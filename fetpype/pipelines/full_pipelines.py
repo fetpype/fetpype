@@ -5,6 +5,8 @@ import nipype.pipeline.engine as pe
 from ..nodes.niftimic import niftimic_segment, niftimic_recon
 from ..nodes.denoise import denoise_slurm
 
+from nipype.interfaces.ants.segmentation import DenoiseImage
+
 def create_fet_subpipes(name = "full_fet_pipe"):
 
 
@@ -58,9 +60,10 @@ def create_fet_subpipes(name = "full_fet_pipe"):
     #full_fet_pipe.connect(niftymic_segment, "seg_T2s", outputnode, "out_outpuf_file")
 
     # denoising_haste
-    denoising_haste = pe.Node(interface = niu.Function(in_files = ["raw_files"], out_files = ["denoised_files"], function = denoise_slurm), name = "denoising_haste")
+    denoising_haste = pe.MapNode(interface = DenoiseImage(), iterfield= ["input_image"],
+                                 name="denoising_haste")
 
-    full_fet_pipe.connect(inputnode, 'haste_stacks', denoising_haste, "raw_files")
+    full_fet_pipe.connect(inputnode, 'haste_stacks', denoising_haste, "input_image")
 
 
     #denoising_tru = pe.Node(interface = niu.Function(in_files = ["raw_files"], out_files = ["denoised_files"], function = denoise_slurm), name = "denoising_tru")
@@ -68,9 +71,9 @@ def create_fet_subpipes(name = "full_fet_pipe"):
     #full_fet_pipe.connect(inputnode, 'tru', niftymic_segment, "raw_files")
 
     # recon_haste
-    recon_haste = pe.Node(interface = niu.Function(in_files = ["in_stacks", "in_masks"], out_files = ["recon_files"], function = niftimic_recon), name = "recon_haste")
+    recon_haste = pe.Node(interface = niu.Function(in_files = ["stacks", "masks"], out_files = ["recon_files"], function = niftimic_recon), name = "recon_haste")
 
-    full_fet_pipe.connect(denoising_haste, 'denoised_files', recon_haste, "in_stacks")
-    full_fet_pipe.connect(inputnode, 'haste_masks', recon_haste, "in_masks")
+    full_fet_pipe.connect(denoising_haste, 'output_image', recon_haste, "stacks")
+    full_fet_pipe.connect(inputnode, 'haste_masks', recon_haste, "masks")
 
     return full_fet_pipe

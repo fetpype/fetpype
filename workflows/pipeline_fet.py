@@ -54,6 +54,7 @@ import nipype
 
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as niu
+import nipype.interfaces.io as nio
 
 import nipype.interfaces.fsl as fsl
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
@@ -67,7 +68,7 @@ from fetpype.utils.utils_bids import (create_datasource,
 ###############################################################################
 
 def create_main_workflow(data_dir, process_dir, subjects, sessions,
-                         acquisitions, reconstructions, nprocs, wf_name="fetpype",):
+                         acquisitions, reconstructions, nprocs, wf_name="fetpype",bids = False):
 
     # macapype_pipeline
     """ Set up the segmentatiopn pipeline based on ANTS
@@ -118,40 +119,67 @@ def create_main_workflow(data_dir, process_dir, subjects, sessions,
 
     # T1 (mandatory, always added)
 
-    output_query['T2'] = {
-        "datatype": "anat", "suffix": "T2w",
-        "extension": ["nii", ".nii.gz"]}
+    if bids:
 
-    #output_query['haste_stacks'] = {
-        #"datatype": "haste", "suffix": "T1w",
-        #"extension": ["nii", ".nii.gz"]}
+        #output_query['haste_stacks'] = {
+            #"datatype": "haste", "suffix": "T1w",
+            #"extension": ["nii", ".nii.gz"]}
 
-    #output_query['haste_masks'] = {
-        #"datatype": "haste", "suffix": "brainmask",
-        #"extension": ["nii", ".nii.gz"]}
+        #output_query['haste_masks'] = {
+            #"datatype": "haste", "suffix": "brainmask",
+            #"extension": ["nii", ".nii.gz"]}
 
-    output_query['haste_stacks'] = {
-        "datatype": "anat", "suffix": "T1w",
-        "extension": ["nii", ".nii.gz"]}
+        output_query['haste_stacks'] = {
+            "datatype": "anat", "suffix": "T1w",
+            "extension": ["nii", ".nii.gz"]}
 
-    output_query['haste_masks'] = {
-        "datatype": "anat", "suffix": "T1w",
-        "extension": ["nii", ".nii.gz"]}
+        output_query['haste_masks'] = {
+            "datatype": "anat", "suffix": "T1w",
+            "extension": ["nii", ".nii.gz"]}
 
 
-    #### datasource
-    datasource = create_datasource(
-        output_query, data_dir, subjects,  sessions, acquisitions, reconstructions)
+        #### datasource
+        datasource = create_datasource(
+            output_query, data_dir, subjects,  sessions, acquisitions, reconstructions)
 
-    main_workflow.connect(datasource, 'T2',
-                          fet_pipe, 'inputnode.list_T2')
+    else:
+
+        # we create a node to pass input filenames to DataGrabber from nipype
+
+        infosource = pe.Node(interface=niu.IdentityInterface(
+            fields=['subject_id','session']),
+            name="infosource")
+
+        infosource.iterables = [('subject_id', subjects),
+            ('session', sessions)]
+
+        # and a node to grab data. The template_args in this node iterate upon
+        # the values in the infosource node
+
+        datasource = pe.Node(interface=nio.DataGrabber(
+            infields=['subject_id','session'],
+            outfields= ['img_file','gm_anat_file','wm_anat_file','csf_anat_file']),
+            name = 'datasource')
+
+        datasource.inputs.base_directory = data_dir
+        datasource.inputs.template = 'sub-%s/sub-%s_ses-%s/%s/NIFTI/sub-%s_ses-%s%s%s%s'
+        datasource.inputs.template_args = dict(
+        haste_stacks=[['subject_id','subject_id','session',"*T2HASTE*",'subject_id','session',"_T2_HASTE","*",".nii.gz"]],
+        tru_stacks=[['subject_id','subject_id','session',"*T2TRUFI*",'subject_id','session',"_T2_TRUFI","*",".nii.gz"]],
+            )
+
+        datasource.inputs.sort_filelist = True
+
+        main_workflow.connect(infosource, 'subject_id',
+                              datasource, 'subject_id')
+
+        main_workflow.connect(infosource, 'session',
+                              datasource, 'session')
+
+    # in both cases we connect datsource outputs to main pipeline
 
     main_workflow.connect(datasource, 'haste_stacks',
-                          fet_pipe, 'inputnode.haste_stacks')
-
-    main_workflow.connect(datasource, 'haste_masks',
-                          fet_pipe, 'inputnode.haste_masks')
-
+                        fet_pipe, 'inputnode.haste_stacks')
 
     main_workflow.write_graph(graph2use="colored")
     main_workflow.config['execution'] = {'remove_unnecessary_outputs': 'false'}
@@ -171,6 +199,9 @@ def main():
                         help="Directory containing MRI data (BIDS)")
     parser.add_argument("-out", dest="out", type=str, #nargs='+',
                         help="Output dir", required=True)
+    parser.add_argument("-bids", dest="bids", action='store_true',
+                        help="BIDS directory is provided",
+                        required=False)
     parser.add_argument("-subjects", "-sub", dest="sub",
                         type=str, nargs='+', help="Subjects", required=False)
     parser.add_argument("-sessions", "-ses", dest="ses",
@@ -190,6 +221,7 @@ def main():
         data_dir=args.data,
         process_dir=args.out,
         subjects=args.sub,
+        bids=args.bids,
         sessions=args.ses,
         acquisitions=args.acq,
         reconstructions=args.rec,

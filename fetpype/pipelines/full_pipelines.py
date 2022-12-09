@@ -65,9 +65,7 @@ def create_fet_subpipes(name = "full_fet_pipe"):
 
     full_fet_pipe.connect(inputnode, 'haste_stacks', denoising_haste, "input_image")
 
-
     #denoising_tru = pe.Node(interface = niu.Function(in_files = ["raw_files"], out_files = ["denoised_files"], function = denoise_slurm), name = "denoising_tru")
-
     #full_fet_pipe.connect(inputnode, 'tru', niftymic_segment, "raw_files")
 
     # recon_haste

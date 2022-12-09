@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 
 
 required_packages=[
-    "nipype", "networkx==2.8.8", "pybids"]
+    "nipype==1.8.5", "networkx==2.8.7"]
 
 verstr = "unknown"
 try:

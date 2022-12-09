@@ -2,8 +2,8 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
-from fetpype.nodes.niftimic import niftimic_segment
-
+from ..nodes.niftimic import niftimic_segment, niftimic_recon
+from ..nodes.denoise import denoise_slurm
 
 def create_fet_subpipes(name = "full_fet_pipe"):
 
@@ -42,7 +42,7 @@ def create_fet_subpipes(name = "full_fet_pipe"):
 
     # Creating input node
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=['list_T2']),
+        niu.IdentityInterface(fields=['list_T2', "haste_stacks", "tru_stacks", "haste_masks", "tru_masks"]),
         name='inputnode'
     )
 
@@ -51,15 +51,26 @@ def create_fet_subpipes(name = "full_fet_pipe"):
         niu.IdentityInterface(fields=['out_outpuf_file']),
         name='outputnode')
 
-    # preprocessing
+    ## preprocessing
+    #niftymic_segment = pe.Node(interface = niu.Function(in_files = ["raw_T2s"], out_files = ["seg_T2s"], function = niftimic_segment), name = "niftymic_segment")
 
-    #TODO
-    niftymic_segment = pe.Node(interface = niu.Function(in_files = ["raw_T2s"], out_files = ["seg_T2s"], function = niftimic_segment), name = "niftymic_segment")
+    #full_fet_pipe.connect(inputnode, 'list_T2', niftymic_segment, "raw_T2s")
+    #full_fet_pipe.connect(niftymic_segment, "seg_T2s", outputnode, "out_outpuf_file")
 
-    full_fet_pipe.connect(inputnode, 'list_T2', niftymic_segment, "raw_T2s")
+    # denoising_haste
+    denoising_haste = pe.Node(interface = niu.Function(in_files = ["raw_files"], out_files = ["denoised_files"], function = denoise_slurm), name = "denoising_haste")
 
-    full_fet_pipe.connect(niftymic_segment, "seg_T2s", outputnode, "out_outpuf_file")
-    # connecting
+    full_fet_pipe.connect(inputnode, 'haste_stacks', denoising_haste, "raw_files")
 
+
+    #denoising_tru = pe.Node(interface = niu.Function(in_files = ["raw_files"], out_files = ["denoised_files"], function = denoise_slurm), name = "denoising_tru")
+
+    #full_fet_pipe.connect(inputnode, 'tru', niftymic_segment, "raw_files")
+
+    # recon_haste
+    recon_haste = pe.Node(interface = niu.Function(in_files = ["in_stacks", "in_masks"], out_files = ["recon_files"], function = niftimic_recon), name = "recon_haste")
+
+    full_fet_pipe.connect(denoising_haste, 'denoised_files', recon_haste, "in_stacks")
+    full_fet_pipe.connect(inputnode, 'haste_masks', recon_haste, "in_masks")
 
     return full_fet_pipe

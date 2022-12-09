@@ -112,6 +112,7 @@ def create_main_workflow(data_dir, process_dir, subjects, sessions,
     main_workflow.base_dir = process_dir
     fet_pipe = create_fet_subpipes()
 
+
     # list of all required outputs
     output_query = {}
 
@@ -121,12 +122,36 @@ def create_main_workflow(data_dir, process_dir, subjects, sessions,
         "datatype": "anat", "suffix": "T2w",
         "extension": ["nii", ".nii.gz"]}
 
-    # indiv_params
+    #output_query['haste_stacks'] = {
+        #"datatype": "haste", "suffix": "T1w",
+        #"extension": ["nii", ".nii.gz"]}
+
+    #output_query['haste_masks'] = {
+        #"datatype": "haste", "suffix": "brainmask",
+        #"extension": ["nii", ".nii.gz"]}
+
+    output_query['haste_stacks'] = {
+        "datatype": "anat", "suffix": "T1w",
+        "extension": ["nii", ".nii.gz"]}
+
+    output_query['haste_masks'] = {
+        "datatype": "anat", "suffix": "T1w",
+        "extension": ["nii", ".nii.gz"]}
+
+
+    #### datasource
     datasource = create_datasource(
         output_query, data_dir, subjects,  sessions, acquisitions, reconstructions)
 
     main_workflow.connect(datasource, 'T2',
                           fet_pipe, 'inputnode.list_T2')
+
+    main_workflow.connect(datasource, 'haste_stacks',
+                          fet_pipe, 'inputnode.haste_stacks')
+
+    main_workflow.connect(datasource, 'haste_masks',
+                          fet_pipe, 'inputnode.haste_masks')
+
 
     main_workflow.write_graph(graph2use="colored")
     main_workflow.config['execution'] = {'remove_unnecessary_outputs': 'false'}

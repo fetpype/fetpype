@@ -29,4 +29,4 @@ jobs:
 
       - name: Flake8
         run:
-            flake8 --count macapype
+            flake8 --count fetpype

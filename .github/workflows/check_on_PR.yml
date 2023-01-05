@@ -1,0 +1,32 @@
+
+name: Checking unit-tests, PEP8 and standard pipeline congruency
+
+on:
+
+  pull_request:
+    branches:
+      - main
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run: |
+            pip install -e .
+            pip install flake8
+            sudo apt-get install build-essential  graphviz libgraphviz-dev
+            pip install --upgrade pygraphviz graphviz
+
+      - name: Flake8
+        run:
+            flake8 --count macapype

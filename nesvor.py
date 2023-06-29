@@ -5,7 +5,6 @@ Should be use CommandLine interface or Python interface?
 As we are using Docker or singularity, we should use the CommandLine interface.
 
 We introduce the NesVoR pipeline but not 
-
 """
 
 from nipype.interfaces.base import (
@@ -99,15 +98,16 @@ class NesvorRegisterInputSpec(CommandLineInputSpec):
         traits.File(exists=True),
         desc="List of stack masks",
         argstr="--stack-masks %s",
-        mandatory=True,
     )
+
     output_slices = File(
         desc="Path to save output slices",
         argstr="--output-slices %s",
         genfile=True,
         hash_files=False,
-        keep_extension=True,
     )
+
+
     """
     output_json = File(
         desc="Path to save output json",
@@ -154,10 +154,7 @@ class NesvorRegistration(CommandLine):
         if name == "output_slices":
             output = self.inputs.output_slices
             if not isdefined(output):
-                output = []
-                for stack in self.inputs.input_stacks:
-                    name = stack.rsplit(".nii.gz", maxsplit=1)
-                    output.append(name[0] + '_reg.nii.gz')
+                output = os.path.basename(self.inputs.input_stacks[0])
             return output
         return None
 

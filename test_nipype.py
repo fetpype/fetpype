@@ -30,7 +30,7 @@ mask = Node(NesvorSegmentation(
 
 # registration Node
 registration = Node(NesvorRegistration(), name="Registration")
-
+print(registration.help())
 ## TODO. Save the output in the output derivative
 output_folder = 'derivatives'
 datasink = Node(DataSink(base_directory=os.path.join(input_path_BIDS, output_folder),
@@ -38,10 +38,10 @@ datasink = Node(DataSink(base_directory=os.path.join(input_path_BIDS, output_fol
                name='datasink')
 
 # Connect the nodes
+# TODO: datasink is not working
 workflow.connect([(bids_node, mask, [("T2w", "input_stacks")]),
                   (bids_node, registration, [("T2w", "input_stacks")]),
                   (mask, registration, [("output_stack_masks", "stack_masks")]),
-                  (mask, datasink, [("output_stack_masks", "output_stack_masks")]),
                   (registration, datasink, [("output_slices", "output_slices")]),
                 ])
 

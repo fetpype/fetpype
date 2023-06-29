@@ -141,12 +141,21 @@ def create_main_workflow(
     fet_pipe = create_fet_subpipes(params=params)
 
     output_query = {
-        "stacks": {"datatype": "anat", "suffix": "T2w", "extension": ["nii", ".nii.gz"]}
+        "stacks": {
+            "datatype": "anat",
+            "suffix": "T2w",
+            "extension": ["nii", ".nii.gz"],
+        }
     }
 
     #### datasource
     datasource = create_datasource(
-        output_query, data_dir, subjects, sessions, acquisitions, reconstructions
+        output_query,
+        data_dir,
+        subjects,
+        sessions,
+        acquisitions,
+        reconstructions,
     )
 
     # in both cases we connect datsource outputs to main pipeline
@@ -167,27 +176,61 @@ def main():
     parser = argparse.ArgumentParser(description="PNH segmentation pipeline")
 
     parser.add_argument(
-        "-data", dest="data", type=str, required=True, help="Directory containing MRI data (BIDS)"
+        "-data",
+        dest="data",
+        type=str,
+        required=True,
+        help="Directory containing MRI data (BIDS)",
     )
     parser.add_argument(
-        "-out", dest="out", type=str, help="Output dir", required=True  # nargs='+',
-    )
-
-    parser.add_argument(
-        "-subjects", "-sub", dest="sub", type=str, nargs="+", help="Subjects", required=False
-    )
-    parser.add_argument(
-        "-sessions", "-ses", dest="ses", type=str, nargs="+", help="Sessions", required=False
-    )
-    parser.add_argument(
-        "-acquisitions", "-acq", dest="acq", type=str, nargs="+", default=None, help="Acquisitions"
+        "-out",
+        dest="out",
+        type=str,
+        help="Output dir",
+        required=True,  # nargs='+',
     )
 
     parser.add_argument(
-        "-params", dest="params_file", type=str, help="Parameters json file", required=False
+        "-subjects",
+        "-sub",
+        dest="sub",
+        type=str,
+        nargs="+",
+        help="Subjects",
+        required=False,
     )
     parser.add_argument(
-        "-nprocs", dest="nprocs", type=int, help="number of processes to allocate", required=False
+        "-sessions",
+        "-ses",
+        dest="ses",
+        type=str,
+        nargs="+",
+        help="Sessions",
+        required=False,
+    )
+    parser.add_argument(
+        "-acquisitions",
+        "-acq",
+        dest="acq",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Acquisitions",
+    )
+
+    parser.add_argument(
+        "-params",
+        dest="params_file",
+        type=str,
+        help="Parameters json file",
+        required=False,
+    )
+    parser.add_argument(
+        "-nprocs",
+        dest="nprocs",
+        type=int,
+        help="number of processes to allocate",
+        required=False,
     )
 
     args = parser.parse_args()

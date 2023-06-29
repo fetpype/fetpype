@@ -40,7 +40,9 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     full_fet_pipe = pe.Workflow(name=name)
 
     # Creating input node
-    inputnode = pe.Node(niu.IdentityInterface(fields=["stacks"]), name="inputnode")
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["stacks"]), name="inputnode"
+    )
 
     # preprocessing
     niftymic_segment = pe.Node(
@@ -55,12 +57,16 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     full_fet_pipe.connect(inputnode, "stacks", niftymic_segment, "raw_T2s")
 
     # denoising
-    denoising = pe.MapNode(interface=DenoiseImage(), iterfield=["input_image"], name="denoising")
+    denoising = pe.MapNode(
+        interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
+    )
 
     full_fet_pipe.connect(inputnode, "stacks", denoising, "input_image")
 
     # merge_denoise
-    merge_denoise = pe.Node(interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise")
+    merge_denoise = pe.Node(
+        interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
+    )
 
     full_fet_pipe.connect(denoising, "output_image", merge_denoise, "in1")
 
@@ -89,7 +95,9 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     full_fet_pipe.connect(niftymic_segment, "bmasks", recon, "masks")
 
     # output node
-    outputnode = pe.Node(niu.IdentityInterface(fields=["recon_files"]), name="outputnode")
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["recon_files"]), name="outputnode"
+    )
 
     full_fet_pipe.connect(recon, "recon_files", outputnode, "recon_files")
 

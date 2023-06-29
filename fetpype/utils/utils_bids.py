@@ -8,7 +8,9 @@ import nipype.interfaces.io as nio
 import nipype.pipeline.engine as pe
 
 
-def create_datasource(output_query, data_dir, subjects=None, sessions=None, acquisitions=None):
+def create_datasource(
+    output_query, data_dir, subjects=None, sessions=None, acquisitions=None
+):
     """Create a datasource node that have iterables following BIDS format.
     By default, from a BIDSLayout, lists all the subjects (<sub>), finds their session numbers (<ses>, if any)
     and their acquisition type (<acq>, if any), and builds an iterable of tuples (sub, ses, acq) with
@@ -24,7 +26,9 @@ def create_datasource(output_query, data_dir, subjects=None, sessions=None, acqu
     """
 
     bids_datasource = pe.Node(
-        interface=nio.BIDSDataGrabber(), name="bids_datasource", synchronize=True
+        interface=nio.BIDSDataGrabber(),
+        name="bids_datasource",
+        synchronize=True,
     )
 
     bids_datasource.inputs.base_dir = data_dir
@@ -54,7 +58,9 @@ def create_datasource(output_query, data_dir, subjects=None, sessions=None, acqu
         sessions = [None] if len(sessions) == 0 else sessions
         for ses in sessions:
             if ses is not None and ses not in existing_ses:
-                print(f"WARNING: Session {ses} was not found for subject {sub}.")
+                print(
+                    f"WARNING: Session {ses} was not found for subject {sub}."
+                )
             existing_acq = layout.get_acquisition(subject=sub, session=ses)
             if acquisitions is None:
                 acquisitions = existing_acq
@@ -74,7 +80,9 @@ def create_datasource(output_query, data_dir, subjects=None, sessions=None, acqu
     return bids_datasource
 
 
-def create_datasink(iterables, name="output", params_subs={}, params_regex_subs={}):
+def create_datasink(
+    iterables, name="output", params_subs={}, params_regex_subs={}
+):
     """
     Description: reformating relevant outputs
     """
@@ -84,7 +92,10 @@ def create_datasink(iterables, name="output", params_subs={}, params_regex_subs=
     datasink = pe.Node(nio.DataSink(container=name), name="datasink")
 
     subjFolders = [
-        ("_session_%s_subject_%s" % (ses, sub), "sub-%s/ses-%s/anat" % (sub, ses))
+        (
+            "_session_%s_subject_%s" % (ses, sub),
+            "sub-%s/ses-%s/anat" % (sub, ses),
+        )
         for ses in iterables[1][1]
         for sub in iterables[0][1]
     ]
@@ -107,7 +118,9 @@ def create_datasink(iterables, name="output", params_subs={}, params_regex_subs=
     datasink.inputs.substitutions = subjFolders
 
     # regex_subs
-    json_regex_subs = op.join(op.dirname(op.abspath(__file__)), "regex_subs.json")
+    json_regex_subs = op.join(
+        op.dirname(op.abspath(__file__)), "regex_subs.json"
+    )
 
     dict_regex_subs = json.load(open(json_regex_subs))
 

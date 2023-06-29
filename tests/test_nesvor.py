@@ -1,4 +1,6 @@
-"""Test nipype functionality.
+"""Test nipype nesvor functionality.
+
+TODO: CHange to unit testing
 """
 
 import os
@@ -15,6 +17,9 @@ input_path_BIDS = "/homedtic/gmarti/DATA/ERANEU_BIDS_small/"
 # Create a nipype workflow
 workflow = Workflow(name="nesvor_workflow", base_dir="/homedtic/gmarti/DATA/nesvor/")
 
+# create an infosource to iterate over the subjects
+
+# BIDS datagrabber
 bids_node = Node(BIDSDataGrabber(), name='bids-grabber')
 bids_node.inputs.base_dir = input_path_BIDS
 bids_node.inputs.subject = '003'

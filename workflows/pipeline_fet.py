@@ -118,9 +118,9 @@ def create_main_workflow(data_dir, process_dir, subjects, sessions,
 
     # T1 (mandatory, always added)
 
-    output_query['T2'] = {
-        "datatype": "anat", "suffix": "T2w",
-        "extension": ["nii", ".nii.gz"]}
+    #output_query['T2'] = {
+    #    "datatype": "anat", "suffix": "T2w",
+    #    "extension": ["nii", ".nii.gz"]}
 
     #output_query['haste_stacks'] = {
         #"datatype": "haste", "suffix": "T1w",
@@ -131,11 +131,11 @@ def create_main_workflow(data_dir, process_dir, subjects, sessions,
         #"extension": ["nii", ".nii.gz"]}
 
     output_query['haste_stacks'] = {
-        "datatype": "anat", "suffix": "T1w",
+        "datatype": "anat", "suffix": "T2w",
         "extension": ["nii", ".nii.gz"]}
 
     output_query['haste_masks'] = {
-        "datatype": "anat", "suffix": "T1w",
+        "datatype": "anat", "suffix": "mask",
         "extension": ["nii", ".nii.gz"]}
 
 

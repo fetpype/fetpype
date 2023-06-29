@@ -7,6 +7,7 @@ from bids.layout import BIDSLayout
 import nipype.interfaces.io as nio
 import nipype.pipeline.engine as pe
 
+
 def create_datasource(output_query, data_dir, subjects=None, sessions=None,
                       acquisitions=None, reconstructions=None):
     """ Create a datasource node that have iterables following BIDS format """

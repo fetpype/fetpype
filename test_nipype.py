@@ -3,7 +3,7 @@
 
 import os
 import glob
-from pipelines.nesvor import NesvorSegmentation, NesvorRegistration
+from nesvor import NesvorSegmentation, NesvorRegistration
 from nipype.interfaces.io import BIDSDataGrabber, DataSink
 from nipype import Workflow, Node
 

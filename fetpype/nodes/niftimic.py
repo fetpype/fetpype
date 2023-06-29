@@ -1,11 +1,7 @@
-import os
 
-
-def niftimic_segment(raw_T2s):
-
+def niftimic_segment(raw_T2s, pre_command="", niftimic_image=""):
 
     """ Description: wraps niftimic_segment dirty
-
     Inputs:
 
         inputnode:
@@ -19,16 +15,20 @@ def niftimic_segment(raw_T2s):
                 bmasks
     """
 
-    #TODO
+    # TODO
+    import os
 
+    output_dir = os.path.abspath("")
+
+    print(output_dir)
+
+    print(pre_command + niftimic_image)
 
     bmasks = [
-        os.path.join(output_dir, os.path.basename(s)[:-7] + "_brain_mask.nii.gz",)
+        os.path.abspath(os.path.basename(s)[:-7] + ".nii.gz",)
         for s in raw_T2s
     ]
-    #cmd = "sbatch "
-    #cmd += "/scratch/apron/code/marsFet_management/marsFet/utils/slurm/nifty_mic.slurm "
-    #cmd += '" '
+    cmd = pre_command + niftimic_image
     cmd += "niftymic_segment_fetal_brains "
     cmd += "--filenames "
     for s in raw_T2s:
@@ -40,19 +40,27 @@ def niftimic_segment(raw_T2s):
     cmd += output_dir + " "
     cmd += "--neuroimage-legacy-seg 0 "
     cmd += "--log-config 1"
-    cmd += ' "'
+
+    print(cmd)
     os.system(cmd)
 
+    print(bmasks)
+
+    for bmask in bmasks:
+        print(bmask)
+        assert os.path.exists(bmask), "Error, {} does not exists".format(bmask)
 
     return bmasks
 
-def niftimic_recon(stacks, masks):
+
+def niftimic_recon(stacks, masks,  pre_command="", niftimic_image=""):
 
     import os
 
     reconst_dir = os.path.abspath("srr_reconstruction")
 
-    cmd_os = "niftymic_run_reconstruction_pipeline"
+    cmd_os = pre_command + niftimic_image
+    cmd_os += "niftymic_run_reconstruction_pipeline"
     # input stacks
     cmd_os += " --filenames "
     for v in stacks:
@@ -70,20 +78,7 @@ def niftimic_recon(stacks, masks):
     cmd_os += " --run-bias-field-correction 1"
     cmd_os += " --run-diagnostics 0"
 
-    #cmd = (
-    #    "sbatch"
-    #    + "  "
-    #    + "/scratch/apron/code/marsFet_management/marsFet/utils/slurm/nifty_mic_singularity.slurm"
-    #    + " "
-    #    + '"'
-    #    + cmd_os
-    #    + '"'
-    #    + " "
-    #    + DB_path
-    #)
-
     print(cmd_os)
-    #os.system(cmd)
 
     os.system(cmd_os)
     return reconst_dir

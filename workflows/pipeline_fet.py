@@ -71,7 +71,6 @@ def create_main_workflow(
     subjects,
     sessions,
     acquisitions,
-    reconstructions,
     params_file,
     nprocs,
     wf_name="fetpype",
@@ -98,9 +97,6 @@ def create_main_workflow(
 
     acquisitions: list of str (optional)
         Acquisition name to match to BIDS specification (acq-[ACQ1]...)
-
-    reconstructions: list of str (optional)
-        Reconstructions name to match to BIDS specification (rec-[ACQ1]...)
 
     params_file: path to a JSON file
         JSON file that specify some parameters of the pipeline.
@@ -155,7 +151,6 @@ def create_main_workflow(
         subjects,
         sessions,
         acquisitions,
-        reconstructions,
     )
 
     # in both cases we connect datsource outputs to main pipeline

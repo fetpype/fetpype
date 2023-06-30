@@ -1,6 +1,6 @@
 {
     "general": {
-        "pre_command": "singularity exec --nv ",
-        "niftimic_image": "/homedtic/gmarti/SINGULARITY/niftymic_upf_latest.sif "
+        "pre_command": "singularity exec -B /scratch:/scratch ",
+        "niftimic_image": "/scratch/apron/softs/niftymic.multifact_latest.sif"
     }
 }

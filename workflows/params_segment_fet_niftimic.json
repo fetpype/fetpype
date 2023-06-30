@@ -2,6 +2,6 @@
     "general":
     {
         "pre_command": "singularity exec -B /scratch:/scratch ",
-        "niftimic_image": "/scratch/apron/softs/niftymic.multifact_latest.sif"
+        "niftymic_image": "/scratch/apron/softs/niftymic.multifact_latest.sif"
     }
 }

@@ -7,31 +7,34 @@ from nipype.interfaces.ants.segmentation import DenoiseImage
 
 
 def create_fet_subpipes(name="full_fet_pipe", params={}):
-    """Description: SPM based segmentation pipeline from T1w and T2w images
-    in template space
+    """
+    Create the fetal processing pipeline (sub-workflow).
 
-    Processing steps:
-
-    - wraps niftymic dirty
+    Given an input of T2w stacks, this pipeline performs the following steps:
+        1. Brain extraction using MONAIfbs (dirty wrapper around NiftyMIC's
+           command niftymic_segment_fetal_brains)
+        2. Denoising using ANTS' DenoiseImage
+        3. Perform reconstruction using NiftyMIC's command
+            niftymic_run_reconstruction_pipeline
 
     Params:
-
-    -
+        name:
+            pipeline name (default = "full_fet_pipe")
+        params:
+            dictionary of parameters (default = {}). This
+            dictionary contains the parameters given in a JSON
+            config file. It specifies which containers to use
+            for each step of the pipeline.
 
     Inputs:
-
         inputnode:
-
-            list_T2:
-                T2 file names
-
-        arguments:
-            name:
-                pipeline name (default = "full_spm_subpipes")
-
+            stacks:
+                list of T2w stacks
     Outputs:
+        outputnode:
+            recon_files:
+                list of reconstructed files
 
-            TODO
     """
 
     print("Full pipeline name: ", name)
@@ -44,7 +47,8 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
         niu.IdentityInterface(fields=["stacks"]), name="inputnode"
     )
 
-    # preprocessing
+    # PREPROCESSING
+    # 1. Brain extraction
     brain_extraction = pe.Node(
         interface=niu.Function(
             input_names=["raw_T2s", "pre_command", "niftymic_image"],
@@ -55,23 +59,16 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     )
 
     if "general" in params.keys():
-        if "pre_command" in params["general"]:
-            brain_extraction.inputs.pre_command = params["general"][
-                "pre_command"
-            ]
-
-        if "niftimic_image" in params["general"]:
-            brain_extraction.inputs.niftimic_image = params["general"][
-                "niftimic_image"
-            ]
-
-    else:
-        brain_extraction.inputs.pre_command = ""
-        brain_extraction.inputs.niftimic_image = ""
+        brain_extraction.inputs.pre_command = params["general"].get(
+            "pre_command", ""
+        )
+        brain_extraction.inputs.niftymic_image = params["general"].get(
+            "niftymic_image", ""
+        )
 
     full_fet_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
-    # denoising
+    # 2. Denoising
     denoising = pe.MapNode(
         interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
     )
@@ -85,7 +82,7 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
 
     full_fet_pipe.connect(denoising, "output_image", merge_denoise, "in1")
 
-    # recon
+    # RECONSTRUCTION
     recon = pe.Node(
         interface=niu.Function(
             input_names=["stacks", "masks", "pre_command", "niftymic_image"],
@@ -96,19 +93,15 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     )
 
     if "general" in params.keys():
-        if "pre_command" in params["general"]:
-            recon.inputs.pre_command = params["general"]["pre_command"]
+        recon.inputs.pre_command = params["general"].get("pre_command", "")
+        recon.inputs.niftymic_image = params["general"].get(
+            "niftymic_image", ""
+        )
 
-        if "niftymic_image" in params["general"]:
-            recon.inputs.niftymic_image = params["general"]["niftymic_image"]
-    else:
-        recon.inputs.pre_command = ""
-        recon.inputs.niftymic_image = ""
-
+    # OUTPUT
     full_fet_pipe.connect(merge_denoise, "out", recon, "stacks")
     full_fet_pipe.connect(brain_extraction, "bmasks", recon, "masks")
 
-    # output node
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["recon_files"]), name="outputnode"
     )

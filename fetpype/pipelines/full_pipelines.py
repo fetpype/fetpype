@@ -54,6 +54,17 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
         name="niftymic_segment",
     )
 
+    if "general" in params.keys():
+        if "pre_command" in params["general"]:
+            niftymic_segment.inputs.pre_command = params["general"]["pre_command"]
+
+        if "niftimic_image" in params["general"]:
+            niftymic_segment.inputs.niftimic_image = params["general"]["niftimic_image"]
+
+    else:
+        niftymic_segment.inputs.pre_command = ""
+        niftymic_segment.inputs.niftimic_image = ""
+
     full_fet_pipe.connect(inputnode, "stacks", niftymic_segment, "raw_T2s")
 
     # denoising

@@ -54,6 +54,21 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
         name="brain_extraction",
     )
 
+    if "general" in params.keys():
+        if "pre_command" in params["general"]:
+            brain_extraction.inputs.pre_command = params["general"][
+                "pre_command"
+            ]
+
+        if "niftimic_image" in params["general"]:
+            brain_extraction.inputs.niftimic_image = params["general"][
+                "niftimic_image"
+            ]
+
+    else:
+        brain_extraction.inputs.pre_command = ""
+        brain_extraction.inputs.niftimic_image = ""
+
     full_fet_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
     # denoising
@@ -83,15 +98,9 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     if "general" in params.keys():
         if "pre_command" in params["general"]:
             recon.inputs.pre_command = params["general"]["pre_command"]
-            brain_extraction.inputs.pre_command = params["general"][
-                "pre_command"
-            ]
 
         if "niftymic_image" in params["general"]:
             recon.inputs.niftymic_image = params["general"]["niftymic_image"]
-            brain_extraction.inputs.niftymic_image = params["general"][
-                "niftymic_image"
-            ]
     else:
         recon.inputs.pre_command = ""
         recon.inputs.niftymic_image = ""

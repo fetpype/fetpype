@@ -81,8 +81,8 @@ def create_datasource(
                     )
 
                 iterables[1] += [(sub, ses, acq)]
-    bids_datasource.iterables = iterables
 
+    bids_datasource.iterables = iterables
     return bids_datasource
 
 

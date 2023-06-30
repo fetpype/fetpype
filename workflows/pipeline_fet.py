@@ -178,7 +178,6 @@ def main():
         "-out",
         dest="out",
         type=str,
-        help="Output dir",
         required=True,  # nargs='+',
         help="Output directory, where all outputs will be saved.",
     )

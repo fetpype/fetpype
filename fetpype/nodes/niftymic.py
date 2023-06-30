@@ -81,6 +81,25 @@ def niftymic_segment(raw_T2s, pre_command="", niftymic_image=""):
 
 
 def niftymic_recon(stacks, masks, pre_command="", niftymic_image=""):
+    """
+    Function wrapping niftymic_run_reconstruction_pipeline for use with nipype
+    This is a quick and dirty implementation, to be replaced by a proper nipype
+    interface in the future.
+
+    Inputs:
+        stacks:
+            Preprocessed T2 file names
+        masks:
+            Brain masks for each T2 low-resolution stack given in stacks.
+        pre_command:
+            Command to run niftymic_image (e.g. docker run or singularity run)
+        niftymic_image:
+            niftymic_image name (e.g. renbem/niftymic:latest)
+
+    Outputs:
+        reconst_dir:
+            Directory containing the reconstructed files
+    """
     import os
 
     reconst_dir = os.path.abspath("srr_reconstruction")

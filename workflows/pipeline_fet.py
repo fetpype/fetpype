@@ -213,7 +213,6 @@ def main():
         type=str,
         nargs="+",
         default=None,
-        help="Acquisitions",
         help=(
             "List of acquisitions to process (default: every acquisition for each "
             "subject/session combination)."

@@ -162,8 +162,13 @@ def create_main_workflow(
 
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
-    main_workflow.write_graph(graph2use="colored")
-    main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
+    main_workflow.connect(datasource, 'haste_stacks',
+                        fet_pipe, 'inputnode.haste_stacks')
+
+    # commented for now to avoid issues with graphviz in HPC
+    # main_workflow.write_graph(graph2use="colored")
+    
+    main_workflow.config['execution'] = {'remove_unnecessary_outputs': 'false'}
 
     if nprocs is None:
         nprocs = 4

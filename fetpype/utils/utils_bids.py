@@ -91,7 +91,7 @@ def create_datasink(
     iterables, name="output", params_subs={}, params_regex_subs={}
 ):
     """
-    Description: reformating relevant outputs
+    Description: reformating relevant outputs.
     """
 
     print("Datasink name: ", name)

@@ -107,8 +107,6 @@ class NesvorRegisterInputSpec(CommandLineInputSpec):
         hash_files=False,
     )
 
-
-    """
     output_json = File(
         desc="Path to save output json",
         argstr="--output-json %s",
@@ -116,7 +114,16 @@ class NesvorRegisterInputSpec(CommandLineInputSpec):
         hash_files=False,
         keep_extension=True,
     )
-    """
+
+    output_log = File(
+        desc="Path to save output log",
+        argstr="--output-log %s",
+        genfile=True,
+        hash_files=False,
+        keep_extension=True,
+    )
+
+
 
 class NesvorRegisterOutputSpec(TraitedSpec):
     """Class for the output for the NeSVoRReg nipype interface.
@@ -128,9 +135,13 @@ class NesvorRegisterOutputSpec(TraitedSpec):
         desc="List of output slices",
     )
 
-    #output_json = traits.File(
-    #    desc="The json file saving the inputs and results",
-    #)
+    output_json = traits.File(
+        desc="The json file saving the inputs and results",
+    )
+
+    output_log = traits.File(
+        desc="The log file of the registration",
+    )
 
 
 class NesvorRegistration(CommandLine):
@@ -154,9 +165,45 @@ class NesvorRegistration(CommandLine):
         if name == "output_slices":
             output = self.inputs.output_slices
             if not isdefined(output):
-                output = os.path.basename(self.inputs.input_stacks[0])
+                #TODO very hacky, fix
+                # extract the full path of the folder
+                output = os.path.dirname(self.inputs.input_stacks[0])
+                # add a new folder named "slices"
+                output = os.path.join(output, "slices")
+                # create the folder if it does not exist
+                os.makedirs(output, exist_ok=True)
             return output
+        if name == "output_json":
+            output = self.inputs.output_json
+            if not isdefined(output):
+                #TODO very hacky, fix
+                # extract the full path of the folder
+                output = os.path.dirname(self.inputs.input_stacks[0])
+                # add a new folder named "slices"
+                output = os.path.join(output, "slices")
+                # create the folder if it does not exist
+                os.makedirs(output, exist_ok=True)
+                output = os.path.join(output, "slices.json")
+            return output
+        if name == "output_log":
+            output = self.inputs.output_json
+            if not isdefined(output):
+                #TODO very hacky, fix
+                # extract the full path of the folder
+                output = os.path.dirname(self.inputs.input_stacks[0])
+                # add a new folder named "slices"
+                output = os.path.join(output, "slices")
+                # create the folder if it does not exist
+                os.makedirs(output, exist_ok=True)
+                output = os.path.join(output, "output.log")
+            return output
+
         return None
 
+
+
     def _list_outputs(self):
-        return {"output_slices": self.inputs.output_slices}
+        return {"output_slices": self.inputs.output_slices,
+                "output_json": self.inputs.output_json,
+                "output_log": self.inputs.output_log}
+        

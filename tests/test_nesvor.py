@@ -5,12 +5,13 @@ TODO: CHange to unit testing
 
 import os
 import glob
-from nesvor import NesvorSegmentation, NesvorRegistration
+# add the path to the nesvor module
+import sys
+sys.path.append("../")
+from fetpype.nodes.nesvor import NesvorSegmentation, NesvorRegistration
 from nipype.interfaces.io import BIDSDataGrabber, DataSink
 from nipype import Workflow, Node
-
 from nipype import config
-config.enable_debug_mode()
   
 input_path_BIDS = "/homedtic/gmarti/DATA/ERANEU_BIDS_small/"
 
@@ -35,7 +36,7 @@ mask = Node(NesvorSegmentation(
 
 # registration Node
 registration = Node(NesvorRegistration(), name="Registration")
-print(registration.help())
+
 ## TODO. Save the output in the output derivative
 output_folder = 'derivatives'
 datasink = Node(DataSink(base_directory=os.path.join(input_path_BIDS, output_folder),
@@ -47,7 +48,6 @@ datasink = Node(DataSink(base_directory=os.path.join(input_path_BIDS, output_fol
 workflow.connect([(bids_node, mask, [("T2w", "input_stacks")]),
                   (bids_node, registration, [("T2w", "input_stacks")]),
                   (mask, registration, [("output_stack_masks", "stack_masks")]),
-                  (registration, datasink, [("output_slices", "output_slices")]),
                 ])
 
 print(workflow.list_node_names())

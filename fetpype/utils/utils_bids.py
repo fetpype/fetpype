@@ -80,10 +80,9 @@ def create_datasource(
                         f"subject {sub} session {ses}."
                     )
 
-                iterables[1] += [(sub, ses, acq) for acq in acquisitions]
+                iterables[1] += [(sub, ses, acq)]
 
     bids_datasource.iterables = iterables
-
     return bids_datasource
 
 

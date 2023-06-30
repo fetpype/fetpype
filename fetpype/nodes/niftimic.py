@@ -28,7 +28,8 @@ def niftimic_segment(raw_T2s, pre_command="", niftimic_image=""):
         os.path.abspath(os.path.basename(s)[:-7] + ".nii.gz",)
         for s in raw_T2s
     ]
-    cmd = pre_command + niftimic_image
+
+    cmd = pre_command + " " + niftimic_image + " "
     cmd += "niftymic_segment_fetal_brains "
     cmd += "--filenames "
     for s in raw_T2s:
@@ -59,7 +60,7 @@ def niftimic_recon(stacks, masks,  pre_command="", niftimic_image=""):
 
     reconst_dir = os.path.abspath("srr_reconstruction")
 
-    cmd_os = pre_command + niftimic_image
+    cmd_os = pre_command + " " + niftimic_image + " "
     cmd_os += "niftymic_run_reconstruction_pipeline"
     # input stacks
     cmd_os += " --filenames "

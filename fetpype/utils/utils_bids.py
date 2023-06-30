@@ -12,20 +12,20 @@ def create_datasource(
     output_query, data_dir, subjects=None, sessions=None, acquisitions=None
 ):
     """Create a datasource node that have iterables following BIDS format.
-    By default, from a BIDSLayout, lists all the subjects (<sub>), 
-    finds their session numbers (<ses>, if any) and their acquisition 
-    type (<acq>, if any), and builds an iterable of tuples 
+    By default, from a BIDSLayout, lists all the subjects (<sub>),
+    finds their session numbers (<ses>, if any) and their acquisition
+    type (<acq>, if any), and builds an iterable of tuples
     (sub, ses, acq) with all valid combinations.
 
-    If a list of subjects/sessions/acquisitions is provided, the 
-    BIDSLayout is not queried and the provided 
+    If a list of subjects/sessions/acquisitions is provided, the
+    BIDSLayout is not queried and the provided
     subjects/sessions/acquisitions are used as is.
 
-    For example, if provided with subjects=["sub01", "sub02"], 
-    sessions=["01"], acq=["haste", "tru"], the datagrabber will 
+    For example, if provided with subjects=["sub01", "sub02"],
+    sessions=["01"], acq=["haste", "tru"], the datagrabber will
     attempt at retrieving all of the following combinations:
     ```
-    [("sub01", "01", "haste"), ("sub01", "01","tru"), 
+    [("sub01", "01", "haste"), ("sub01", "01","tru"),
      ("sub02", "01", "haste"), ("sub02", "01","tru")]
     ```
     """
@@ -70,7 +70,7 @@ def create_datasource(
             if acquisitions is None:
                 acquisitions = existing_acq
 
-            # If there is no acquisition found, maybe the acquisition 
+            # If there is no acquisition found, maybe the acquisition
             # tag was not specified.
             acquisitions = [None] if len(acquisitions) == 0 else acquisitions
             for acq in acquisitions:

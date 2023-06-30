@@ -20,10 +20,6 @@ def niftymic_segment(raw_T2s, pre_command="", niftymic_image=""):
 
     output_dir = os.path.abspath("")
 
-    print(output_dir)
-
-    print(pre_command + niftymic_image)
-
     # Why do we do [:-7] + .nii.gz?
     bmasks = [
         os.path.abspath(
@@ -34,12 +30,13 @@ def niftymic_segment(raw_T2s, pre_command="", niftymic_image=""):
 
     # DOCKER PATH
     if "docker" in pre_command:
-        stacks_dir = os.path.dirname(raw_T2s[0])
-        bmasks_docker = " ".join(
-            [os.path.join("/masks", os.path.basename(m)) for m in bmasks]
-        )
+        stacks_dir = os.path.commonpath(raw_T2s)
+        masks_dir = os.path.commonpath(bmasks)
         stacks_docker = " ".join(
-            [os.path.join("/data", os.path.basename(s)) for s in raw_T2s]
+            [s.replace(stacks_dir, "/data") for s in raw_T2s]
+        )
+        bmasks_docker = " ".join(
+            [m.replace(masks_dir, "/masks") for m in bmasks]
         )
 
         cmd = pre_command
@@ -88,26 +85,53 @@ def niftymic_recon(stacks, masks, pre_command="", niftymic_image=""):
 
     reconst_dir = os.path.abspath("srr_reconstruction")
 
-    cmd_os = pre_command + niftymic_image
-    cmd_os += "niftymic_run_reconstruction_pipeline"
-    # input stacks
-    cmd_os += " --filenames "
-    for v in stacks:
-        cmd_os += v + " "
-    # corresponding masks (previously obtained)
-    cmd_os += " --filenames-masks "
-    for u in masks:
-        cmd_os += u + " "
-    # output directory
-    cmd_os += " --dir-output " + reconst_dir
+    if "docker" in pre_command:
+        stacks_dir = os.path.commonpath(stacks)
+        masks_dir = os.path.commonpath(masks)
+        stacks_docker = " ".join(
+            [s.replace(stacks_dir, "/data") for s in stacks]
+        )
+        bmasks_docker = " ".join(
+            [m.replace(masks_dir, "/masks") for m in masks]
+        )
+        cmd = pre_command
+        cmd += (
+            f"-v {stacks_dir}:/data "
+            f"-v {masks_dir}:/masks "
+            f"-v {reconst_dir}:/rec "
+            f"{niftymic_image} niftymic_run_reconstruction_pipeline "
+            f"--filenames {stacks_docker} "
+            f"--filenames-masks {bmasks_docker} "
+            "--dir-output /rec "
+        )
+    elif "singularity" in pre_command:
+        stacks = " ".join(stacks)
+        masks = " ".join(masks)
+
+        cmd = pre_command + niftymic_image
+        cmd += (
+            "niftymic_run_reconstruction_pipeline"
+            # input stacks
+            f" --filenames {stacks}"
+            # corresponding masks (previously obtained)
+            f" --filenames-masks {masks}"
+            # output directory
+            f" --dir-output {reconst_dir} "
+        )
+
+    else:
+        raise ValueError(
+            "pre_command must either contain docker or singularity."
+        )
+
     # bias field correction was already performed
-    cmd_os += " --bias-field-correction 1"
-    cmd_os += " --isotropic-resolution 0.5"
+    cmd += " --bias-field-correction 1"
+    cmd += " --isotropic-resolution 0.5"
     # outliers rejection parameters
-    cmd_os += " --run-bias-field-correction 1"
-    cmd_os += " --run-diagnostics 0"
+    cmd += " --run-bias-field-correction 1"
+    cmd += " --run-diagnostics 0"
 
-    print(cmd_os)
+    print(cmd)
 
-    os.system(cmd_os)
+    os.system(cmd)
     return reconst_dir

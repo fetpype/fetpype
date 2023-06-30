@@ -53,7 +53,7 @@ def create_datasource(
         subjects = existing_sub
 
     for sub in subjects:
-        if sub in existing_sub:
+        if sub not in existing_sub:
             print(f"Subject {sub} was not found.")
         existing_ses = layout.get_sessions(subject=sub)
         if sessions is None:

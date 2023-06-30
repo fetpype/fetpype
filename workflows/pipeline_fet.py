@@ -36,7 +36,7 @@
     --------------
     This workflow use:
         - ANTS (denoise)
-        - niftimic
+        - nifyimic
 """
 
 # Authors : David Meunier (david.meunier@univ-amu.fr)

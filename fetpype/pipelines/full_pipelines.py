@@ -1,7 +1,7 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
-from ..nodes.niftimic import niftimic_segment, niftimic_recon
+from fetpype.nodes.niftymic import niftymic_segment, niftymic_recon
 
 from nipype.interfaces.ants.segmentation import DenoiseImage
 
@@ -12,7 +12,7 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
 
     Processing steps:
 
-    - wraps niftimic dirty
+    - wraps niftymic dirty
 
     Params:
 
@@ -45,16 +45,16 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     )
 
     # preprocessing
-    niftymic_segment = pe.Node(
+    brain_extraction = pe.Node(
         interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "niftimic_image"],
+            input_names=["raw_T2s", "pre_command", "niftymic_image"],
             output_names=["bmasks"],
-            function=niftimic_segment,
+            function=niftymic_segment,
         ),
-        name="niftymic_segment",
+        name="brain_extraction",
     )
 
-    full_fet_pipe.connect(inputnode, "stacks", niftymic_segment, "raw_T2s")
+    full_fet_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
     # denoising
     denoising = pe.MapNode(
@@ -73,9 +73,9 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     # recon
     recon = pe.Node(
         interface=niu.Function(
-            input_names=["stacks", "masks", "pre_command", "niftimic_image"],
+            input_names=["stacks", "masks", "pre_command", "niftymic_image"],
             output_names=["recon_files"],
-            function=niftimic_recon,
+            function=niftymic_recon,
         ),
         name="recon",
     )
@@ -83,16 +83,21 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     if "general" in params.keys():
         if "pre_command" in params["general"]:
             recon.inputs.pre_command = params["general"]["pre_command"]
+            brain_extraction.inputs.pre_command = params["general"][
+                "pre_command"
+            ]
 
-        if "niftimic_image" in params["general"]:
-            recon.inputs.niftimic_image = params["general"]["niftimic_image"]
-
+        if "niftymic_image" in params["general"]:
+            recon.inputs.niftymic_image = params["general"]["niftymic_image"]
+            brain_extraction.inputs.niftymic_image = params["general"][
+                "niftymic_image"
+            ]
     else:
         recon.inputs.pre_command = ""
-        recon.inputs.niftimic_image = ""
+        recon.inputs.niftymic_image = ""
 
     full_fet_pipe.connect(merge_denoise, "out", recon, "stacks")
-    full_fet_pipe.connect(niftymic_segment, "bmasks", recon, "masks")
+    full_fet_pipe.connect(brain_extraction, "bmasks", recon, "masks")
 
     # output node
     outputnode = pe.Node(

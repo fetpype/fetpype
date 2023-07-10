@@ -1,0 +1,7 @@
+{
+    "general":
+    {
+        "pre_command": "docker run ",
+        "niftymic_image": "renbem/niftymic "
+    }
+}

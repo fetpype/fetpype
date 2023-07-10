@@ -1,37 +1,40 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
-from ..nodes.niftimic import niftimic_segment, niftimic_recon
+from fetpype.nodes.niftymic import niftymic_segment, niftymic_recon
 
 from nipype.interfaces.ants.segmentation import DenoiseImage
 
 
 def create_fet_subpipes(name="full_fet_pipe", params={}):
-    """Description: SPM based segmentation pipeline from T1w and T2w images
-    in template space
+    """
+    Create the fetal processing pipeline (sub-workflow).
 
-    Processing steps:
-
-    - wraps niftimic dirty
+    Given an input of T2w stacks, this pipeline performs the following steps:
+        1. Brain extraction using MONAIfbs (dirty wrapper around NiftyMIC's
+           command niftymic_segment_fetal_brains)
+        2. Denoising using ANTS' DenoiseImage
+        3. Perform reconstruction using NiftyMIC's command
+            niftymic_run_reconstruction_pipeline
 
     Params:
-
-    -
+        name:
+            pipeline name (default = "full_fet_pipe")
+        params:
+            dictionary of parameters (default = {}). This
+            dictionary contains the parameters given in a JSON
+            config file. It specifies which containers to use
+            for each step of the pipeline.
 
     Inputs:
-
         inputnode:
-
-            list_T2:
-                T2 file names
-
-        arguments:
-            name:
-                pipeline name (default = "full_spm_subpipes")
-
+            stacks:
+                list of T2w stacks
     Outputs:
+        outputnode:
+            recon_files:
+                list of reconstructed files
 
-            TODO
     """
 
     print("Full pipeline name: ", name)
@@ -44,32 +47,28 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
         niu.IdentityInterface(fields=["stacks"]), name="inputnode"
     )
 
-    # preprocessing
-    niftymic_segment = pe.Node(
+    # PREPROCESSING
+    # 1. Brain extraction
+    brain_extraction = pe.Node(
         interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "niftimic_image"],
+            input_names=["raw_T2s", "pre_command", "niftymic_image"],
             output_names=["bmasks"],
-            function=niftimic_segment,
+            function=niftymic_segment,
         ),
-        name="niftymic_segment",
+        name="brain_extraction",
     )
 
     if "general" in params.keys():
-        if "pre_command" in params["general"]:
-            niftymic_segment.inputs.pre_command = \
-                params["general"]["pre_command"]
+        brain_extraction.inputs.pre_command = params["general"].get(
+            "pre_command", ""
+        )
+        brain_extraction.inputs.niftymic_image = params["general"].get(
+            "niftymic_image", ""
+        )
 
-        if "niftimic_image" in params["general"]:
-            niftymic_segment.inputs.niftimic_image = \
-                params["general"]["niftimic_image"]
+    full_fet_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
-    else:
-        niftymic_segment.inputs.pre_command = ""
-        niftymic_segment.inputs.niftimic_image = ""
-
-    full_fet_pipe.connect(inputnode, "stacks", niftymic_segment, "raw_T2s")
-
-    # denoising
+    # 2. Denoising
     denoising = pe.MapNode(
         interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
     )
@@ -83,31 +82,26 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
 
     full_fet_pipe.connect(denoising, "output_image", merge_denoise, "in1")
 
-    # recon
+    # RECONSTRUCTION
     recon = pe.Node(
         interface=niu.Function(
-            input_names=["stacks", "masks", "pre_command", "niftimic_image"],
+            input_names=["stacks", "masks", "pre_command", "niftymic_image"],
             output_names=["recon_files"],
-            function=niftimic_recon,
+            function=niftymic_recon,
         ),
         name="recon",
     )
 
     if "general" in params.keys():
-        if "pre_command" in params["general"]:
-            recon.inputs.pre_command = params["general"]["pre_command"]
+        recon.inputs.pre_command = params["general"].get("pre_command", "")
+        recon.inputs.niftymic_image = params["general"].get(
+            "niftymic_image", ""
+        )
 
-        if "niftimic_image" in params["general"]:
-            recon.inputs.niftimic_image = params["general"]["niftimic_image"]
-
-    else:
-        recon.inputs.pre_command = ""
-        recon.inputs.niftimic_image = ""
-
+    # OUTPUT
     full_fet_pipe.connect(merge_denoise, "out", recon, "stacks")
-    full_fet_pipe.connect(niftymic_segment, "bmasks", recon, "masks")
+    full_fet_pipe.connect(brain_extraction, "bmasks", recon, "masks")
 
-    # output node
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["recon_files"]), name="outputnode"
     )

@@ -36,7 +36,7 @@
     --------------
     This workflow use:
         - ANTS (denoise)
-        - niftimic
+        - nifyimic
 """
 
 # Authors : David Meunier (david.meunier@univ-amu.fr)
@@ -76,39 +76,36 @@ def create_main_workflow(
     wf_name="fetpype",
     bids=False,
 ):
-    # macapype_pipeline
-    """Set up the segmentatiopn pipeline based on ANTS
+    """
+    Create the main workflow of the fetpype pipeline.
 
-    Arguments
-    ---------
-    data_path: pathlike str
-        Path to the BIDS directory that contains anatomical images
+    Params:
+        data_path: pathlike str
+            Path to the BIDS directory that contains anatomical images
 
-    process_dir: pathlike str
-        Path to the ouput directory (will be created if not alredy existing).
-        Previous outputs maybe overwritten.
+        process_dir: pathlike str
+            Path to the ouput directory (will be created if not alredy
+            existing). Previous outputs maybe overwritten.
 
+        subjects: list of str (optional)
+            Subject's IDs to match to BIDS specification (sub-[SUB1],
+            sub-[SUB2]...)
 
-    subjects: list of str (optional)
-        Subject's IDs to match to BIDS specification (sub-[SUB1], sub-[SUB2]...)
+        sessions: list of str (optional)
+            Session's IDs to match to BIDS specification (ses-[SES1],
+            ses-[SES2]...)
 
-    sessions: list of str (optional)
-        Session's IDs to match to BIDS specification (ses-[SES1], ses-[SES2]...)
+        acquisitions: list of str (optional)
+            Acquisition name to match to BIDS specification (acq-[ACQ1]...)
 
-    acquisitions: list of str (optional)
-        Acquisition name to match to BIDS specification (acq-[ACQ1]...)
+        params_file: path to a JSON file
+            JSON file that specify some parameters of the pipeline.
 
-    params_file: path to a JSON file
-        JSON file that specify some parameters of the pipeline.
+        nprocs: integer
+            number of processes that will be launched by MultiProc
 
-    nprocs: integer
-        number of processes that will be launched by MultiProc
-
-    Returns
-    -------
-    workflow: nipype.pipeline.engine.Workflow
-
-
+    Returns:
+        workflow: nipype.pipeline.engine.Workflow
     """
 
     # formating args
@@ -175,14 +172,14 @@ def main():
         dest="data",
         type=str,
         required=True,
-        help="Directory containing MRI data (BIDS)",
+        help="BIDS-formatted directory containing low-resolution T2w MRI scans.",
     )
     parser.add_argument(
         "-out",
         dest="out",
         type=str,
-        help="Output dir",
         required=True,  # nargs='+',
+        help="Output directory, where all outputs will be saved.",
     )
 
     parser.add_argument(
@@ -191,8 +188,11 @@ def main():
         dest="sub",
         type=str,
         nargs="+",
-        help="Subjects",
         required=False,
+        help=(
+            "List of subjects to process (default: all subjects in the"
+            "data directory)."
+        ),
     )
     parser.add_argument(
         "-sessions",
@@ -200,8 +200,11 @@ def main():
         dest="ses",
         type=str,
         nargs="+",
-        help="Sessions",
         required=False,
+        help=(
+            "List of sessions to process (default: every session for each "
+            "subject)."
+        ),
     )
     parser.add_argument(
         "-acquisitions",
@@ -210,21 +213,28 @@ def main():
         type=str,
         nargs="+",
         default=None,
-        help="Acquisitions",
+        help=(
+            "List of acquisitions to process (default: every acquisition for each "
+            "subject/session combination)."
+        ),
     )
 
     parser.add_argument(
         "-params",
         dest="params_file",
         type=str,
-        help="Parameters json file",
-        required=False,
+        help=(
+            "Parameters JSON file specifying the parameters, containers and "
+            "functions to be used in the pipeline. For now, there is only "
+            "compatibility with singularity and docker containers."
+        ),
+        required=True,
     )
     parser.add_argument(
         "-nprocs",
         dest="nprocs",
         type=int,
-        help="number of processes to allocate",
+        help="Number of processes to allocate.",
         required=False,
     )
 

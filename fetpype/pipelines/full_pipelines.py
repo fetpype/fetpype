@@ -4,6 +4,91 @@ import nipype.pipeline.engine as pe
 from ..nodes.niftimic import niftimic_segment, niftimic_recon
 
 from nipype.interfaces.ants.segmentation import DenoiseImage
+from ..nodes.nesvor import (
+    NesvorSegmentation,
+    NesvorRegistration,
+    NesvorReconstruction,
+)
+
+#from nipype import config
+#config.enable_debug_mode()
+
+def print_files(files):
+    print("Files:")
+    print(files)
+    return files
+
+def create_nesvor_pipe(name="nesvor_pipe", params={}):
+    """Nesvor based segmentation pipeline for fetal MRI
+
+    Processing steps:
+    - Masking
+    - Registration
+
+    Missing steps:
+    - Denoising (?)
+    - Actual reconstruction
+
+    Params:
+    - name: pipeline name (default = "nesvor_pipe")
+    - params: dictionary of parameters to be passed to the pipeline
+
+    Outputs:
+    - nesvor_pipe: nipype workflow
+    """
+
+    # Creating pipeline
+    nesvor_pype = pe.Workflow(name=name)
+
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["stacks"]), name="inputnode"
+    )
+
+    # mask Node
+    mask = pe.Node(NesvorSegmentation(no_augmentation_seg=True), name="mask")
+
+    # registration Node
+    registration = pe.Node(NesvorRegistration(), name="registration")
+
+    nesvor_pype.connect(
+        [
+            (inputnode, mask, [("stacks", "input_stacks")]),
+            (inputnode, registration, [("stacks", "input_stacks")]),
+            #(mask, registration, [("output_stack_masks", "stack_masks")]),
+        ]
+    )
+
+    # recon Node
+    recon = pe.Node(
+        NesvorReconstruction(),
+        name="reconstruction",
+    )
+
+    nesvor_pype.connect(registration, "output_slices", recon, "input_slices")
+    #nesvor_pype.connect(registration, "output_slices", recon, "input_slices")
+
+    #TODO Add pre_commands if needed (docker/singularity) for the nesvor nodes
+    # Add pre_commands if needed (docker/singularity)
+    # if "general" in params.keys():
+    #    if "pre_command" in params["general"]:
+    #        recon.inputs.pre_command = params["general"]["pre_command"]
+
+    #    if "niftimic_image" in params["general"]:
+    #        recon.inputs.niftimic_image = params["general"]["niftimic_image"]
+
+    #else:
+    #    recon.inputs.pre_command = ""
+    #    recon.inputs.niftimic_image = ""
+
+    # output node
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
+    )
+
+    nesvor_pype.connect(recon, "output_volume", outputnode, "output_volume")
+
+    return nesvor_pype
 
 
 def create_fet_subpipes(name="full_fet_pipe", params={}):

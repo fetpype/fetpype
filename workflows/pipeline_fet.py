@@ -45,7 +45,7 @@
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
 from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
-    create_nesvor_subpipes,
+    create_nesvor_subpipes_fullrecon,
 )
 from fetpype.utils.utils_bids import create_datasource
 
@@ -135,7 +135,7 @@ def create_main_workflow(
     if params["general"]["pipeline"] == "niftymic":
         fet_pipe = create_fet_subpipes(params=params)
     else:
-        fet_pipe = create_nesvor_subpipes(params=params)
+        fet_pipe = create_nesvor_subpipes_fullrecon(params=params)
 
     output_query = {
         "stacks": {
@@ -166,8 +166,8 @@ def create_main_workflow(
 
     if nprocs is None:
         nprocs = 4
-    main_workflow.run()
-    # main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
+    # main_workflow.run()
+    main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
 
 
 def main():

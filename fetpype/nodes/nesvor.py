@@ -16,9 +16,7 @@ from nipype.interfaces.base import (
     traits,
     isdefined,
 )
-
-SINGULARITY_NESVOR = "/homedtic/gmarti/SINGULARITY/nesvor_latest.sif"
-DOCKER_NESVOR = "junshenxu/nesvor:latest"
+from typing import Optional, List
 
 
 class NesvorSegmentationInputSpec(CommandLineInputSpec):
@@ -35,6 +33,12 @@ class NesvorSegmentationInputSpec(CommandLineInputSpec):
         for the masks
     no_augmentation_seg : traits.Bool
         Use no augmentation seg (mandatory for curr version, else error)
+    pre_command : str
+        Pre-command to be run before nesvor. Not used in the command line as a
+        parameter.
+    nesvor_image : str
+        Singularity Nesvor command. Not used in the command line as a
+        parameter.
     """
 
     input_stacks = traits.List(
@@ -44,22 +48,12 @@ class NesvorSegmentationInputSpec(CommandLineInputSpec):
         mandatory=True,
     )
 
-    # This should be a traits.Either, either a list of files or a single file
-    # specifying the output folder for the masks
-    # output_stack_masks = traits.Either(
-    #     traits.List(
-    #         traits.File(),
-    #         desc="List of output stack masks",
-    #     ),
-    #     traits.File(desc="Output folder for the masks"),
-    #     genfile=True,
-    #     hash_files=False,
-    #     argstr="--output-stack-masks %s",
-    #     mandatory=True,
-    # )
-    output_stack_masks = traits.List(
-        traits.File(),
-        desc="List of output stack masks",
+    output_stack_masks = traits.Either(
+        traits.List(
+            traits.File(),
+            desc="List of output stack masks",
+        ),
+        traits.File(desc="Output folder for the masks"),
         genfile=True,
         hash_files=False,
         argstr="--output-stack-masks %s",
@@ -72,6 +66,18 @@ class NesvorSegmentationInputSpec(CommandLineInputSpec):
             desc="use no augmentation seg (mandatory for curr version, "
             "else error)",
         ),
+    )
+
+    # pre command and nesvor image
+    # these two commands are not used in the command line
+    pre_command = traits.Str(
+        desc="Pre-command to be run",
+        mandatory=True,
+    )
+
+    nesvor_image = traits.Str(
+        desc="Singularity Nesvor command",
+        mandatory=True,
     )
 
 
@@ -111,38 +117,109 @@ class NesvorSegmentation(CommandLine):
     _format_arg
     """
 
-    _cmd = f"singularity exec --nv {SINGULARITY_NESVOR} \
-        nesvor segment-stack"
     input_spec = NesvorSegmentationInputSpec
     output_spec = NesvorSegmentationOutputSpec
 
-    def _gen_filename(self, name):
-        """Generate output filename if not defined."""
+    def __init__(self, **inputs):
+        self._cmd = "nesvor segment-stack"
+        super(NesvorSegmentation, self).__init__(**inputs)
+        # update the command
+        self._cmd = (
+            f"{self.inputs.pre_command} "
+            f"{self.inputs.nesvor_image} "
+            "nesvor segment-stack"
+        )
+
+    # Customize how arguments are formatted
+    def _format_arg(self, name, trait_spec, value):
+        if name == "pre_command":
+            return ""  # if the argument is 'pre_command', ignore it
+        elif name == "nesvor_image":
+            return ""  # if the argument is 'pre_command', ignore it
+        return super()._format_arg(name, trait_spec, value)
+
+    def _gen_filename(self, name: str) -> Optional[List[str]]:
+        """
+        Generate output filename if not defined.
+
+        Parameters
+        ----------
+        name : str
+            Name of the attribute.
+
+        Returns
+        ----------
+        output : Optional[List[str]]
+            List of output filenames if name is "output_stack_masks",
+            None otherwise.
+        """
         if name == "output_stack_masks":
             output = self.inputs.output_stack_masks
             if not isdefined(output):
                 output = []
+
+                # get current working dir
+                # os.getcwd() fails because of the (strange) way UPF HPC works
+                cwd = os.getcwd()
+
                 for stack in self.inputs.input_stacks:
-                    # Remove .nii.gz extension
-                    name = stack.rsplit(".nii.gz", maxsplit=1)
-                    output.append(name[0] + "_mask.nii.gz")
-            print(output)
+                    # remove .nii.gz extension and full path
+                    base = os.path.basename(stack)
+                    # get filename including extension
+                    filename, _ = os.path.splitext(base)
+                    # split the extension once
+                    filename, _ = os.path.splitext(filename)
+                    # split the extension again
+
+                    # add the full path to the output
+                    output.append(os.path.join(cwd, filename + "_mask.nii.gz"))
+
             return output
         return None
 
-    def _list_outputs(self):
+    def _list_outputs(self) -> dict:
+        """
+        List the outputs of the NesvorSegmentation.
+
+        Returns
+        ----------
+        outputs : dict
+            Dictionary of outputs.
+        """
         outputs = self._outputs().get()
         if isdefined(self.inputs.output_stack_masks):
             outputs["output_stack_masks"] = self.inputs.output_stack_masks
         else:
-            outputs["output_stack_masks"] = self._gen_filename("output_stack_masks")
+            outputs["output_stack_masks"] = self._gen_filename(
+                "output_stack_masks"
+            )
         print(outputs)
         return outputs
 
 
 class NesvorRegisterInputSpec(CommandLineInputSpec):
-    """Class for the input for the NeSVoRReg nipype interface.
-    Inherits from CommandLineInputSpec.
+    """
+    NesvorRegisterInputSpec is a class for specifying the input for
+    the NeSVoRReg nipype interface. It inherits from CommandLineInputSpec.
+
+    Attributes
+    ----------
+    input_stacks : TraitsList[File]
+        List of input stacks.
+    stack_masks : TraitsList[File]
+        List of stack masks.
+    output_slices : File
+        Path to save output slices.
+    output_json : File
+        Path to save output JSON.
+    output_log : File
+        Path to save output log.
+    pre_command : str
+        Pre-command to be run before nesvor. Not used in the command line as a
+        parameter.
+    nesvor_image : str
+        Singularity Nesvor command. Not used in the command line as a
+        parameter.
     """
 
     input_stacks = traits.List(
@@ -177,60 +254,116 @@ class NesvorRegisterInputSpec(CommandLineInputSpec):
         keep_extension=True,
     )
 
+    # pre command and nesvor image
+    # these two commands are not used in the command line
+    pre_command = traits.Str(
+        desc="Pre-command to be run",
+        mandatory=True,
+    )
+
+    nesvor_image = traits.Str(
+        desc="Singularity Nesvor command",
+        mandatory=True,
+    )
+
 
 class NesvorRegisterOutputSpec(TraitedSpec):
-    """Class for the output for the NeSVoRReg nipype interface.
-    Inherits from TraitedSpec.
+    """
+    NesvorRegisterOutputSpec is a class for specifying the output for
+    the NeSVoRReg nipype interface. It inherits from TraitedSpec.
+
+    Attributes
+    ----------
+    output_slices : File
+        Folder where the output slices are saved.
     """
 
     output_slices = File(
         desc="Folder where the output slices are saved",
     )
 
-    #output_json = traits.File(
-    #    desc="The json file saving the inputs and results",
-    #)
-
-    #output_log = traits.File(
-    #    desc="The log file of the registration",
-    #)
-
 
 class NesvorRegistration(CommandLine):
-    """Class for the NeSVoRReg nipype interface.
-    Inherits from CommandLine.
+    """
+    NesvorRegistration is a class for the NeSVoRReg nipype interface.
+    It inherits from CommandLine.
 
-    Calls the singularity container for NeSVoRReg.
-
-    No need to implement _run_interface, as it is inherited from CommandLine
+    This class calls the singularity container for NeSVoRReg. There's no
+    need to implement _run_interface, as it is inherited from CommandLine
     and we just need to change the _cmd attribute.
 
-    # TODO: if installed, use the docker version?
-    """
+    Attributes
+    ----------
+    _cmd : str
+        Command to be run.
+    input_spec : NesvorRegisterInputSpec
+        Class containing the input specification for the NeSVoRReg
+        nipype interface.
+    output_spec : NesvorRegisterOutputSpec
+        Class containing the output specification for the NeSVoRReg
+        nipype interface.
 
-    _cmd = f"singularity exec --nv {SINGULARITY_NESVOR} \
-        nesvor register"
+    TODO: if installed, use the docker version?
+    """
 
     input_spec = NesvorRegisterInputSpec
     output_spec = NesvorRegisterOutputSpec
 
-    def _gen_filename(self, name):
-        """Generate output filename if not defined."""
+    def __init__(self, **inputs):
+        self._cmd = "nesvor register"
+        super(NesvorRegistration, self).__init__(**inputs)
+        self._cmd = (
+            f"{self.inputs.pre_command} "
+            f"{self.inputs.nesvor_image} "
+            "nesvor register"
+        )
+
+    # Customize how arguments are formatted
+    def _format_arg(self, name, trait_spec, value):
+        if name == "pre_command":
+            return ""  # if the argument is 'pre_command', ignore it
+        elif name == "nesvor_image":
+            return ""  # if the argument is 'pre_command', ignore it
+        return super()._format_arg(name, trait_spec, value)
+
+    def _gen_filename(self, name: str) -> str:
+        """
+        Generate output filename if not defined.
+
+        Parameters
+        ----------
+        name : str
+            The name for the filename to generate.
+
+        Returns
+        -------
+        str
+            The generated filename.
+        """
         if name == "output_slices":
             output = self.inputs.output_slices
             if not isdefined(output):
-                # very hacky, fix
-                # extract the full path of the folder
-                output = os.path.dirname(self.inputs.input_stacks[0])
-                # add a new folder named "slices"
-                output = os.path.join(output, "slices")
+                # get current working dir
+                cwd = os.getcwd()
+
+                # add the name of the folder
+                output = os.path.join(cwd, "slices")
+
                 # create the folder if it does not exist
                 os.makedirs(output, exist_ok=True)
             return output
 
         return None
 
-    def _list_outputs(self):
+    def _list_outputs(self) -> dict:
+        """
+        List the outputs.
+
+        Returns
+        -------
+        dict
+            The dictionary containing the output.
+        """
         outputs = self._outputs().get()
         if isdefined(self.inputs.output_slices):
             outputs["output_slices"] = self.inputs.output_slices
@@ -239,14 +372,29 @@ class NesvorRegistration(CommandLine):
         return outputs
 
 
-
 class NesvorReconstructionInputSpec(CommandLineInputSpec):
-    """Class for the input for the NeSVoRRec nipype interface.
-    Inherits from CommandLineInputSpec.
+    """
+    NesvorReconstructionInputSpec is a class for the input specification for
+    the NeSVoRRec nipype interface.
+    It inherits from CommandLineInputSpec.
+
+    Attributes
+    ----------
+    input_slices : traits.Directory
+        The directory where the input slices are saved. This argument is
+        mandatory.
+    output_volume : traits.File
+        The path where the output reconstruction is saved.
+    pre_command : str
+        Pre-command to be run before nesvor. Not used in the command line as a
+        parameter.
+    nesvor_image : str
+        Singularity Nesvor command. Not used in the command line as a
+        parameter.
     TODO:
-    Right now, it only works with a list of slices,
-    but it should also work with a list of stacks,
-    and we should add the rest of the options and parameters
+    Currently, it only works with a list of slices,
+    but it should also work with a list of stacks.
+    We should add the rest of the options and parameters.
     """
 
     input_slices = traits.Directory(
@@ -262,11 +410,29 @@ class NesvorReconstructionInputSpec(CommandLineInputSpec):
         genfile=True,
         hash_files=False,
     )
+    # pre command and nesvor image
+    # these two commands are not used in the command line
+    pre_command = traits.Str(
+        desc="Pre-command to be run",
+        mandatory=True,
+    )
+
+    nesvor_image = traits.Str(
+        desc="Singularity Nesvor command",
+        mandatory=True,
+    )
 
 
 class NesvorReconstructionOutputSpec(TraitedSpec):
-    """Class for the output for the NeSVoRRec nipype interface.
-    Inherits from TraitedSpec.
+    """
+    NesvorReconstructionOutputSpec is a class for the output specification for
+    the NeSVoRRec nipype interface.
+    It inherits from TraitedSpec.
+
+    Attributes
+    ----------
+    output_volume : traits.File
+        The reconstructed image.
     """
 
     output_volume = File(
@@ -275,40 +441,307 @@ class NesvorReconstructionOutputSpec(TraitedSpec):
 
 
 class NesvorReconstruction(CommandLine):
-    """Class for the NeSVoR nipype interface.
-    Inherits from CommandLine.
+    """
+    NesvorReconstruction is a class for the NeSVoR nipype interface.
+    It inherits from CommandLine.
 
-    Calls the singularity container for NeSVoRRec.
+    This class calls the singularity container for NeSVoRRec. There is no need
+    to implement _run_interface,
+    as it is inherited from CommandLine and we just need to change the
+    _cmd attribute.
 
-    No need to implement _run_interface, as it is inherited from CommandLine
-    and we just need to change the _cmd attribute.
+    Attributes
+    ----------
+    _cmd : str
+        The command to be run by the singularity container.
+    input_spec : NesvorReconstructionInputSpec
+        The input specifications for the NeSVoRRec interface.
+    output_spec : NesvorReconstructionOutputSpec
+        The output specifications for the NeSVoRRec interface.
     """
 
-    _cmd = f"singularity exec --nv {SINGULARITY_NESVOR} \
-        nesvor reconstruct"
     input_spec = NesvorReconstructionInputSpec
     output_spec = NesvorReconstructionOutputSpec
 
-    def _gen_filename(self, name):
-        """Generate output filename if not defined."""
+    def __init__(self, **inputs):
+        self._cmd = "nesvor reconstruct"
+        super(NesvorReconstruction, self).__init__(**inputs)
+
+        self._cmd = (
+            f"{self.inputs.pre_command} "
+            f"{self.inputs.nesvor_image} "
+            "nesvor reconstruct"
+        )
+
+    # Customize how arguments are formatted
+    def _format_arg(self, name, trait_spec, value):
+        if name == "pre_command":
+            return ""  # if the argument is 'pre_command', ignore it
+        elif name == "nesvor_image":
+            return ""  # if the argument is 'pre_command', ignore it
+        return super()._format_arg(name, trait_spec, value)
+
+    def _gen_filename(self, name: str) -> str:
+        """
+        Generates an output filename if not defined.
+
+        Parameters
+        ----------
+        name : str
+            The name of the file for which to generate a name.
+
+        Returns
+        -------
+        str
+            The generated filename.
+        """
         if name == "output_volume":
             output = self.inputs.output_volume
             if not isdefined(output):
-                # very hacky, fix
-                # extract the full path of the folder
-                output = os.path.dirname(self.inputs.input_slices)
-                # add a new folder named "recon"
-                output = os.path.join(output, "recon")
+                cwd = os.environ["PWD"]
+
+                # add the name of the folder
+                output = os.path.join(cwd, "recon")
+
                 # create the folder if it does not exist
                 os.makedirs(output, exist_ok=True)
+
                 # add the name of the file
                 output = os.path.join(output, "recon.nii.gz")
             return output
 
         return None
 
+    def _list_outputs(self) -> dict:
+        """
+        Lists the outputs of the class.
 
-    def _list_outputs(self):
+        Returns
+        -------
+        dict
+            The dictionary of outputs.
+        """
+        outputs = self._outputs().get()
+        if isdefined(self.inputs.output_volume):
+            outputs["output_volume"] = self.inputs.output_volume
+        else:
+            outputs["output_volume"] = self._gen_filename("output_volume")
+        return outputs
+
+
+class NesvorFullReconstructionInputSpec(CommandLineInputSpec):
+    """
+    Class for the input for the NeSVoRRecon nipype interface.
+    Inherits from CommandLineInputSpec.
+
+    Some attributes are missing. Need to be implemented later to complete the
+    nipype interface.
+
+    Attributes
+    ----------
+    input_stacks : traits.List
+        List of input stacks
+    thicknesses : traits.List
+        List of thicknesses for each stack
+    stack_masks : traits.List
+        List of masks of input stacks
+    volume_mask : traits.File
+        Path to a 3D mask
+    background_threshold : traits.Float
+        Threshold for background
+    otsu_thresholding : traits.Bool
+        Apply Otsu thresholding to each input stack
+    output_volume : traits.File
+        Paths to the reconstructed volume
+    output_slices : traits.File
+        Folder to save the motion corrected slices
+    simulated_slices : traits.File
+        Folder to save the simulated (extracted) slices
+    output_model : traits.File
+        Path to save the output model
+    output_json : traits.File
+        Path to a json file for saving the inputs and results of the command.
+    """
+
+    input_stacks = traits.List(
+        traits.File(exists=True),
+        desc="Paths to the input stacks (NIfTI).",
+        argstr="--input-stacks %s",
+        mandatory=True,
+    )
+    output_volume = File(
+        desc="Path to the reconstructed volume",
+        argstr="--output-volume %s",
+        genfile=True,
+        hash_files=False,
+    )
+    thicknesses = traits.List(
+        traits.Float(),
+        desc="Slice thickness of each input stack.",
+        argstr="--thicknesses %s",
+    )
+    input_slices = traits.Directory(
+        exists=True,
+        desc="Folder of the input slices.",
+        argstr="--input-slices %s",
+    )
+    stack_masks = traits.List(
+        traits.File(exists=True),
+        desc="Paths to masks of input stacks.",
+        argstr="--stack-masks %s",
+    )
+    volume_mask = traits.File(
+        exists=True,
+        desc="Path to a 3D mask which will be applied to each input stack.",
+        argstr="--volume-mask %s",
+    )
+    stacks_intersection = traits.Bool(
+        desc="Only consider the region defined by input stacks intersection.",
+        argstr="--stacks-intersection",
+    )
+    background_threshold = traits.Float(
+        desc="Pixels with value <= this threshold will be ignored.",
+        argstr="--background-threshold %s",
+    )
+    otsu_thresholding = traits.Bool(
+        desc="Apply Otsu thresholding to each input stack.",
+        argstr="--otsu-thresholding",
+    )
+    output_slices = traits.Directory(
+        desc="Folder to save the motion corrected slices.",
+        argstr="--output-slices %s",
+    )
+    simulated_slices = traits.Directory(
+        desc="Folder to save the simulated slices from the reconstruction.",
+        argstr="--simulated-slices %s",
+    )
+    output_model = traits.File(
+        desc="Path to save the output model (.pt).",
+        argstr="--output-model %s",
+    )
+    output_json = traits.File(
+        desc="Path to json for saving the inputs and results of the command.",
+        argstr="--output-json %s",
+    )
+    output_resolution = traits.Float(
+        desc="Isotropic resolution of the reconstructed volume.",
+        argstr="--output-resolution %s",
+    )
+    # pre command and nesvor image
+    # these two commands are not used in the command line
+    pre_command = traits.Str(
+        desc="Pre-command to be run",
+        mandatory=True,
+    )
+
+    nesvor_image = traits.Str(
+        desc="Singularity Nesvor command",
+        mandatory=True,
+    )
+
+
+class NesvorFullReconstructionOutputSpec(TraitedSpec):
+    """
+    Class for the output specification for the NeSVoRRecon nipype interface.
+    Inherits from TraitedSpec.
+
+    Attributes
+    ----------
+    output_volume : traits.File
+        Paths to the reconstructed volume
+    output_slices : traits.File
+        Folder to save the motion corrected slices
+    simulated_slices : traits.File
+        Folder to save the simulated (extracted) slices
+    output_model : traits.File
+        Path to save the output model
+    # Add more attributes based on the command documentation
+    """
+
+    output_volume = traits.File(
+        desc="Paths to the reconstructed volume",
+    )
+
+
+class NesvorFullReconstruction(CommandLine):
+    """
+    Class for the NeSVoRRecon nipype interface.
+    Inherits from CommandLine.
+
+    Attributes
+    ----------
+    _cmd : str
+        Command to be run.
+    input_spec : NesvorFullReconstructionInputSpec
+        Class containing the input specification for the NeSVoRRecon
+        nipype interface.
+    output_spec : NesvorFullReconstructionOutputSpec
+        Class containing the output specification for the NeSVoRRecon
+        nipype interface.
+    """
+
+    input_spec = NesvorFullReconstructionInputSpec
+    output_spec = NesvorFullReconstructionOutputSpec
+    _cmd = "nesvor reconstruct"
+
+    def __init__(self, **inputs):
+        self._cmd = "nesvor reconstruct"
+        super(NesvorFullReconstruction, self).__init__(**inputs)
+        # update the command
+        self._cmd = (
+            f"{self.inputs.pre_command} "
+            f"{self.inputs.nesvor_image} "
+            "nesvor reconstruct"
+        )
+
+    # Customize how arguments are formatted
+    def _format_arg(self, name, trait_spec, value):
+        if name == "pre_command":
+            return ""  # if the argument is 'pre_command', ignore it
+        elif name == "nesvor_image":
+            return ""  # if the argument is 'nesvor_image', ignore it
+        return super()._format_arg(name, trait_spec, value)
+
+    def _gen_filename(self, name: str) -> str:
+        """
+        Generates an output filename if not defined.
+
+        Parameters
+        ----------
+        name : str
+            The name of the file for which to generate a name.
+
+        Returns
+        -------
+        str
+            The generated filename.
+        """
+        if name == "output_volume":
+            output = self.inputs.output_volume
+            if not isdefined(output):
+                cwd = os.getcwd()
+
+                # add the name of the folder
+                output = os.path.join(cwd, "recon")
+
+                # create the folder if it does not exist
+                os.makedirs(output, exist_ok=True)
+
+                # add the name of the file
+                output = os.path.join(output, "recon.nii.gz")
+            return output
+
+        return None
+
+    def _list_outputs(self) -> dict:
+        """
+        Lists the outputs of the class.
+
+        Returns
+        -------
+        dict
+            The dictionary of outputs.
+        """
         outputs = self._outputs().get()
         if isdefined(self.inputs.output_volume):
             outputs["output_volume"] = self.inputs.output_volume

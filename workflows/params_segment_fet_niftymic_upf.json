@@ -1,0 +1,8 @@
+{
+    "general": {
+        "pipeline": "niftymic",
+        "pre_command": "singularity exec --bind /gpfs:/gpfs --nv ",
+        "niftymic_image": " /home/gmarti/SINGULARITY/niftymic_upf_latest.sif ",
+        "no_graph": false
+    }
+}

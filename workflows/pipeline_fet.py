@@ -2,7 +2,8 @@
 """
     Human fetal anatomical segmentation pipeline
 
-    Adapted in Nipype from an original pipeline of Alexandre Pron by David Meunier.
+    Adapted in Nipype from an original pipeline of Alexandre Pron by David
+    Meunier.
 
     parser, params are derived from macapype pipeline
 
@@ -30,7 +31,8 @@
 
     Example
     ---------
-    python pipeline_fet.py -data [PATH_TO_BIDS] -out ../local_tests/ -subjects Elouk
+    python pipeline_fet.py -data [PATH_TO_BIDS] -out ../local_tests/ -subjects
+    Elouk
 
     Requirements
     --------------
@@ -41,26 +43,21 @@
 
 # Authors : David Meunier (david.meunier@univ-amu.fr)
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
+from fetpype.pipelines.full_pipelines import (
+    create_fet_subpipes,
+    create_nesvor_subpipes_fullrecon,
+)
+from fetpype.utils.utils_bids import create_datasource
 
 import os
 import os.path as op
-
-import argparse
 import json
-import pprint
-
-import nipype
-
-import nipype.pipeline.engine as pe
-import nipype.interfaces.utility as niu
-import nipype.interfaces.io as nio
-
+import argparse
 import nipype.interfaces.fsl as fsl
+import nipype.pipeline.engine as pe
 
 fsl.FSLCommand.set_default_output_type("NIFTI_GZ")
 
-from fetpype.pipelines.full_pipelines import create_fet_subpipes
-from fetpype.utils.utils_bids import create_datasource
 
 ###############################################################################
 
@@ -128,10 +125,17 @@ def create_main_workflow(
 
         params = json.load(open(params_file))
 
+    # if general, pipeline is not in params ,create it and set it to niftymic
+    if "pipeline" not in params["general"]:
+        params["general"]["pipeline"] = "niftymic"
+
     # main_workflow
     main_workflow = pe.Workflow(name=wf_name)
     main_workflow.base_dir = process_dir
-    fet_pipe = create_fet_subpipes(params=params)
+    if params["general"]["pipeline"] == "niftymic":
+        fet_pipe = create_fet_subpipes(params=params)
+    else:
+        fet_pipe = create_nesvor_subpipes_fullrecon(params=params)
 
     output_query = {
         "stacks": {
@@ -141,7 +145,7 @@ def create_main_workflow(
         }
     }
 
-    #### datasource
+    # datasource
     datasource = create_datasource(
         output_query,
         data_dir,
@@ -151,15 +155,18 @@ def create_main_workflow(
     )
 
     # in both cases we connect datsource outputs to main pipeline
-
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
-    main_workflow.write_graph(graph2use="colored")
+    # check if the parameter general/no_graph exists and is set to True
+    # added as an option, as graph drawing fails in UPF cluster
+    if "no_graph" in params["general"] and params["general"]["no_graph"]:
+        main_workflow.write_graph(graph2use="colored")
+
     main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
 
     if nprocs is None:
         nprocs = 4
-
+    # main_workflow.run()
     main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
 
 
@@ -214,8 +221,8 @@ def main():
         nargs="+",
         default=None,
         help=(
-            "List of acquisitions to process (default: every acquisition for each "
-            "subject/session combination)."
+            "List of acquisitions to process (default: every acquisition for "
+            "each subject/session combination)."
         ),
     )
 
@@ -226,7 +233,8 @@ def main():
         help=(
             "Parameters JSON file specifying the parameters, containers and "
             "functions to be used in the pipeline. For now, there is only "
-            "compatibility with singularity and docker containers."
+            "compatibility with singularity and docker containers and "
+            " niftymic/nesvor pipelines"
         ),
         required=True,
     )

@@ -9,7 +9,8 @@
 
     Description
     --------------
-    TODO :/
+    Base pipeline for running the dhcp pipeline (segmentation and surface extraction) from a 
+    superresolution reconstructed T2w image (nesvor of niftymic) 
 
     Arguments
     -----------
@@ -44,9 +45,7 @@
 # Authors : David Meunier (david.meunier@univ-amu.fr)
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
 from fetpype.pipelines.full_pipelines import (
-    create_fet_subpipes,
-    create_nesvor_subpipes_fullrecon,
-    create_fet_subpipes,
+    create_dhcp_subpipe,
 )
 from fetpype.utils.utils_bids import create_datasource
 
@@ -58,7 +57,6 @@ import nipype.interfaces.fsl as fsl
 import nipype.pipeline.engine as pe
 
 fsl.FSLCommand.set_default_output_type("NIFTI_GZ")
-
 
 ###############################################################################
 
@@ -126,17 +124,9 @@ def create_main_workflow(
 
         params = json.load(open(params_file))
 
-    # if general, pipeline is not in params ,create it and set it to niftymic
-    if "pipeline" not in params["general"]:
-        params["general"]["pipeline"] = "niftymic"
-
     # main_workflow
     main_workflow = pe.Workflow(name=wf_name)
     main_workflow.base_dir = process_dir
-    if params["general"]["pipeline"] == "niftymic":
-        fet_pipe = create_fet_subpipes(params=params)
-    elif params["general"]["pipeline"] == "nesvor":
-        fet_pipe = create_nesvor_subpipes_fullrecon(params=params)
     output_query = {
         "stacks": {
             "datatype": "anat",

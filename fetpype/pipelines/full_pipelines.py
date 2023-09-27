@@ -2,7 +2,6 @@ import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
 from fetpype.nodes.niftymic import niftymic_segment, niftymic_recon
-
 from nipype.interfaces.ants.segmentation import DenoiseImage
 from ..nodes.nesvor import (
     NesvorSegmentation,

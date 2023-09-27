@@ -10,6 +10,8 @@ from ..nodes.nesvor import (
     NesvorFullReconstruction,
 )
 
+from ..nodes.dhcp import dhcp_segment, dhcp_surface
+
 # from nipype import config
 # config.enable_debug_mode()
 
@@ -282,5 +284,114 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     )
 
     full_fet_pipe.connect(recon, "recon_files", outputnode, "recon_files")
+
+    return full_fet_pipe
+
+
+def create_dhcp_subpipe(name="dhcp_pipe", params={}):
+    """
+    Create a dhcp pipeline for segmentation of fetal MRI
+
+    Given an reconstruction of fetal MRI and a mask, this pipeline performs the following steps:
+        1. Run the dhcp pipeline for segmentation
+        2. Run it for surface extraction
+        
+    Params:
+        name:
+            pipeline name (default = "full_fet_pipe")
+        params:
+            dictionary of parameters (default = {}). This
+            dictionary contains the parameters given in a JSON
+            config file. It specifies which containers to use
+            for each step of the pipeline.
+
+    Inputs:
+        inputnode:
+            MRI brain:
+                Reconstruction of MRI brain
+            Mask:
+                Corresponding brain mask of the reconstruction
+            GA:
+                gestational age of the fetus
+    Outputs:
+        outputnode:
+            dhcp_files:
+                folder with dhcp outputs
+
+    TODO:
+    - define the parameters in a better way
+    - EM algorithm halting, solve it better or in the messy way?
+    - Do the masking (BET?) if no mask provided?
+    - Ignore masking if the T2 is already masked? (but we need to provide the mask anyway)
+    """
+
+    print("Full pipeline name: ", name)
+
+    # Creating pipeline
+    full_fet_pipe = pe.Workflow(name=name)
+
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=["T2", "mask", "gestational_age"]
+        ),
+        name="inputnode",
+    )
+
+    # PREPROCESSING
+    # 1. Run the dhcp pipeline for segmentation
+    dhcp_seg = pe.Node(
+        interface=niu.Function(
+            input_names=["T2", "mask", "gestational_age", "pre_command", "dhcp_image"],
+            output_names=["dhcp_files"],
+            function=dhcp_segment,
+        ),
+        name="dhcp_seg",
+    )
+
+    if "general" in params.keys():
+        dhcp_seg.inputs.pre_command = params["general"].get("pre_command", "")
+        dhcp_seg.inputs.dhcp_image = params["general"].get(
+            "dhcp_image", ""
+        )
+
+    full_fet_pipe.connect(
+        inputnode, "T2", dhcp_seg, "T2"
+    )
+    full_fet_pipe.connect(
+        inputnode, "mask", dhcp_seg, "mask"
+    )
+
+    full_fet_pipe.connect(
+        inputnode, "gestational_age", dhcp_seg, "gestational_age"
+    )
+
+    # 2. Run it for surface extraction
+    """
+    dhcp_surf = pe.Node(
+        interface=niu.Function(
+            input_names=["dhcp_files"],
+            output_names=["dhcp_files"],
+            function=dhcp_surface,
+        ),
+        name="dhcp_surf",
+    )
+
+    if "general" in params.keys():
+        dhcp_surf.inputs.pre_command = params["general"].get("pre_command", "")
+        dhcp_surf.inputs.image = params["general"].get(
+            "dhcp_image", ""
+        )
+
+    full_fet_pipe.connect(
+        dhcp_seg, "dhcp_files", dhcp_surf, "dhcp_files"
+    )
+    """
+    # OUTPUT
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["dhcp_files"]), name="outputnode"
+    )
+
+    full_fet_pipe.connect(dhcp_seg, "dhcp_files", outputnode, "dhcp_files")
 
     return full_fet_pipe

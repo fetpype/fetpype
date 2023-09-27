@@ -1,0 +1,8 @@
+{
+    "general": {
+        "pipeline": "dhcp",
+        "pre_command": "singularity exec --env PREPEND_PATH=/home/gmarti/LIB/fsl/bin --bind /gpfs:/gpfs ",
+        "dhcp_image": "/home/gmarti/SINGULARITY/dhcp-structural-pipeline_fetal-custom.sif ",
+        "no_graph": false
+    }
+}

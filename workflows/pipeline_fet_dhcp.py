@@ -47,7 +47,8 @@
 from fetpype.pipelines.full_pipelines import (
     create_dhcp_subpipe,
 )
-from fetpype.utils.utils_bids import create_datasource
+from fetpype.utils.utils_bids import create_datasource, get_gestational_age
+import nipype.interfaces.utility as niu
 
 import os
 import os.path as op
@@ -64,6 +65,7 @@ fsl.FSLCommand.set_default_output_type("NIFTI_GZ")
 def create_main_workflow(
     data_dir,
     process_dir,
+    derivative,
     subjects,
     sessions,
     acquisitions,
@@ -82,6 +84,9 @@ def create_main_workflow(
         process_dir: pathlike str
             Path to the ouput directory (will be created if not alredy
             existing). Previous outputs maybe overwritten.
+
+        derivative: str
+            Name of the derivative which contains the reconstructions
 
         subjects: list of str (optional)
             Subject's IDs to match to BIDS specification (sub-[SUB1],
@@ -127,13 +132,25 @@ def create_main_workflow(
     # main_workflow
     main_workflow = pe.Workflow(name=wf_name)
     main_workflow.base_dir = process_dir
+
+    fet_pipe = create_dhcp_subpipe(params=params)
     output_query = {
-        "stacks": {
+        "T2": {
             "datatype": "anat",
             "suffix": "T2w",
-            "extension": ["nii", ".nii.gz"],
+            "scope": derivative,
+            "extension": ["nii", ".nii.gz"]
+        },
+        "mask": {
+            "datatype": "anat",
+            "suffix": "mask",
+            "scope": derivative,
+            "extension": ["nii", ".nii.gz"]
         }
     }
+
+    # We need this for the datasource to find the derivatives
+    index_derivative = True
 
     # datasource
     datasource = create_datasource(
@@ -142,10 +159,38 @@ def create_main_workflow(
         subjects,
         sessions,
         acquisitions,
+        index_derivative,
+        derivative
     )
 
-    # in both cases we connect datsource outputs to main pipeline
-    main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
+    # Use fetpype utility to select the first T2 and th first mask (ideally, there should only be one)
+    # maybe not the best practice?
+    # Create a Node for selecting the first element
+    sl_t2 = pe.Node(niu.Select(), name='select_first_T2')
+    sl_t2.inputs.index = [0]  # Select the first element
+    main_workflow.connect(datasource, "T2", sl_t2, "inlist")
+    main_workflow.connect(sl_t2, "out", fet_pipe, "inputnode.T2")
+
+    sl_mask = pe.Node(niu.Select(), name='select_first_mask')
+    sl_mask.inputs.index = [0]  # Select the first element
+    main_workflow.connect(datasource, "mask", sl_mask, "inlist")
+    main_workflow.connect(sl_mask, "out", fet_pipe, "inputnode.mask")
+
+    # Create a node to get the gestational age
+    gestational_age = pe.Node(
+        interface=niu.Function(
+            input_names=["bids_dir", "T2"],
+            output_names=["gestational_age"],
+            function=get_gestational_age,
+        ),
+        name="gestational_age"
+    )
+
+    main_workflow.connect(sl_t2, "out", gestational_age, "T2")
+    gestational_age.inputs.bids_dir = data_dir
+
+    # Connect the gestational age
+    main_workflow.connect(gestational_age, "gestational_age", fet_pipe, "inputnode.gestational_age")
 
     # check if the parameter general/no_graph exists and is set to True
     # added as an option, as graph drawing fails in UPF cluster
@@ -156,13 +201,13 @@ def create_main_workflow(
 
     if nprocs is None:
         nprocs = 4
-    # main_workflow.run()
-    main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
+    main_workflow.run()
+    # main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
 
 
 def main():
     # Command line parser
-    parser = argparse.ArgumentParser(description="PNH segmentation pipeline")
+    parser = argparse.ArgumentParser(description="dHCP segmentation pipeline")
 
     parser.add_argument(
         "-data",
@@ -173,12 +218,21 @@ def main():
             "BIDS-formatted directory containing low-resolution T2w MRI scans"
         ),
     )
+
     parser.add_argument(
         "-out",
         dest="out",
         type=str,
         required=True,  # nargs='+',
         help="Output directory, where all outputs will be saved.",
+    )
+
+    parser.add_argument(
+        "-derivative",
+        dest="derivative",
+        type=str,
+        required=True,  # nargs='+',
+        help="Derivative inside the BIDS directory that contain reconstructions and their corresponding masks.",
     )
 
     parser.add_argument(
@@ -245,6 +299,7 @@ def main():
     create_main_workflow(
         data_dir=args.data,
         process_dir=args.out,
+        derivative=args.derivative,
         subjects=args.sub,
         sessions=args.ses,
         acquisitions=args.acq,

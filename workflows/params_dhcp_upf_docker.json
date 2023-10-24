@@ -1,0 +1,13 @@
+{
+    "general": {
+        "pipeline": "dhcp",
+        "pre_command": "docker run  ",
+        "dhcp_image": "gerardmartijuan/dhcp-pipeline-multifact ",
+        "no_graph": false
+    },
+    "dhcp": {
+        "seg": true,
+        "surf": true,
+        "threads": "4"
+    }
+}

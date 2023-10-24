@@ -63,7 +63,7 @@ def dhcp_pipeline(
             f"/data/{recon_file_name} "
             f"{gestational_age} "
             "-data-dir /data "
-            "-t 4 "
+            f"-t {threads} "
             "-c 0 "
             f"{flag} "
         )
@@ -77,7 +77,7 @@ def dhcp_pipeline(
             f"{gestational_age} "
             f"-data-dir "
             f"{output_dir} "
-            "-t 4 "
+            f"-t {threads} "
             "-c 0 "
             f"{flag} "
         )

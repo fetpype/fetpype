@@ -137,16 +137,16 @@ def create_main_workflow(
     output_query = {
         "T2": {
             "datatype": "anat",
-            "suffix": "T2w",
+            "suffix": "recon",
             "scope": derivative,
-            "extension": ["nii", ".nii.gz"]
+            "extension": ["nii", ".nii.gz"],
         },
         "mask": {
             "datatype": "anat",
             "suffix": "mask",
             "scope": derivative,
-            "extension": ["nii", ".nii.gz"]
-        }
+            "extension": ["nii", ".nii.gz"],
+        },
     }
 
     # We need this for the datasource to find the derivatives
@@ -160,18 +160,18 @@ def create_main_workflow(
         sessions,
         acquisitions,
         index_derivative,
-        derivative
+        derivative,
     )
 
     # Use fetpype utility to select the first T2 and th first mask (ideally, there should only be one)
     # maybe not the best practice?
     # Create a Node for selecting the first element
-    sl_t2 = pe.Node(niu.Select(), name='select_first_T2')
+    sl_t2 = pe.Node(niu.Select(), name="select_first_T2")
     sl_t2.inputs.index = [0]  # Select the first element
     main_workflow.connect(datasource, "T2", sl_t2, "inlist")
     main_workflow.connect(sl_t2, "out", fet_pipe, "inputnode.T2")
 
-    sl_mask = pe.Node(niu.Select(), name='select_first_mask')
+    sl_mask = pe.Node(niu.Select(), name="select_first_mask")
     sl_mask.inputs.index = [0]  # Select the first element
     main_workflow.connect(datasource, "mask", sl_mask, "inlist")
     main_workflow.connect(sl_mask, "out", fet_pipe, "inputnode.mask")
@@ -183,14 +183,19 @@ def create_main_workflow(
             output_names=["gestational_age"],
             function=get_gestational_age,
         ),
-        name="gestational_age"
+        name="gestational_age",
     )
 
     main_workflow.connect(sl_t2, "out", gestational_age, "T2")
     gestational_age.inputs.bids_dir = data_dir
 
     # Connect the gestational age
-    main_workflow.connect(gestational_age, "gestational_age", fet_pipe, "inputnode.gestational_age")
+    main_workflow.connect(
+        gestational_age,
+        "gestational_age",
+        fet_pipe,
+        "inputnode.gestational_age",
+    )
 
     # check if the parameter general/no_graph exists and is set to True
     # added as an option, as graph drawing fails in UPF cluster
@@ -201,6 +206,8 @@ def create_main_workflow(
 
     if nprocs is None:
         nprocs = 4
+
+    # commented for testing
     main_workflow.run()
     # main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
 
@@ -280,7 +287,7 @@ def main():
             "Parameters JSON file specifying the parameters, containers and "
             "functions to be used in the pipeline. For now, there is only "
             "compatibility with singularity and docker containers and "
-            " niftymic/nesvor pipelines"
+            " niftymic/nesvor pipelines, plus the dhcp pipeline."
         ),
         required=True,
     )

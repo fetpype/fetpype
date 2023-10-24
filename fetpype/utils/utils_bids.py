@@ -9,8 +9,14 @@ import nipype.pipeline.engine as pe
 
 
 def create_datasource(
-    output_query, data_dir, subjects=None, sessions=None, acquisitions=None, 
-index_derivative=False, derivative=None):
+    output_query,
+    data_dir,
+    subjects=None,
+    sessions=None,
+    acquisitions=None,
+    index_derivative=False,
+    derivative=None,
+):
     """Create a datasource node that have iterables following BIDS format.
     By default, from a BIDSLayout, lists all the subjects (<sub>),
     finds their session numbers (<ses>, if any) and their acquisition
@@ -44,9 +50,9 @@ index_derivative=False, derivative=None):
     bids_datasource.inputs.output_query = output_query
 
     # If a derivative is specified, we need to go to the derivatives
-    #if not, problems with acquisition
-    if derivative is not None:
-        data_dir = op.join(data_dir, "derivatives", derivative)
+    # if not, problems with acquisition
+    # if derivative is not None:
+    #     data_dir = op.join(data_dir, "derivatives", derivative)
 
     layout = BIDSLayout(data_dir, derivatives=index_derivative)
 
@@ -54,7 +60,6 @@ index_derivative=False, derivative=None):
     print("BIDS layout:", layout)
     print("\t", layout.get_subjects())
     print("\t", layout.get_sessions())
-
     iterables = [("subject", "session", "acquisition"), []]
 
     existing_sub = layout.get_subjects()
@@ -91,7 +96,7 @@ index_derivative=False, derivative=None):
                     )
 
                 iterables[1] += [(sub, ses, acq)]
-    
+
     bids_datasource.iterables = iterables
     return bids_datasource
 
@@ -159,7 +164,7 @@ def get_gestational_age(bids_dir, T2):
         The file path to the root of the BIDS dataset,
         which must contain a 'participants.tsv' file.
     T2 : str
-        The path of the image. We can get the subject id from there if 
+        The path of the image. We can get the subject id from there if
         it follows a BIDS format.
 
     Returns
@@ -181,20 +186,27 @@ def get_gestational_age(bids_dir, T2):
     """
     import pandas as pd
     import os
+
     participants_path = f"{bids_dir}/participants.tsv"
 
     try:
-        df = pd.read_csv(participants_path, delimiter='\t')
+        df = pd.read_csv(participants_path, delimiter="\t")
     except FileNotFoundError:
         raise FileNotFoundError(f"participants.tsv not found in {bids_dir}")
-    
-    #TODO This T2[0] not really clean
-    subject_id = os.path.basename(T2).split('_')[0]
+
+    # TODO This T2[0] not really clean
+    subject_id = os.path.basename(T2).split("_")[0]
     try:
-        gestational_age = df.loc[df['participant_id'] == f"{subject_id}", 'gestational_age'].values[0]
+        gestational_age = df.loc[
+            df["participant_id"] == f"{subject_id}", "gestational_age"
+        ].values[0]
     except KeyError:
-        raise KeyError("Column 'gestational_age' not found in participants.tsv")
+        raise KeyError(
+            "Column 'gestational_age' not found in participants.tsv"
+        )
     except IndexError:
-        raise IndexError(f"Subject sub-{subject_id} not found in participants.tsv")
+        raise IndexError(
+            f"Subject sub-{subject_id} not found in participants.tsv"
+        )
 
     return gestational_age

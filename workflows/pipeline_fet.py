@@ -58,8 +58,6 @@ import nipype.interfaces.fsl as fsl
 import nipype.pipeline.engine as pe
 
 fsl.FSLCommand.set_default_output_type("NIFTI_GZ")
-
-
 ###############################################################################
 
 

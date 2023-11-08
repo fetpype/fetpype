@@ -342,36 +342,6 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
 
     minimal_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
-    # 2. Denoising
-    denoising = pe.MapNode(
-        interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
-    )
-
-    minimal_pipe.connect(inputnode, "stacks", denoising, "input_image")
-
-    # merge_denoise
-    merge_denoise = pe.Node(
-        interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
-    )
-
-    minimal_pipe.connect(denoising, "output_image", merge_denoise, "in1")
-
-    # RECONSTRUCTION
-    recon = pe.Node(
-        interface=niu.Function(
-            input_names=["stacks", "masks", "pre_command", "niftymic_image"],
-            output_names=["recon_files"],
-            function=niftymic_recon,
-        ),
-        name="recon",
-    )
-
-    if "general" in params.keys():
-        recon.inputs.pre_command = params["general"].get("pre_command", "")
-        recon.inputs.niftymic_image = params["general"].get(
-            "niftymic_image", ""
-        )
-
     # OUTPUT
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["masks"]), name="outputnode"

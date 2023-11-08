@@ -12,8 +12,14 @@ jobs:
 
     steps:
 
-      - name: Install fetpype
+      - uses: actions/checkout@minimal_pipeline_for_CI
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
 
+      - name: Install fetpype
+        run: |
             pip install -e .
             sudo apt-get install graphviz libgraphviz-dev
             pip install --upgrade pygraphviz graphviz

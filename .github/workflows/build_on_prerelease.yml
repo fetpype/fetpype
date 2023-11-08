@@ -40,5 +40,5 @@ jobs:
       - name: Running test pipeline marmo-marmobrain
         run: |
 
-            python workflows/pipeline_fet.py -data /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain -out /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain/results -species marmo -params workflows/params_segment_minimal.json -sub 8034 -ses 01 -deriv
+            python workflows/pipeline_fet.py -data /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain -out /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain/results -params workflows/params_segment_minimal.json -sub 8034 -ses 01
 

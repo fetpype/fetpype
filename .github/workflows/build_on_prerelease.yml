@@ -12,7 +12,9 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@minimal_pipeline_for_CI
+      - uses: actions/checkout@v4
+        with:
+            ref: minimal_pipeline_for_CI
       - name: Set up Python 3.7
         uses: actions/setup-python@v1
         with:

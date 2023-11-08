@@ -36,9 +36,16 @@ jobs:
             wget --no-check-certificate --content-disposition  "https://amubox.univ-amu.fr/public.php?service=files&t=KJ2L5j6L6orPXxM&download" -O macapype_CI.zip
             unzip -o macapype_CI.zip -d macapype_CI
 
+            pwd
+            echo ""
+            ls macapype_CI
+            echo ""
+
+            ls macapype_CI/marmo-marmobrain
+            echo ""
 
       - name: Running test pipeline marmo-marmobrain
         run: |
 
-            python workflows/pipeline_fet.py -data /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain -out /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain/results -params workflows/params_segment_fet_minimal.json -sub 8034 -ses 01
+            python workflows/pipeline_fet.py -data /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain -out /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain/results -params workflows/params_segment_fet_minimal.json -sub Percy -ses 01
 

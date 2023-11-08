@@ -15,10 +15,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
             ref: minimal_pipeline_for_CI
-      - name: Set up Python 3.8.16
+      - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8.16
+          python-version: 3.8
 
       - name: Install fetpype
         run: |

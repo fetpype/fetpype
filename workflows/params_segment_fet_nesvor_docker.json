@@ -1,0 +1,7 @@
+{
+    "general": {
+        "pipeline": "nesvor",
+        "pre_command": "docker run --gpus all ",
+        "nesvor_image": "junshenxu/nesvor:v0.5.0 "
+    }
+}

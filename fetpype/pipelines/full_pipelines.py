@@ -1,7 +1,7 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
-from fetpype.nodes.niftymic import niftymic_segment, niftymic_recon
+from fetpype.nodes.niftymic import niftymic_recon
 
 from nipype.interfaces.ants.segmentation import DenoiseImage
 from ..nodes.nesvor import (
@@ -9,6 +9,12 @@ from ..nodes.nesvor import (
     NesvorRegistration,
     NesvorReconstruction,
     NesvorFullReconstruction,
+)
+
+from ..nodes.preprocessing import (
+    nesvor_brain_extraction,
+    niftymic_brain_extraction,
+    CropStacksAndMasks,
 )
 
 # from nipype import config
@@ -227,9 +233,9 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     # 1. Brain extraction
     brain_extraction = pe.Node(
         interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "niftymic_image"],
-            output_names=["bmasks"],
-            function=niftymic_segment,
+            input_names=["raw_T2s", "pre_command", "nesvor_image"],
+            output_names=["masks"],
+            function=nesvor_brain_extraction,
         ),
         name="brain_extraction",
     )
@@ -238,18 +244,31 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
         brain_extraction.inputs.pre_command = params["general"].get(
             "pre_command", ""
         )
-        brain_extraction.inputs.niftymic_image = params["general"].get(
-            "niftymic_image", ""
+        # brain_extraction.inputs.niftymic_image = params["general"].get(
+        #    "niftymic_image", ""
+        # )
+        brain_extraction.inputs.nesvor_image = params["general"].get(
+            "nesvor_image", ""
         )
 
     full_fet_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
-    # 2. Denoising
+    # 2. Cropping
+    cropping = pe.MapNode(
+        interface=CropStacksAndMasks(),
+        iterfield=["input_image", "input_mask"],
+        name="cropping",
+    )
+
+    full_fet_pipe.connect(inputnode, "stacks", cropping, "input_image")
+    full_fet_pipe.connect(brain_extraction, "masks", cropping, "input_mask")
+
+    # 3. Denoising
     denoising = pe.MapNode(
         interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
     )
 
-    full_fet_pipe.connect(inputnode, "stacks", denoising, "input_image")
+    full_fet_pipe.connect(cropping, "output_image", denoising, "input_image")
 
     # merge_denoise
     merge_denoise = pe.Node(
@@ -276,7 +295,7 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
 
     # OUTPUT
     full_fet_pipe.connect(merge_denoise, "out", recon, "stacks")
-    full_fet_pipe.connect(brain_extraction, "bmasks", recon, "masks")
+    full_fet_pipe.connect(cropping, "output_mask", recon, "masks")
 
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["recon_files"]), name="outputnode"

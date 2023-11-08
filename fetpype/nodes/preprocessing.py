@@ -1,3 +1,15 @@
+import numpy as np
+import nibabel as ni
+import os
+from nipype.interfaces.base import (
+    traits,
+    TraitedSpec,
+    File,
+    BaseInterface,
+    BaseInterfaceInputSpec,
+)
+
+
 def nesvor_brain_extraction(raw_T2s, pre_command="", nesvor_image=""):
     """
     Function wrapping nesvor segment-stack for use with nipype
@@ -170,19 +182,10 @@ def niftymic_brain_extraction(raw_T2s, pre_command="", niftymic_image=""):
     return bmasks
 
 
-from nipype.interfaces.base import (
-    traits,
-    TraitedSpec,
-    File,
-    InputMultiPath,
-    OutputMultiPath,
-    BaseInterface,
-    BaseInterfaceInputSpec,
-)
-
-
 class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
-    """Class used to represent the inputs of the ReduceFieldOfView interface."""
+    """Class used to represent the inputs of the
+    CropStacksAndMasks interface.
+    """
 
     input_image = File(mandatory=True, desc="Input image filename")
     input_mask = File(mandatory=True, desc="Input mask filename")
@@ -194,22 +197,11 @@ class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
 
 
 class CropStacksAndMasksOutputSpec(TraitedSpec):
-    """Class used to represent the outputs of the ReduceFieldOfView interface."""
+    """Class used to represent the outputs of the
+    CropStacksAndMasks interface."""
 
     output_image = File(desc="Cropped image")
     output_mask = File(desc="Cropped mask")
-
-
-def squeeze_dim(arr, dim):
-    if arr.shape[dim] == 1 and len(arr.shape) > 3:
-        return np.squeeze(arr, axis=dim)
-    return arr
-
-
-import copy
-import numpy as np
-import nibabel as ni
-import os
 
 
 class CropStacksAndMasks(BaseInterface):
@@ -234,6 +226,11 @@ class CropStacksAndMasks(BaseInterface):
             return os.path.abspath(os.path.basename(self.inputs.input_mask))
         return None
 
+    def _squeeze_dim(self, arr, dim):
+        if arr.shape[dim] == 1 and len(arr.shape) > 3:
+            return np.squeeze(arr, axis=dim)
+        return arr
+
     def _crop_stack_and_mask(
         self,
         image_path,
@@ -246,7 +243,8 @@ class CropStacksAndMasks(BaseInterface):
         """
         Crops the input image to the field of view given by the bounding box
         around its mask.
-        Code inspired from Michael Ebner: https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
+        Code inspired from Michael Ebner:
+        https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
 
         Input
         -----
@@ -273,12 +271,13 @@ class CropStacksAndMasks(BaseInterface):
         print(f"Working on {image_path} and {mask_path}")
         image_ni = ni.load(image_path)
         mask_ni = ni.load(mask_path)
-        image = squeeze_dim(image_ni.get_fdata(), -1)
-        mask = squeeze_dim(mask_ni.get_fdata(), -1)
+        image = self._squeeze_dim(image_ni.get_fdata(), -1)
+        mask = self._squeeze_dim(mask_ni.get_fdata(), -1)
 
-        assert all(
-            [i >= m] for i, m in zip(image.shape, mask.shape)
-        ), "For a correct cropping, the image should be larger or equal to the mask."
+        assert all([i >= m] for i, m in zip(image.shape, mask.shape)), (
+            "For a correct cropping, the image should be larger "
+            "or equal to the mask."
+        )
 
         # Get rectangular region surrounding the masked voxels
         [x_range, y_range, z_range] = self._get_rectangular_masked_region(mask)
@@ -313,14 +312,14 @@ class CropStacksAndMasks(BaseInterface):
         new_affine[:, -1] = new_origin
 
         image_cropped = image[
-            x_range[0] : x_range[1],
-            y_range[0] : y_range[1],
-            z_range[0] : z_range[1],
+            x_range[0] : x_range[1],  # noqa: E203
+            y_range[0] : y_range[1],  # noqa: E203
+            z_range[0] : z_range[1],  # noqa: E203
         ]
         mask_cropped = mask[
-            x_range[0] : x_range[1],
-            y_range[0] : y_range[1],
-            z_range[0] : z_range[1],
+            x_range[0] : x_range[1],  # noqa: E203
+            y_range[0] : y_range[1],  # noqa: E203
+            z_range[0] : z_range[1],  # noqa: E203
         ]
 
         image_cropped = ni.Nifti1Image(image_cropped, new_affine)
@@ -334,7 +333,8 @@ class CropStacksAndMasks(BaseInterface):
     ) -> tuple:
         """
         Computes the bounding box around the given mask
-        Code inspired from Michael Ebner: https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
+        Code inspired from Michael Ebner:
+        https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
 
         Input
         -----

@@ -2,7 +2,7 @@
 Nodes that implement the dHCP pipeline for fetal data.
 
 Version from https://github.com/GerardMJuan/dhcp-structural-pipeline
-, which is a fork of the original dataset 
+, which is a fork of the original dataset
 https://github.com/BioMedIA/dhcp-structural-pipeline
 with several fixes and changes
 
@@ -10,7 +10,6 @@ The docker image, where everything works "well", is:
 https://hub.docker.com/r/gerardmartijuan/dhcp-pipeline-multifact
 
 TODO: specify the changes from one version to another.
-
 """
 
 
@@ -24,7 +23,9 @@ def dhcp_pipeline(
     flag="all",
 ):
     """Run the dhcp segmentation pipeline on a single subject.
-    The script needs to create the output folders and put the mask there so that the docker image can find it and doesn't run bet. TODO: don't do it that convoluted.
+    The script needs to create the output folders and put the mask
+    there so that the docker image can find it and doesn't run bet.
+    TODO: don't do it that convoluted.
     TODO: Be able to input the number of threads
 
     # Flags can be either "-all", "-seg", or "-surf"
@@ -45,7 +46,6 @@ def dhcp_pipeline(
     os.makedirs(os.path.join(output_dir, "segmentations"), exist_ok=True)
 
     # check if mask file exists. If not, create it
-
     shutil.copyfile(
         mask,
         os.path.join(
@@ -88,6 +88,15 @@ def dhcp_pipeline(
         )
 
     print(cmd)
-
     os.system(cmd)
+
+    # assert if the output files exist
+    assert os.path.exists(
+        os.path.join(
+            output_dir,
+            "segmentations",
+            f"{recon_file_name.replace('.nii.gz', '')}_all_labels.nii.gz",
+        )
+    ), "Error, segmentations file does not exist"
+
     return output_dir

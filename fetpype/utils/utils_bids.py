@@ -124,7 +124,7 @@ def create_datasink(
     # subs
     json_subs = op.join(op.dirname(op.abspath(__file__)), "subs.json")
 
-    dict_subs = json.load(open(json_subs))
+    dict_subs = json.load(open(json_subs, encoding="utf-8"))
 
     dict_subs.update(params_subs)
 
@@ -143,7 +143,7 @@ def create_datasink(
         op.dirname(op.abspath(__file__)), "regex_subs.json"
     )
 
-    dict_regex_subs = json.load(open(json_regex_subs))
+    dict_regex_subs = json.load(open(json_regex_subs, encoding="utf-8"))
 
     dict_regex_subs.update(params_regex_subs)
 

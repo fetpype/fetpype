@@ -9,8 +9,9 @@
 
     Description
     --------------
-    Base pipeline for running the dhcp pipeline (segmentation and surface extraction) from a 
-    superresolution reconstructed T2w image (nesvor of niftymic) 
+    Base pipeline for running the dhcp pipeline (segmentation and
+    surface extraction) from a
+    superresolution reconstructed T2w image (nesvor of niftymic)
 
     Arguments
     -----------
@@ -44,18 +45,17 @@
 
 # Authors : David Meunier (david.meunier@univ-amu.fr)
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
-from fetpype.pipelines.full_pipelines import (
-    create_dhcp_subpipe,
-)
-from fetpype.utils.utils_bids import create_datasource, get_gestational_age
-import nipype.interfaces.utility as niu
-
 import os
 import os.path as op
 import json
 import argparse
-import nipype.interfaces.fsl as fsl
 import nipype.pipeline.engine as pe
+import nipype.interfaces.utility as niu
+from nipype.interfaces import fsl
+from fetpype.pipelines.full_pipelines import (
+    create_dhcp_subpipe,
+)
+from fetpype.utils.utils_bids import create_datasource, get_gestational_age
 
 fsl.FSLCommand.set_default_output_type("NIFTI_GZ")
 
@@ -72,7 +72,6 @@ def create_main_workflow(
     params_file,
     nprocs,
     wf_name="fetpype",
-    bids=False,
 ):
     """
     Create the main workflow of the fetpype pipeline.
@@ -115,7 +114,7 @@ def create_main_workflow(
     try:
         os.makedirs(process_dir)
     except OSError:
-        print("process_dir {} already exists".format(process_dir))
+        print(f"process_dir {process_dir} already exists")
 
     # params
     if params_file is None:
@@ -123,11 +122,9 @@ def create_main_workflow(
 
     else:
         # params
-        assert op.exists(params_file), "Error with file {}".format(params_file)
-
+        assert op.exists(params_file), f"Error with file {params_file}"
         print("Using orig params file:", params_file)
-
-        params = json.load(open(params_file))
+        params = json.load(open(params_file, encoding="utf-8"))
 
     # main_workflow
     main_workflow = pe.Workflow(name=wf_name)
@@ -163,7 +160,8 @@ def create_main_workflow(
         derivative,
     )
 
-    # Use fetpype utility to select the first T2 and th first mask (ideally, there should only be one)
+    # Use fetpype utility to select the first T2 and the
+    # first mask (ideally, there should only be one)
     # maybe not the best practice?
     # Create a Node for selecting the first element
     sl_t2 = pe.Node(niu.Select(), name="select_first_T2")
@@ -239,7 +237,10 @@ def main():
         dest="derivative",
         type=str,
         required=True,  # nargs='+',
-        help="Derivative inside the BIDS directory that contain reconstructions and their corresponding masks.",
+        help=(
+            "Derivative inside the BIDS directory that contain"
+            "reconstructions and their corresponding masks."
+        ),
     )
 
     parser.add_argument(

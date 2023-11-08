@@ -292,7 +292,8 @@ def create_dhcp_subpipe(name="dhcp_pipe", params={}):
     """
     Create a dhcp pipeline for segmentation of fetal MRI
 
-    Given an reconstruction of fetal MRI and a mask, this pipeline performs the following steps:
+    Given an reconstruction of fetal MRI and a mask, this
+    pipeline performs the following steps:
         1. Run the dhcp pipeline for segmentation
         2. Run it for surface extraction
 
@@ -333,7 +334,8 @@ def create_dhcp_subpipe(name="dhcp_pipe", params={}):
         name="inputnode",
     )
 
-    # Check params to see if we need to run the seg or surf part, or both. Params to look is [dhcp][seg] and [dhcp][surf]
+    # Check params to see if we need to run the seg or surf part, or both.
+    # Params to look is [dhcp][seg] and [dhcp][surf]
     flag = None
     if "dhcp" in params.keys():
         if params["dhcp"]["surf"] and params["dhcp"]["seg"]:

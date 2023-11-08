@@ -1,0 +1,36 @@
+﻿name: (Prerelease) Download docker images and run
+
+on:
+  release:
+    types: [prereleased]
+
+jobs:
+
+  run-pretest:
+    name: Download minimal docker containers and data and runs it
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Install fetpype
+
+            pip install -e .
+            sudo apt-get install graphviz libgraphviz-dev
+            pip install --upgrade pygraphviz graphviz
+
+      - name: Pull latest docker image of niftymic
+        run:
+            docker pull renbem/niftymic:v0.9
+
+      - name: Download dataset
+        run: |
+
+            wget --no-check-certificate --content-disposition  "https://amubox.univ-amu.fr/public.php?service=files&t=KJ2L5j6L6orPXxM&download" -O macapype_CI.zip
+            unzip -o macapype_CI.zip -d macapype_CI
+
+
+      - name: Running test pipeline marmo-marmobrain
+        run: |
+
+            python workflows/pipeline_fet.py -data /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain -out /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain/results -soft ANTS_test -species marmo -params workflows/params_segment_minimal.json -sub 8034 -ses 01 -deriv
+

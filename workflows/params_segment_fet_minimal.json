@@ -1,0 +1,8 @@
+{
+    "general": {
+        "pipeline": "minimal",
+        "pre_command": "docker run -v /home/runner/work/macapype/macapype/macapype_CI/marmo-marmobrain:/data",
+        "niftymic_image": "renbem/niftymic ",
+        "no_graph": false
+    }
+}

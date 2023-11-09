@@ -286,11 +286,13 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
 
     return full_fet_pipe
 
+
 def create_minimal_subpipes(name="minimal_pipe", params={}):
     """
     Create minimal pipeline (sub-workflow).
 
-    Given an input, this pipeline performs BrainExtraction using NiftiMic in docker version
+    Given an input, this pipeline performs BrainExtraction
+    using NiftiMic in docker version
 
     Params:
         name:

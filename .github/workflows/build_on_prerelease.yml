@@ -33,7 +33,7 @@ jobs:
       - name: Download dataset
         run: |
 
-            wget --no-check-certificate --content-disposition  "https://drive.switch.ch/index.php/s/UcjvNz96SLKihjy" -O fabian.zip
+            wget --no-check-certificate --content-disposition  "https://drive.switch.ch/index.php/s/UcjvNz96SLKihjy/download" -O fabian.zip
             unzip -o fabian.zip -d fabian
 
             pwd

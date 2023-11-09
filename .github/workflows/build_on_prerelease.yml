@@ -30,7 +30,7 @@ jobs:
         run:
             docker pull renbem/niftymic:v0.9
 
-      - name: Download dataset
+      - name: Download fabian dataset
         run: |
 
             wget --no-check-certificate --content-disposition  "https://drive.switch.ch/index.php/s/UcjvNz96SLKihjy/download" -O fabian.zip
@@ -42,7 +42,7 @@ jobs:
             ls fabian
             echo ""
 
-      - name: Running test pipeline marmo-marmobrain
+      - name: Running test pipeline on simu010
         run: |
 
             python workflows/pipeline_fet.py -data /home/runner/work/fetpype/fetpype/fabian/fabian/fabian -out /home/runner/work/fetpype/fetpype/fabian/fabian/fabian/results -params workflows/params_segment_fet_minimal.json -sub simu010 -ses 01

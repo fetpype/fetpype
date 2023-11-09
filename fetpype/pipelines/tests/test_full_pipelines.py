@@ -18,7 +18,7 @@ def test_create_minimal_subpipes_no_args():
             "pipeline": "minimal",
             "pre_command": "docker run ",
             "niftymic_image": "renbem/niftymic:v0.9 ",
-            "no_graph": false
+            "no_graph": False
         }
     }
 
@@ -33,6 +33,7 @@ def test_create_minimal_subpipes_no_args():
     assert op.exists(
         op.join(data_path, "test_create_minimal_subpipes_no_args",
                 "graph.png"))
+
 
 if __name__ == '__main__':
     test_create_minimal_subpipes_no_args

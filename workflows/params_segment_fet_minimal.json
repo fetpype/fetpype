@@ -1,7 +1,7 @@
 {
     "general": {
         "pipeline": "minimal",
-        "pre_command": "docker run -v ",
+        "pre_command": "docker run ",
         "niftymic_image": "renbem/niftymic:v0.9 ",
         "no_graph": false
     }

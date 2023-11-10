@@ -46,9 +46,8 @@
 from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
     create_nesvor_subpipes_fullrecon,
-    create_fet_subpipes,
 )
-from fetpype.utils.utils_bids import create_datasource
+from fetpype.utils.utils_bids import create_datasource, create_datasink
 
 import os
 import os.path as op
@@ -128,13 +127,6 @@ def create_main_workflow(
     if "pipeline" not in params["general"]:
         params["general"]["pipeline"] = "niftymic"
 
-    # main_workflow
-    main_workflow = pe.Workflow(name=wf_name)
-    main_workflow.base_dir = process_dir
-    if params["general"]["pipeline"] == "niftymic":
-        fet_pipe = create_fet_subpipes(params=params)
-    elif params["general"]["pipeline"] == "nesvor":
-        fet_pipe = create_nesvor_subpipes_fullrecon(params=params)
     output_query = {
         "stacks": {
             "datatype": "anat",
@@ -142,6 +134,10 @@ def create_main_workflow(
             "extension": ["nii", ".nii.gz"],
         }
     }
+
+    datasink_name = os.path.join(
+        data_dir, "derivatives", params["general"]["pipeline"]
+    )
 
     # datasource
     datasource = create_datasource(
@@ -151,6 +147,36 @@ def create_main_workflow(
         sessions,
         acquisitions,
     )
+
+    # Check if workflow params have specific regex substitutions
+    # if not, use default
+    if "regex_subs" in params.keys():
+        params_regex_subs = params["regex_subs"]
+    else:
+        params_regex_subs = {}
+
+    if "subs" in params.keys():
+        params_subs = params["rsubs"]
+    else:
+        params_subs = {}
+
+    # create datasink
+    datasink = create_datasink(
+        iterables=datasource.iterables,
+        name=datasink_name,
+        params_subs=params_subs,
+        params_regex_subs=params_regex_subs,
+    )
+
+    # main_workflow
+    main_workflow = pe.Workflow(name=wf_name)
+    main_workflow.base_dir = process_dir
+    if params["general"]["pipeline"] == "niftymic":
+        fet_pipe = create_fet_subpipes(params=params, datasink=datasink)
+    elif params["general"]["pipeline"] == "nesvor":
+        fet_pipe = create_nesvor_subpipes_fullrecon(
+            params=params, datasink=datasink
+        )
 
     # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")

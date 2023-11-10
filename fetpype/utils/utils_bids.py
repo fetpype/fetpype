@@ -112,13 +112,14 @@ def create_datasink(
 
     datasink = pe.Node(nio.DataSink(container=name), name="datasink")
 
+    print(iterables[1])
+
     subjFolders = [
         (
             "_session_%s_subject_%s" % (ses, sub),
             "sub-%s/ses-%s/anat" % (sub, ses),
         )
-        for ses in iterables[1][1]
-        for sub in iterables[0][1]
+        for (sub, ses, _) in iterables[1]
     ]
 
     # subs

@@ -97,8 +97,10 @@ def niftymic_recon(stacks, masks, pre_command="", niftymic_image=""):
             niftymic_image name (e.g. renbem/niftymic:latest)
 
     Outputs:
-        reconst_dir:
-            Directory containing the reconstructed files
+        recon_file:
+            Reconstruction file
+        mask_file:
+            brain mask obtained from the reconstruction
     """
     import os
 
@@ -153,4 +155,15 @@ def niftymic_recon(stacks, masks, pre_command="", niftymic_image=""):
     print(cmd)
 
     os.system(cmd)
-    return reconst_dir
+
+    recon_file = os.path.join(
+        reconst_dir, "recon_template_space", "srr_template.nii.gz"
+    )
+    mask_file = os.path.join(
+        reconst_dir, "recon_template_space", "srr_template_mask.nii.gz"
+    )
+
+    assert os.path.exists(recon_file), f"Error, {recon_file} does not exist"
+    assert os.path.exists(mask_file), f"Error, {mask_file} does not exist"
+
+    return recon_file, mask_file

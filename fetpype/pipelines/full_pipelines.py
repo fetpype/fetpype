@@ -11,6 +11,7 @@ from ..nodes.nesvor import (
 )
 
 from ..nodes.dhcp import dhcp_pipeline
+from ..utils.utils_bids import create_datasink
 
 # from nipype import config
 # config.enable_debug_mode()
@@ -22,7 +23,9 @@ def print_files(files):
     return files
 
 
-def create_nesvor_subpipes_fullrecon(name="nesvor_pipe_full", params={}):
+def create_nesvor_subpipes_fullrecon(
+    name="nesvor_pipe_full", datasink=None, params={}
+):
     """Nesvor based segmentation pipeline for fetal MRI
 
     Processing steps:
@@ -80,14 +83,19 @@ def create_nesvor_subpipes_fullrecon(name="nesvor_pipe_full", params={}):
     )
     nesvor_pipe.connect(merge_denoise, "out", full_recon, "input_stacks")
 
-    # output node
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
-    )
+    # datasink connection
+    if datasink is not None:
+        # full_fet_pipe.connect(recon, "mask_file", datasink, "@brain_mask")
+        nesvor_pipe.connect(full_recon, "output_volume", datasink, "@recon")
 
-    nesvor_pipe.connect(
-        full_recon, "output_volume", outputnode, "output_volume"
-    )
+    # output node
+    # outputnode = pe.Node(
+    #     niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
+    # )
+
+    # nesvor_pipe.connect(
+    #     full_recon, "output_volume", outputnode, "output_volume"
+    # )
     return nesvor_pipe
 
 
@@ -183,7 +191,7 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
     return nesvor_pipe
 
 
-def create_fet_subpipes(name="full_fet_pipe", params={}):
+def create_fet_subpipes(name="full_fet_pipe", datasink=None, params={}):
     """
     Create the fetal processing pipeline (sub-workflow).
 
@@ -197,6 +205,9 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     Params:
         name:
             pipeline name (default = "full_fet_pipe")
+        datasink:
+            datasink object to save the outputs of the pipeline
+            in a BIDS-like structure
         params:
             dictionary of parameters (default = {}). This
             dictionary contains the parameters given in a JSON
@@ -263,7 +274,7 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     recon = pe.Node(
         interface=niu.Function(
             input_names=["stacks", "masks", "pre_command", "niftymic_image"],
-            output_names=["recon_files"],
+            output_names=["recon_file", "mask_file"],
             function=niftymic_recon,
         ),
         name="recon",
@@ -279,11 +290,16 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     full_fet_pipe.connect(merge_denoise, "out", recon, "stacks")
     full_fet_pipe.connect(brain_extraction, "bmasks", recon, "masks")
 
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=["recon_files"]), name="outputnode"
-    )
+    # datasink connection
+    if datasink is not None:
+        full_fet_pipe.connect(recon, "mask_file", datasink, "@brain_mask")
+        full_fet_pipe.connect(recon, "recon_file", datasink, "@recon")
 
-    full_fet_pipe.connect(recon, "recon_files", outputnode, "recon_files")
+    # outputnode = pe.Node(
+    #    niu.IdentityInterface(fields=["recon_files"]), #name="outputnode"
+    # )
+
+    # full_fet_pipe.connect(recon, "recon_files", outputnode, "recon_files")
 
     return full_fet_pipe
 

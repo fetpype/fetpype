@@ -116,10 +116,11 @@ def create_datasink(
 
     subjFolders = [
         (
-            "_session_%s_subject_%s" % (ses, sub),
+            # hard coded acquisition haste
+            "_acquisition_%s_session_%s_subject_%s" % (acq, ses, sub),
             "sub-%s/ses-%s/anat" % (sub, ses),
         )
-        for (sub, ses, _) in iterables[1]
+        for (sub, ses, acq) in iterables[1]
     ]
 
     # subs

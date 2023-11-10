@@ -288,6 +288,73 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     return full_fet_pipe
 
 
+def create_minimal_subpipes(name="minimal_pipe", params={}):
+    """
+    Create minimal pipeline (sub-workflow).
+
+    Given an input, this pipeline performs BrainExtraction
+    using NiftiMic in docker version
+
+    Params:
+        name:
+            pipeline name (default = "minimal_pipe")
+        params:
+            dictionary of parameters (default = {}). This
+            dictionary contains the parameters given in a JSON
+            config file. It specifies which containers to use
+            for each step of the pipeline.
+
+    Inputs:
+        inputnode:
+            stacks:
+                list of T2w stacks
+    Outputs:
+        outputnode:
+                list of reconstructed files
+
+    """
+
+    print("Full pipeline name: ", name)
+
+    # Creating pipeline
+    minimal_pipe = pe.Workflow(name=name)
+
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["stacks"]), name="inputnode"
+    )
+
+    # PREPROCESSING
+    # 1. Brain extraction
+    brain_extraction = pe.Node(
+        interface=niu.Function(
+            input_names=["raw_T2s", "pre_command", "niftymic_image"],
+            output_names=["bmasks"],
+            function=niftymic_segment,
+        ),
+        name="brain_extraction",
+    )
+
+    if "general" in params.keys():
+        brain_extraction.inputs.pre_command = params["general"].get(
+            "pre_command", ""
+        )
+        brain_extraction.inputs.niftymic_image = params["general"].get(
+            "niftymic_image", ""
+        )
+
+    minimal_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
+
+    # OUTPUT
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["masks"]), name="outputnode"
+    )
+
+    minimal_pipe.connect(brain_extraction, "bmasks", outputnode, "masks")
+
+    return minimal_pipe
+
+
 def create_dhcp_subpipe(name="dhcp_pipe", params={}):
     """
     Create a dhcp pipeline for segmentation of fetal MRI

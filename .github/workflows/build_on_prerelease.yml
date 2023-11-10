@@ -1,0 +1,49 @@
+﻿name: (Prerelease) Download docker images and run
+
+on:
+  release:
+    types: [prereleased]
+
+jobs:
+
+  run-pretest:
+    name: Download minimal docker containers and data and runs it
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+            ref: minimal_pipeline_for_CI
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Install fetpype
+        run: |
+            pip install -e .
+            sudo apt-get install graphviz libgraphviz-dev
+            pip install --upgrade pygraphviz graphviz
+
+      - name: Pull latest docker image of niftymic
+        run:
+            docker pull renbem/niftymic:v0.9
+
+      - name: Download fabian dataset
+        run: |
+
+            wget --no-check-certificate --content-disposition  "https://drive.switch.ch/index.php/s/UcjvNz96SLKihjy/download" -O fabian.zip
+            unzip -o fabian.zip -d fabian
+
+            pwd
+            echo ""
+
+            ls fabian
+            echo ""
+
+      - name: Running test pipeline on simu010
+        run: |
+
+            python workflows/pipeline_fet.py -data /home/runner/work/fetpype/fetpype/fabian/fabian/fabian -out /home/runner/work/fetpype/fetpype/fabian/fabian/fabian/results -params workflows/params_segment_fet_minimal.json -sub simu010 -ses 01
+

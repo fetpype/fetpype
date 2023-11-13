@@ -13,7 +13,6 @@ from ..nodes.nesvor import (
 
 from ..nodes.preprocessing import (
     nesvor_brain_extraction,
-    niftymic_brain_extraction,
     CropStacksAndMasks,
 )
 from ..nodes.dhcp import dhcp_pipeline

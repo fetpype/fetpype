@@ -1,7 +1,7 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
-from fetpype.nodes.niftymic import niftymic_recon
+from fetpype.nodes.niftymic import niftymic_recon, niftymic_segment
 
 from nipype.interfaces.ants.segmentation import DenoiseImage
 from ..nodes.nesvor import (
@@ -346,9 +346,9 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
     # 1. Brain extraction
     brain_extraction = pe.Node(
         interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "nesvor_image"],
+            input_names=["raw_T2s", "pre_command", "niftymic_image"],
             output_names=["bmasks"],
-            function=nesvor_brain_extraction,
+            function=niftymic_segment,
         ),
         name="brain_extraction",
     )

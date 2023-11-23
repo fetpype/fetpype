@@ -46,7 +46,7 @@
 from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
     create_nesvor_subpipes_fullrecon,
-    create_minimal_subpipes
+    create_minimal_subpipes,
     create_fet_subpipes,
 )
 from fetpype.utils.utils_bids import create_datasource
@@ -181,9 +181,7 @@ def main():
         dest="data",
         type=str,
         required=True,
-        help=(
-            "BIDS-formatted directory containing low-resolution T2w MRI scans"
-        ),
+        help="BIDS-formatted directory containing low-resolution T2w MRI scans.",
     )
     parser.add_argument(
         "-out",

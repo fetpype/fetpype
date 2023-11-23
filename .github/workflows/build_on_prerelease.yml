@@ -26,9 +26,9 @@ jobs:
             sudo apt-get install graphviz libgraphviz-dev
             pip install --upgrade pygraphviz graphviz
 
-      - name: Pull latest docker image of niftymic
+      - name: Pull latest docker image of nesvor
         run:
-            docker pull renbem/niftymic:v0.9
+            docker pull junshenxu/nesvor:latest
 
       - name: Download fabian dataset
         run: |

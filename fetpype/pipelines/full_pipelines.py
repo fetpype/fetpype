@@ -356,8 +356,8 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
         brain_extraction.inputs.pre_command = params["general"].get(
             "pre_command", ""
         )
-        brain_extraction.inputs.niftymic_image = params["general"].get(
-            "niftymic_image", ""
+        brain_extraction.inputs.nesvor_image = params["general"].get(
+            "nesvor_image", ""
         )
 
     minimal_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")

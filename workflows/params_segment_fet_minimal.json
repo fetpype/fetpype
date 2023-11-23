@@ -2,7 +2,7 @@
     "general": {
         "pipeline": "minimal",
         "pre_command": "docker run ",
-        "niftymic_image": "junshenxu/nesvor:latest ",
+        "nesvor_image": "junshenxu/nesvor:latest ",
         "no_graph": false
     }
 }

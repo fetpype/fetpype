@@ -13,6 +13,7 @@ from ..nodes.nesvor import (
 
 from ..nodes.preprocessing import (
     nesvor_brain_extraction,
+    niftymic_brain_extraction,
     CropStacksAndMasks,
 )
 from ..nodes.dhcp import dhcp_pipeline
@@ -346,9 +347,9 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
     # 1. Brain extraction
     brain_extraction = pe.Node(
         interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "nesvor_image"],
+            input_names=["raw_T2s", "pre_command", "niftymic_image"],
             output_names=["bmasks"],
-            function=nesvor_brain_extraction,
+            function=niftymic_brain_extraction,
         ),
         name="brain_extraction",
     )
@@ -356,8 +357,8 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
         brain_extraction.inputs.pre_command = params["general"].get(
             "pre_command", ""
         )
-        brain_extraction.inputs.nesvor_image = params["general"].get(
-            "nesvor_image", ""
+        brain_extraction.inputs.niftymic_image = params["general"].get(
+            "niftymic_image", ""
         )
 
     minimal_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")

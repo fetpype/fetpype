@@ -7,25 +7,18 @@ on:
 jobs:
 
   run-pretest:
-    name: ${{ matrix.os }} / ${{ matrix.py_version }}
-    runs-on: ${{ matrix.os }}-latest
-
     name: Download minimal docker containers and data and runs it
     runs-on: ubuntu-latest
 
-    strategy:
-        matrix:
-            os: ["ubuntu", "MacOS"]
-            py_version: ["3.8", "3.9"]
     steps:
 
       - uses: actions/checkout@v4
         with:
             ref: main
-      - name: Set up Python ${{ matrix.py_version }}
+      - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
-          python-version: ${{ matrix.py_version }}
+          python-version: 3.8
 
       - name: Install fetpype
         run: |
@@ -35,7 +28,7 @@ jobs:
 
       - name: Pull latest docker image of nesvor
         run:
-            docker pull junshenxu/nesvor:latest
+            docker pull renbem/niftymic:latest
 
       - name: Download fabian dataset
         run: |

@@ -3,6 +3,7 @@
         "pipeline": "minimal",
         "pre_command": "docker run ",
         "nesvor_image": "junshenxu/nesvor:latest ",
+        "niftymic_image": "renbem/niftymic:latest ",
         "no_graph": false
     }
 }

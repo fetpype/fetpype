@@ -28,8 +28,7 @@ jobs:
 
       - name: Pull latest docker image of nesvor
         run:
-            docker pull junshenxu/nesvor:latest
-
+            docker pull renbem/niftymic:latest
       - name: Download fabian dataset
         run: |
 

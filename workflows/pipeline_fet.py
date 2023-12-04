@@ -45,9 +45,7 @@
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
 from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
-    create_nesvor_subpipes_fullrecon,
     create_minimal_subpipes,
-    create_fet_subpipes,
 )
 from fetpype.utils.utils_bids import create_datasource
 
@@ -60,6 +58,58 @@ import nipype.pipeline.engine as pe
 
 fsl.FSLCommand.set_default_output_type("NIFTI_GZ")
 ###############################################################################
+
+def check_params(params):
+    general = params.get("general", None)
+    if general is None:
+        raise ValueError("General parameters are missing.")
+    else:
+        device = general.get("device", None)
+        if device is None:
+            device = "cpu"
+            print("Device not specified, using CPU.")
+
+        if device not in ["cpu", "gpu"]:
+            raise ValueError(
+                f"Device must be either cpu or gpu, not {device}"
+            )
+        
+    iter_on = ["pre_command"]
+
+    recon = params.get("reconstruction", None)
+    general_pipeline = general.get("pipeline", None)
+    if general_pipeline is not None:
+        assert general_pipeline == "minimal", "Pipeline must be minimal if reconstruction is not specified.
+        iter_on += ["niftymic_image"]
+        
+    else:
+        if recon is None:
+            raise ValueError("Reconstruction parameters are missing.")
+        else:
+            pipeline = recon.get("pipeline", None)
+            if pipeline is None:
+                raise ValueError("Pipeline not specified.")
+            elif pipeline not in ["niftymic", "nesvor"]:
+                raise ValueError(
+                    f"Pipeline must be either niftymic or nesvor, not {pipeline}"
+                )
+            if device == "cpu" and pipeline == "nesvor":
+                raise ValueError(
+                    "NeSVoR requires using a GPU."
+                )
+            
+            iter_on += ["nesvor_image"] if pipeline == "nesvor" else ["niftymic_image"]
+            iter_on += ["nesvor_image"] if device == "gpu" else []
+        
+    for k in iter_on:
+        # Check that there is a space at the end of the command, if not add it
+        if params["general"].get(k,None) is None:
+            raise ValueError(f"Missing {k} in general parameters")
+        
+        if params["general"][k][-1] != " ":
+            params["general"][k] += " "
+    print("Params", params)
+    return params
 
 
 def create_main_workflow(
@@ -116,7 +166,6 @@ def create_main_workflow(
     # params
     if params_file is None:
         params = {}
-
     else:
         # params
         assert op.exists(params_file), "Error with file {}".format(params_file)
@@ -124,15 +173,12 @@ def create_main_workflow(
         print("Using orig params file:", params_file)
 
         params = json.load(open(params_file))
-
-    # if general, pipeline is not in params ,create it and set it to niftymic
-    if "pipeline" not in params["general"]:
-        params["general"]["pipeline"] = "minimal"
-
+        params = check_params(params)
+    
     # main_workflow
     main_workflow = pe.Workflow(name=wf_name)
     main_workflow.base_dir = process_dir
-    if params["general"]["pipeline"] in ["niftymic", "nesvor"]:
+    if params["recon"]["pipeline"] in ["niftymic", "nesvor"]:
         fet_pipe = create_fet_subpipes(params=params)
     elif params["general"]["pipeline"] == "minimal":
         fet_pipe = create_minimal_subpipes(params=params)

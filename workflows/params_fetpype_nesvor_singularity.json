@@ -1,0 +1,12 @@
+{
+    "general": {
+        "device": "gpu",
+        "pre_command": "singularity exec --bind /gpfs:/gpfs --nv ",
+        "nesvor_image": "/home/gmarti/SINGULARITY/nesvor_latest.sif",
+        "niftymic_image": " /scratch/apron/softs/niftymic.multifact_latest.sif ",
+        "no_graph": false
+    },
+    "reconstruction": {
+        "pipeline": "nesvor"
+    }
+}

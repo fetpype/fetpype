@@ -1,0 +1,10 @@
+{
+    "general": {
+        "device": "cpu",
+        "pre_command": "singularity exec -B /scratch:/scratch ",
+        "niftymic_image": " /scratch/apron/softs/niftymic.multifact_latest.sif "
+    },
+    "reconstruction": {
+        "pipeline": "niftymic"
+    }
+}

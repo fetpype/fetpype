@@ -59,7 +59,11 @@ import nipype.pipeline.engine as pe
 fsl.FSLCommand.set_default_output_type("NIFTI_GZ")
 ###############################################################################
 
+
 def check_params(params):
+    """
+    Check that the input parameters are correct.
+    """
     general = params.get("general", None)
     if general is None:
         raise ValueError("General parameters are missing.")
@@ -70,18 +74,31 @@ def check_params(params):
             print("Device not specified, using CPU.")
 
         if device not in ["cpu", "gpu"]:
-            raise ValueError(
-                f"Device must be either cpu or gpu, not {device}"
-            )
-        
+            raise ValueError(f"Device must be either cpu or gpu, not {device}")
+        assert (
+            general.get("pre_command", None) is not None
+        ), "Missing pre_command in general parameters"
+        assert (
+            "docker" in general["pre_command"]
+            or "singularity" in general["pre_command"]
+        ), "pre_command must either contain docker or singularity."
+        if device == "cpu":
+            assert (
+                "--gpus" not in general["pre_command"]
+            ), "GPU specified in pre_command but device is set to CPU."
     iter_on = ["pre_command"]
 
     recon = params.get("reconstruction", None)
+
+    # Minimal pipeline can still be set in the general config.
+    # In this case, the reconstruction parameters are not used.
     general_pipeline = general.get("pipeline", None)
     if general_pipeline is not None:
-        assert general_pipeline == "minimal", "Pipeline must be minimal if reconstruction is not specified.
+        assert (
+            general_pipeline == "minimal"
+        ), "Pipeline must be minimal if reconstruction is not specified."
         iter_on += ["niftymic_image"]
-        
+
     else:
         if recon is None:
             raise ValueError("Reconstruction parameters are missing.")
@@ -91,24 +108,26 @@ def check_params(params):
                 raise ValueError("Pipeline not specified.")
             elif pipeline not in ["niftymic", "nesvor"]:
                 raise ValueError(
-                    f"Pipeline must be either niftymic or nesvor, not {pipeline}"
+                    "Pipeline must be either niftymic or nesvor, not "
+                    f"{pipeline}"
                 )
             if device == "cpu" and pipeline == "nesvor":
-                raise ValueError(
-                    "NeSVoR requires using a GPU."
-                )
-            
-            iter_on += ["nesvor_image"] if pipeline == "nesvor" else ["niftymic_image"]
+                raise ValueError("NeSVoR requires using a GPU.")
+
+            iter_on += (
+                ["nesvor_image"]
+                if pipeline == "nesvor"
+                else ["niftymic_image"]
+            )
             iter_on += ["nesvor_image"] if device == "gpu" else []
-        
+
+    # Check that there is a space at the end of the command, if not add it
     for k in iter_on:
-        # Check that there is a space at the end of the command, if not add it
-        if params["general"].get(k,None) is None:
+        if params["general"].get(k, None) is None:
             raise ValueError(f"Missing {k} in general parameters")
-        
+
         if params["general"][k][-1] != " ":
             params["general"][k] += " "
-    print("Params", params)
     return params
 
 
@@ -174,11 +193,11 @@ def create_main_workflow(
 
         params = json.load(open(params_file))
         params = check_params(params)
-    
+
     # main_workflow
     main_workflow = pe.Workflow(name=wf_name)
     main_workflow.base_dir = process_dir
-    if params["recon"]["pipeline"] in ["niftymic", "nesvor"]:
+    if params["reconstruction"]["pipeline"] in ["niftymic", "nesvor"]:
         fet_pipe = create_fet_subpipes(params=params)
     elif params["general"]["pipeline"] == "minimal":
         fet_pipe = create_minimal_subpipes(params=params)
@@ -225,7 +244,10 @@ def main():
         dest="data",
         type=str,
         required=True,
-        help="BIDS-formatted directory containing low-resolution T2w MRI scans.",
+        help=(
+            "BIDS-formatted directory containing low-resolution "
+            "T2w MRI scans."
+        ),
     )
     parser.add_argument(
         "-out",

@@ -1,0 +1,11 @@
+{
+    "general": {
+        "device": "gpu",
+        "pre_command": "docker run --gpus '\"device=0\"' ",
+        "nesvor_image": "junshenxu/nesvor:v0.5.0",
+        "niftymic_image": "renbem/niftymic"
+    },
+    "reconstruction": {
+        "pipeline": "niftymic"
+    }
+}

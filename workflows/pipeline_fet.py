@@ -45,9 +45,7 @@
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
 from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
-    create_nesvor_subpipes_fullrecon,
     create_minimal_subpipes,
-    create_fet_subpipes,
 )
 from fetpype.utils.utils_bids import create_datasource
 

@@ -8,11 +8,11 @@ collaborative effort shared across teams involved in the ERANET project MultiFac
 - Each team works independently on their new processing tools and when ready for integration in the common pipeline, they provide the wraper corresponding to their new tool in addition to the tool itself as a singularity image.
 - Each module ideally would be either a docker/singularity image for easier reproducibility and for running it in a HPC. 
 Fetpype is a wrapper calling to docker images (don’t intricate the different code bases)
--use BIDS format for easier input/output across datasets.
+- use BIDS format for easier input/output across datasets.
 Strict and consistent data formatting so that we can easily swap in and out different parts of the pipelines
--Construct intermediary BIDS-datasets after each step + logging
--Fail fast if there is an issue (don’t fail silently)
--Default path + use of configuration files to define different paths (typically a yaml config file could be great).
+- Construct intermediary BIDS-datasets after each step + logging
+- Fail fast if there is an issue (don’t fail silently)
+- Default path + use of configuration files to define different paths (typically a yaml config file could be great).
 
 # List of Nodes available at the present state
 - simple data graber (not BIDS)

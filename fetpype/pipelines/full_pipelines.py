@@ -5,9 +5,6 @@ from fetpype.nodes.niftymic import niftymic_recon
 
 from nipype.interfaces.ants.segmentation import DenoiseImage
 from ..nodes.nesvor import (
-    NesvorSegmentation,
-    NesvorRegistration,
-    NesvorReconstruction,
     NesvorFullReconstruction,
 )
 
@@ -27,32 +24,35 @@ def print_files(files):
     print(files)
     return files
 
+
 def get_preprocessing(params):
-    """
-    """
+    """ """
     preprocessing = pe.Workflow(name="Preprocessing")
     # Creating input node
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["stacks"]), name="inputnode"
     )
     # 1. Brain extraction
+    device = params["general"]["device"]
+    img_str = "niftymic_image" if device == "cpu" else "nesvor_image"
+    fct_BE = (
+        niftymic_brain_extraction
+        if device == "cpu"
+        else nesvor_brain_extraction
+    )
     brain_extraction = pe.Node(
         interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "nesvor_image"],
+            input_names=["raw_T2s", "pre_command", img_str],
             output_names=["masks"],
-            function=nesvor_brain_extraction,
+            function=fct_BE,
         ),
         name="brain_extraction",
     )
-
-    if "general" in params.keys():
-        brain_extraction.inputs.pre_command = params["general"].get(
-            "pre_command", ""
-        )
-        brain_extraction.inputs.nesvor_image = params["general"].get(
-            "nesvor_image", ""
-        )
-
+    brain_extraction.inputs.pre_command = params["general"]["pre_command"]
+    if device == "cpu":
+        brain_extraction.inputs.niftymic_image = params["general"][img_str]
+    else:
+        brain_extraction.inputs.nesvor_image = params["general"][img_str]
     preprocessing.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
     # 2. Cropping
@@ -78,7 +78,6 @@ def get_preprocessing(params):
     )
 
     preprocessing.connect(denoising, "output_image", merge_denoise, "in1")
-
 
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["output_stacks", "output_masks"]),
@@ -123,7 +122,7 @@ def get_recon(params):
         niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
     )
 
-    pipeline = params["general"].get("pipeline", "")
+    pipeline = params["reconstruction"].get("pipeline", "")
     pre_command = params["general"].get("pre_command", "")
 
     if pipeline == "niftymic":
@@ -213,17 +212,27 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
         niu.IdentityInterface(fields=["stacks"]), name="inputnode"
     )
     preprocessing = get_preprocessing(params)
-    full_fet_pipe.connect(inputnode, "stacks", preprocessing, "inputnode.stacks")
+    full_fet_pipe.connect(
+        inputnode, "stacks", preprocessing, "inputnode.stacks"
+    )
 
     # PREPROCESSING
-    
+
     # RECONSTRUCTION
     recon = get_recon(params)
 
     full_fet_pipe.connect(
         [
-            (preprocessing, recon, [("outputnode.output_stacks", "inputnode.stacks")]),
-            (preprocessing, recon, [("outputnode.output_masks", "inputnode.masks")]),
+            (
+                preprocessing,
+                recon,
+                [("outputnode.output_stacks", "inputnode.stacks")],
+            ),
+            (
+                preprocessing,
+                recon,
+                [("outputnode.output_masks", "inputnode.masks")],
+            ),
         ]
     )
 

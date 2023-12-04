@@ -662,6 +662,7 @@ class NesvorFullReconstructionOutputSpec(TraitedSpec):
         desc="Paths to the reconstructed volume",
     )
 
+
 class NesvorFullReconstruction(CommandLine):
     """
     Class for the NeSVoRRecon nipype interface.
@@ -691,8 +692,8 @@ class NesvorFullReconstruction(CommandLine):
             f"{self.inputs.pre_command} "
             f"{self.inputs.nesvor_image} "
             "nesvor reconstruct"
-            )
-    
+        )
+
     def _run_interface(self, runtime, correct_return_codes=(0,)):
         if "docker" in self.cmdline:
             stacks_dir = os.path.commonpath(self.inputs.input_stacks)

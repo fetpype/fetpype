@@ -1,9 +1,9 @@
 {
     "general": {
         "pipeline": "minimal",
-        "pre_command": "docker run ",
-        "nesvor_image": "junshenxu/nesvor:latest ",
-        "niftymic_image": "renbem/niftymic:latest ",
+        "pre_command": "singularity exec -B /scratch:/scratch ",
+        "niftymic_image": " /scratch/gauzias/softs/niftymic.multifact_latest.sif ",
+        "nesvor_image": "/scratch/gauzias/softs/nesvor_lastest.sif ",
         "no_graph": false
     }
 }

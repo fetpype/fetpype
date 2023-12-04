@@ -44,5 +44,5 @@ jobs:
       - name: Running test pipeline on simu010
         run: |
 
-            python workflows/pipeline_fet.py -data /home/runner/work/fetpype/fetpype/fabian/fabian/fabian -out /home/runner/work/fetpype/fetpype/fabian/fabian/fabian/results -params workflows/params_segment_fet_minimal.json -sub simu010 -ses 01
+            python workflows/pipeline_fet.py -data /home/runner/work/fetpype/fetpype/fabian/fabian/fabian -out /home/runner/work/fetpype/fetpype/fabian/fabian/fabian/results -params workflows/params_segment_fet_minimal_docker.json -sub simu010 -ses 01
 

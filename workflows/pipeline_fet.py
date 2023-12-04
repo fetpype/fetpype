@@ -45,9 +45,7 @@
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
 from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
-    create_nesvor_subpipes_fullrecon,
     create_minimal_subpipes,
-    create_fet_subpipes,
 )
 from fetpype.utils.utils_bids import create_datasource
 
@@ -132,10 +130,8 @@ def create_main_workflow(
     # main_workflow
     main_workflow = pe.Workflow(name=wf_name)
     main_workflow.base_dir = process_dir
-    if params["general"]["pipeline"] == "niftymic":
+    if params["general"]["pipeline"] in ["niftymic", "nesvor"]:
         fet_pipe = create_fet_subpipes(params=params)
-    elif params["general"]["pipeline"] == "nesvor":
-        fet_pipe = create_nesvor_subpipes_fullrecon(params=params)
     elif params["general"]["pipeline"] == "minimal":
         fet_pipe = create_minimal_subpipes(params=params)
 

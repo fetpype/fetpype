@@ -80,12 +80,12 @@ class NiftymicReconstructionOutputSpec(TraitedSpec):
 
     Attributes
     ----------
-    output_volume : traits.File
+    dir_output : traits.Directory
         The reconstructed image.
     """
-
-    output_volume = File(
-        desc="The reconstructed image",
+    dir_output = traits.Directory(
+        desc="Path to save output reconstruction files",
+        mandatory=True,
     )
 
 
@@ -166,8 +166,8 @@ class NiftymicReconstruction(CommandLine):
             The generated filename.
         """
         if name == "dir_output":
-            output = self.inputs.dir_output
-            if not isdefined(output):
+            dir_output = self.inputs.dir_output
+            if not isdefined(dir_output):
                 dir_output = os.path.abspath("srr_reconstruction")
                 # cwd = os.environ["PWD"]
                 #

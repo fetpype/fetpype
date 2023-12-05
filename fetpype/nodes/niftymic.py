@@ -113,6 +113,9 @@ class NiftymicReconstruction(CommandLine):
     output_spec = NiftymicReconstructionOutputSpec
 
     def __init__(self, **inputs):
+        self._cmd = "niftymic_reconstruct_volume"
+        super(NiftymicReconstruction, self).__init__(**inputs)
+
         self._cmd = (
             f"{self.inputs.pre_command} "
             f"{self.inputs.niftymic_image} "
@@ -124,7 +127,7 @@ class NiftymicReconstruction(CommandLine):
         # outliers rejection parameters
         self._cmd += " --run-bias-field-correction 1"
         self._cmd += " --run-diagnostics 0"
-        super(NiftymicReconstruction, self).__init__(**inputs)
+
 
     # def _run_interface(self, runtime, correct_return_codes=(0,)):
     #     if "docker" in self.cmdline:
@@ -254,12 +257,15 @@ class NiftymicBrainExtraction(CommandLine):
     output_spec = NiftymicBrainExtractionOutputSpec
 
     def __init__(self, **inputs):
+        self._cmd = "niftymic_segment_fetal_brains"
+        super(NiftymicBrainExtraction, self).__init__(**inputs)
+
         self._cmd = (
             f"{self.inputs.pre_command} "
             f"{self.inputs.niftymic_image} "
             "niftymic_segment_fetal_brains"
         )
-        super(NiftymicBrainExtraction, self).__init__(**inputs)
+
 
     # Customize how arguments are formatted
     def _format_arg(self, name, trait_spec, value):

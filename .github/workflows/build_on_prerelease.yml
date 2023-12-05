@@ -14,7 +14,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-            ref: minimal_pipeline_for_CI
+            ref: main
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
@@ -26,10 +26,9 @@ jobs:
             sudo apt-get install graphviz libgraphviz-dev
             pip install --upgrade pygraphviz graphviz
 
-      - name: Pull latest docker image of niftymic
+      - name: Pull latest docker image of nesvor
         run:
-            docker pull renbem/niftymic:v0.9
-
+            docker pull renbem/niftymic:latest
       - name: Download fabian dataset
         run: |
 
@@ -45,5 +44,5 @@ jobs:
       - name: Running test pipeline on simu010
         run: |
 
-            python workflows/pipeline_fet.py -data /home/runner/work/fetpype/fetpype/fabian/fabian/fabian -out /home/runner/work/fetpype/fetpype/fabian/fabian/fabian/results -params workflows/params_segment_fet_minimal.json -sub simu010 -ses 01
+            python workflows/pipeline_fet.py -data /home/runner/work/fetpype/fetpype/fabian/fabian/fabian -out /home/runner/work/fetpype/fetpype/fabian/fabian/fabian/results -params workflows/params_segment_fet_minimal_docker.json -sub simu010 -ses 01
 

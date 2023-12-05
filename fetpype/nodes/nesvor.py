@@ -694,6 +694,21 @@ class NesvorFullReconstruction(CommandLine):
             "nesvor reconstruct"
         )
 
+    def _run_interface(self, runtime, correct_return_codes=(0,)):
+        if "docker" in self.cmdline:
+            stacks_dir = os.path.commonpath(self.inputs.input_stacks)
+            stack_masks = os.path.commonpath(self.inputs.stack_masks)
+            out_dir = os.path.dirname(self._list_outputs()["output_volume"])
+            new_cmd = self.inputs.pre_command + (
+                f"-v {stacks_dir}:{stacks_dir} "
+                f"-v {stack_masks}:{stack_masks} "
+                f"-v {out_dir}:{out_dir} "
+                f"{self.inputs.nesvor_image} "
+                "nesvor reconstruct"
+            )
+            self._cmd = new_cmd
+        super()._run_interface(runtime, correct_return_codes)
+
     # Customize how arguments are formatted
     def _format_arg(self, name, trait_spec, value):
         if name == "pre_command":

@@ -1,7 +1,8 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
-from fetpype.nodes.niftymic import niftymic_segment, niftymic_recon
+from fetpype.nodes.niftymic import niftymic_recon
+
 from nipype.interfaces.ants.segmentation import DenoiseImage
 from ..nodes.nesvor import (
     NesvorSegmentation,
@@ -10,6 +11,11 @@ from ..nodes.nesvor import (
     NesvorFullReconstruction,
 )
 
+from ..nodes.preprocessing import (
+    nesvor_brain_extraction,
+    niftymic_brain_extraction,
+    CropStacksAndMasks,
+)
 from ..nodes.dhcp import dhcp_pipeline
 
 # from nipype import config
@@ -20,75 +26,6 @@ def print_files(files):
     print("Files:")
     print(files)
     return files
-
-
-def create_nesvor_subpipes_fullrecon(name="nesvor_pipe_full", params={}):
-    """Nesvor based segmentation pipeline for fetal MRI
-
-    Processing steps:
-    - Brain extraction using MONAIfbs ( using the nesvor_image container)
-    - Denoising using ANTS' DenoiseImage
-    - Registration of slices using SVORT
-    - Reconstruction using NesVoR
-
-    Difference with the other pipeline is that we use the full reconstruction
-    command from NesVoR, instead of each part separately
-
-    Params:
-    - name: pipeline name (default = "nesvor_pipe")
-    - params: dictionary of parameters to be passed to the pipeline. We would
-        need to specify the nesvor_image and pre_command parameters,
-        right now.
-
-    Outputs:
-    - nesvor_pipe: nipype workflow implementing the pipeline
-    """
-    # get parameters
-    if "general" in params.keys():
-        pre_command = params["general"].get("pre_command", "")
-        nesvor_image = params["general"].get("nesvor_image", "")
-
-    # Creating pipeline
-    nesvor_pipe = pe.Workflow(name=name)
-
-    # Creating input node
-    inputnode = pe.Node(
-        niu.IdentityInterface(fields=["stacks"]), name="inputnode"
-    )
-
-    # PREPROCESSING
-    # 1. Denoising
-    denoising = pe.MapNode(
-        interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
-    )
-
-    nesvor_pipe.connect(inputnode, "stacks", denoising, "input_image")
-
-    # merge_denoise
-    merge_denoise = pe.Node(
-        interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
-    )
-
-    nesvor_pipe.connect(denoising, "output_image", merge_denoise, "in1")
-
-    # 2 full recon
-    full_recon = pe.Node(
-        NesvorFullReconstruction(
-            nesvor_image=nesvor_image, pre_command=pre_command
-        ),
-        name="full_recon",
-    )
-    nesvor_pipe.connect(merge_denoise, "out", full_recon, "input_stacks")
-
-    # output node
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
-    )
-
-    nesvor_pipe.connect(
-        full_recon, "output_volume", outputnode, "output_volume"
-    )
-    return nesvor_pipe
 
 
 def create_nesvor_subpipes(name="nesvor_pipe", params={}):
@@ -183,6 +120,87 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
     return nesvor_pipe
 
 
+def get_recon(params):
+    """
+    Get the reconstruction workflow based on the pipeline specified
+    in params. Currently, the supported pipelines are niftymic and nesvor.
+
+    Params:
+        params:
+            dictionary of parameters (default = {}). This
+            dictionary contains the parameters given in a JSON
+            config file. It specifies which containers to use
+            for each step of the pipeline.
+
+    Inputs:
+        inputnode:
+            stacks:
+                list of T2w stacks
+            masks:
+                list of brain masks
+    Outputs:
+        outputnode:
+            output_volume:
+                3D reconstructed volume
+    """
+    rec_pipe = pe.Workflow(name="Reconstruction")
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["stacks", "masks"]), name="inputnode"
+    )
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
+    )
+
+    pipeline = params["general"].get("pipeline", "")
+    pre_command = params["general"].get("pre_command", "")
+
+    if pipeline == "niftymic":
+        recon = pe.Node(
+            interface=niu.Function(
+                input_names=[
+                    "stacks",
+                    "masks",
+                    "pre_command",
+                    "niftymic_image",
+                ],
+                output_names=["output_volume"],
+                function=niftymic_recon,
+            ),
+            name="recon",
+        )
+        if "general" in params.keys():
+            recon.inputs.pre_command = pre_command
+            recon.inputs.niftymic_image = params["general"].get(
+                "niftymic_image", ""
+            )
+
+        # OUTPUT
+        rec_pipe.connect(inputnode, "stacks", recon, "stacks")
+        rec_pipe.connect(inputnode, "masks", recon, "masks")
+    elif pipeline == "nesvor":
+        nesvor_image = params["general"].get("nesvor_image", "")
+
+        recon = pe.Node(
+            NesvorFullReconstruction(
+                nesvor_image=nesvor_image, pre_command=pre_command
+            ),
+            name="full_recon",
+        )
+
+        rec_pipe.connect(
+            [
+                (inputnode, recon, [("stacks", "input_stacks")]),
+                (inputnode, recon, [("masks", "stack_masks")]),
+            ]
+        )
+    else:
+        raise ValueError(f"Pipeline {pipeline} not recognized")
+
+    rec_pipe.connect(recon, "output_volume", outputnode, "output_volume")
+    return rec_pipe
+
+
 def create_fet_subpipes(name="full_fet_pipe", params={}):
     """
     Create the fetal processing pipeline (sub-workflow).
@@ -228,9 +246,9 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     # 1. Brain extraction
     brain_extraction = pe.Node(
         interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "niftymic_image"],
-            output_names=["bmasks"],
-            function=niftymic_segment,
+            input_names=["raw_T2s", "pre_command", "nesvor_image"],
+            output_names=["masks"],
+            function=nesvor_brain_extraction,
         ),
         name="brain_extraction",
     )
@@ -239,18 +257,28 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
         brain_extraction.inputs.pre_command = params["general"].get(
             "pre_command", ""
         )
-        brain_extraction.inputs.niftymic_image = params["general"].get(
-            "niftymic_image", ""
+        brain_extraction.inputs.nesvor_image = params["general"].get(
+            "nesvor_image", ""
         )
 
     full_fet_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
-    # 2. Denoising
+    # 2. Cropping
+    cropping = pe.MapNode(
+        interface=CropStacksAndMasks(),
+        iterfield=["input_image", "input_mask"],
+        name="cropping",
+    )
+
+    full_fet_pipe.connect(inputnode, "stacks", cropping, "input_image")
+    full_fet_pipe.connect(brain_extraction, "masks", cropping, "input_mask")
+
+    # 3. Denoising
     denoising = pe.MapNode(
         interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
     )
 
-    full_fet_pipe.connect(inputnode, "stacks", denoising, "input_image")
+    full_fet_pipe.connect(cropping, "output_image", denoising, "input_image")
 
     # merge_denoise
     merge_denoise = pe.Node(
@@ -260,30 +288,21 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     full_fet_pipe.connect(denoising, "output_image", merge_denoise, "in1")
 
     # RECONSTRUCTION
-    recon = pe.Node(
-        interface=niu.Function(
-            input_names=["stacks", "masks", "pre_command", "niftymic_image"],
-            output_names=["recon_files"],
-            function=niftymic_recon,
-        ),
-        name="recon",
+    recon = get_recon(params)
+
+    full_fet_pipe.connect(
+        [
+            (merge_denoise, recon, [("out", "inputnode.stacks")]),
+            (cropping, recon, [("output_mask", "inputnode.masks")]),
+        ]
     )
-
-    if "general" in params.keys():
-        recon.inputs.pre_command = params["general"].get("pre_command", "")
-        recon.inputs.niftymic_image = params["general"].get(
-            "niftymic_image", ""
-        )
-
-    # OUTPUT
-    full_fet_pipe.connect(merge_denoise, "out", recon, "stacks")
-    full_fet_pipe.connect(brain_extraction, "bmasks", recon, "masks")
 
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["recon_files"]), name="outputnode"
+        niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
     )
-
-    full_fet_pipe.connect(recon, "recon_files", outputnode, "recon_files")
+    full_fet_pipe.connect(
+        recon, "outputnode.output_volume", outputnode, "output_volume"
+    )
 
     return full_fet_pipe
 
@@ -330,11 +349,10 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
         interface=niu.Function(
             input_names=["raw_T2s", "pre_command", "niftymic_image"],
             output_names=["bmasks"],
-            function=niftymic_segment,
+            function=niftymic_brain_extraction,
         ),
         name="brain_extraction",
     )
-
     if "general" in params.keys():
         brain_extraction.inputs.pre_command = params["general"].get(
             "pre_command", ""
@@ -353,6 +371,111 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
     minimal_pipe.connect(brain_extraction, "bmasks", outputnode, "masks")
 
     return minimal_pipe
+
+
+def create_dhcp_subpipe(name="dhcp_pipe", params={}):
+    """
+    Create a dhcp pipeline for segmentation of fetal MRI
+
+    Given an reconstruction of fetal MRI and a mask, this
+    pipeline performs the following steps:
+        1. Run the dhcp pipeline for segmentation
+        2. Run it for surface extraction
+
+    Params:
+        name:
+            pipeline name (default = "full_fet_pipe")
+        params:
+            dictionary of parameters (default = {}). This
+            dictionary contains the parameters given in a JSON
+            config file. It specifies which containers to use
+            for each step of the pipeline.
+
+    Inputs:
+        inputnode:
+            MRI brain:
+                Reconstruction of MRI brain
+            Mask:
+                Corresponding brain mask of the reconstruction
+            GA:
+                gestational age of the fetus
+    Outputs:
+        outputnode:
+            dhcp_files:
+                folder with dhcp outputs
+
+    TODO:
+    - EM algorithm halting, solve it better or in the messy way?
+    """
+
+    print("Full pipeline name: ", name)
+
+    # Creating pipeline
+    full_fet_pipe = pe.Workflow(name=name)
+
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["T2", "mask", "gestational_age"]),
+        name="inputnode",
+    )
+
+    # Check params to see if we need to run the seg or surf part, or both.
+    # Params to look is [dhcp][seg] and [dhcp][surf]
+    flag = None
+    if "dhcp" in params.keys():
+        if params["dhcp"]["surf"] and params["dhcp"]["seg"]:
+            flag = "-all"
+        elif params["dhcp"]["seg"]:
+            flag = "-seg"
+        elif params["dhcp"]["surf"]:
+            flag = "-surf"
+
+    else:
+        print("No dhcp parameters found, running both seg and surf")
+        flag = "-all"
+
+    # PREPROCESSING
+    # 1. Run the dhcp pipeline for segmentation
+    dhcp_seg = pe.Node(
+        interface=niu.Function(
+            input_names=[
+                "T2",
+                "mask",
+                "gestational_age",
+                "pre_command",
+                "dhcp_image",
+                "threads",
+                "flag",
+            ],
+            output_names=["dhcp_files"],
+            function=dhcp_pipeline,
+        ),
+        name="dhcp_seg",
+    )
+
+    if "general" in params.keys():
+        dhcp_seg.inputs.pre_command = params["general"].get("pre_command", "")
+        dhcp_seg.inputs.dhcp_image = params["general"].get("dhcp_image", "")
+
+    if "dhcp" in params.keys():
+        dhcp_seg.inputs.threads = params["dhcp"].get("threads", "")
+        dhcp_seg.inputs.flag = flag
+
+    full_fet_pipe.connect(inputnode, "T2", dhcp_seg, "T2")
+    full_fet_pipe.connect(inputnode, "mask", dhcp_seg, "mask")
+
+    full_fet_pipe.connect(
+        inputnode, "gestational_age", dhcp_seg, "gestational_age"
+    )
+
+    # OUTPUT
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["dhcp_files"]), name="outputnode"
+    )
+
+    full_fet_pipe.connect(dhcp_seg, "dhcp_files", outputnode, "dhcp_files")
+
+    return full_fet_pipe
 
 
 def create_dhcp_subpipe(name="dhcp_pipe", params={}):

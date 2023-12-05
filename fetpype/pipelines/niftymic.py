@@ -44,7 +44,7 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
 
     # Creating input node
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=["input_stacks", "input_masks"]), name="inputnode"
+        niu.IdentityInterface(fields=["stacks", "masks"]), name="inputnode"
     )
 
     # PREPROCESSING
@@ -57,8 +57,8 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
         name="recon",
     )
 
-    niftymic_pipe.connect(inputnode, "input_stacks", recon, "input_stacks")
-    niftymic_pipe.connect(inputnode, "input_masks", recon, "input_masks")
+    niftymic_pipe.connect(inputnode, "stacks", recon, "input_stacks")
+    niftymic_pipe.connect(inputnode, "masks", recon, "input_masks")
 
     # output node
     outputnode = pe.Node(

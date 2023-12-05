@@ -221,7 +221,17 @@ class NiftymicBrainExtractionInputSpec(CommandLineInputSpec):
         genfile=True,
         mandatory=False,
     )
+    # pre command and niftymic image
+    # these two commands are not used in the command line
+    pre_command = traits.Str(
+        desc="Pre-command to be run",
+        mandatory=True,
+    )
 
+    niftymic_image = traits.Str(
+        desc="Singularity Niftymic command",
+        mandatory=True,
+    )
 
 class NiftymicBrainExtractionOutputSpec(TraitedSpec):
     """

@@ -83,7 +83,7 @@ def nesvor_brain_extraction(raw_T2s, pre_command="", nesvor_image=""):
 
     print(cmd)
     os.system(cmd)
-    bmasks = []
+    masks = []
     for bmasktmp in bmasks_tmp:
         bmask = bmasktmp.replace("_masktmp", "_mask")
         mask = ni.load(bmasktmp)
@@ -93,8 +93,8 @@ def nesvor_brain_extraction(raw_T2s, pre_command="", nesvor_image=""):
             ni.Nifti1Image(mask.get_fdata()[::-1, :, :], mask.affine), bmask
         )
         assert os.path.exists(bmasktmp), f"Error, {bmasktmp} does not exist"
-        bmasks.append(bmask)
-    return bmasks
+        masks.append(bmask)
+    return masks
 
 
 # This function is not currently used, as both nesvor_brain_extraction

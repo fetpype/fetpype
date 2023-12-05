@@ -5,9 +5,6 @@ from fetpype.nodes.niftymic import niftymic_recon
 
 from nipype.interfaces.ants.segmentation import DenoiseImage
 from ..nodes.nesvor import (
-    NesvorSegmentation,
-    NesvorRegistration,
-    NesvorReconstruction,
     NesvorFullReconstruction,
 )
 
@@ -28,96 +25,69 @@ def print_files(files):
     return files
 
 
-def create_nesvor_subpipes(name="nesvor_pipe", params={}):
-    """Nesvor based segmentation pipeline for fetal MRI
-
-    Processing steps:
-    - Brain extraction using MONAIfbs ( using the nesvor_image container)
-    - Denoising using ANTS' DenoiseImage
-    - Registration of slices using SVORT
-    - Reconstruction using NesVoR
-
-    Params:
-    - name: pipeline name (default = "nesvor_pipe")
-    - params: dictionary of parameters to be passed to the pipeline. We would
-        need to specify the nesvor_image and pre_command parameters,
-        right now.
-
-    Outputs:
-    - nesvor_pipe: nipype workflow implementing the pipeline
-    """
-
-    # get parameters
-    if "general" in params.keys():
-        pre_command = params["general"].get("pre_command", "")
-        nesvor_image = params["general"].get("nesvor_image", "")
-
-    # Creating pipeline
-    nesvor_pipe = pe.Workflow(name=name)
-
+def get_preprocessing(params):
+    """ """
+    preprocessing = pe.Workflow(name="Preprocessing")
     # Creating input node
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["stacks"]), name="inputnode"
     )
+    # 1. Brain extraction
+    device = params["general"]["device"]
+    img_str = "niftymic_image" if device == "cpu" else "nesvor_image"
+    fct_BE = (
+        niftymic_brain_extraction
+        if device == "cpu"
+        else nesvor_brain_extraction
+    )
+    brain_extraction = pe.Node(
+        interface=niu.Function(
+            input_names=["raw_T2s", "pre_command", img_str],
+            output_names=["masks"],
+            function=fct_BE,
+        ),
+        name="brain_extraction",
+    )
+    brain_extraction.inputs.pre_command = params["general"]["pre_command"]
+    if device == "cpu":
+        brain_extraction.inputs.niftymic_image = params["general"][img_str]
+    else:
+        brain_extraction.inputs.nesvor_image = params["general"][img_str]
+    preprocessing.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
 
-    # PREPROCESSING
-    # 1. Denoising
+    # 2. Cropping
+    cropping = pe.MapNode(
+        interface=CropStacksAndMasks(),
+        iterfield=["input_image", "input_mask"],
+        name="cropping",
+    )
+
+    preprocessing.connect(inputnode, "stacks", cropping, "input_image")
+    preprocessing.connect(brain_extraction, "masks", cropping, "input_mask")
+
+    # 3. Denoising
     denoising = pe.MapNode(
         interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
     )
 
-    nesvor_pipe.connect(inputnode, "stacks", denoising, "input_image")
+    preprocessing.connect(cropping, "output_image", denoising, "input_image")
 
     # merge_denoise
     merge_denoise = pe.Node(
         interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
     )
 
-    nesvor_pipe.connect(denoising, "output_image", merge_denoise, "in1")
+    preprocessing.connect(denoising, "output_image", merge_denoise, "in1")
 
-    # 2. Brain extraction
-    mask = pe.Node(
-        NesvorSegmentation(
-            nesvor_image=nesvor_image,
-            pre_command=pre_command,
-            no_augmentation_seg=True,
-        ),
-        name="mask",
-    )
-
-    # 3. REGISTRATION WITH SVORT
-    # registration Node
-    registration = pe.Node(
-        NesvorRegistration(nesvor_image=nesvor_image, pre_command=pre_command),
-        name="registration",
-    )
-
-    nesvor_pipe.connect(
-        [
-            (merge_denoise, mask, [("out", "input_stacks")]),
-            (merge_denoise, registration, [("out", "input_stacks")]),
-            (mask, registration, [("output_stack_masks", "stack_masks")]),
-        ]
-    )
-
-    # 4. RECONSTRUCTION
-    # recon Node
-    recon = pe.Node(
-        NesvorReconstruction(
-            nesvor_image=nesvor_image, pre_command=pre_command
-        ),
-        name="reconstruction",
-    )
-
-    nesvor_pipe.connect(registration, "output_slices", recon, "input_slices")
-
-    # output node
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
+        niu.IdentityInterface(fields=["output_stacks", "output_masks"]),
+        name="outputnode",
     )
 
-    nesvor_pipe.connect(recon, "output_volume", outputnode, "output_volume")
-    return nesvor_pipe
+    preprocessing.connect(merge_denoise, "out", outputnode, "output_stacks")
+    preprocessing.connect(cropping, "output_mask", outputnode, "output_masks")
+
+    return preprocessing
 
 
 def get_recon(params):
@@ -152,7 +122,7 @@ def get_recon(params):
         niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
     )
 
-    pipeline = params["general"].get("pipeline", "")
+    pipeline = params["reconstruction"].get("pipeline", "")
     pre_command = params["general"].get("pre_command", "")
 
     if pipeline == "niftymic":
@@ -241,59 +211,28 @@ def create_fet_subpipes(name="full_fet_pipe", params={}):
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["stacks"]), name="inputnode"
     )
+    preprocessing = get_preprocessing(params)
+    full_fet_pipe.connect(
+        inputnode, "stacks", preprocessing, "inputnode.stacks"
+    )
 
     # PREPROCESSING
-    # 1. Brain extraction
-    brain_extraction = pe.Node(
-        interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "nesvor_image"],
-            output_names=["masks"],
-            function=nesvor_brain_extraction,
-        ),
-        name="brain_extraction",
-    )
-
-    if "general" in params.keys():
-        brain_extraction.inputs.pre_command = params["general"].get(
-            "pre_command", ""
-        )
-        brain_extraction.inputs.nesvor_image = params["general"].get(
-            "nesvor_image", ""
-        )
-
-    full_fet_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
-
-    # 2. Cropping
-    cropping = pe.MapNode(
-        interface=CropStacksAndMasks(),
-        iterfield=["input_image", "input_mask"],
-        name="cropping",
-    )
-
-    full_fet_pipe.connect(inputnode, "stacks", cropping, "input_image")
-    full_fet_pipe.connect(brain_extraction, "masks", cropping, "input_mask")
-
-    # 3. Denoising
-    denoising = pe.MapNode(
-        interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
-    )
-
-    full_fet_pipe.connect(cropping, "output_image", denoising, "input_image")
-
-    # merge_denoise
-    merge_denoise = pe.Node(
-        interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
-    )
-
-    full_fet_pipe.connect(denoising, "output_image", merge_denoise, "in1")
 
     # RECONSTRUCTION
     recon = get_recon(params)
 
     full_fet_pipe.connect(
         [
-            (merge_denoise, recon, [("out", "inputnode.stacks")]),
-            (cropping, recon, [("output_mask", "inputnode.masks")]),
+            (
+                preprocessing,
+                recon,
+                [("outputnode.output_stacks", "inputnode.stacks")],
+            ),
+            (
+                preprocessing,
+                recon,
+                [("outputnode.output_masks", "inputnode.masks")],
+            ),
         ]
     )
 

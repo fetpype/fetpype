@@ -54,7 +54,7 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
         NiftymicReconstruction(
             niftymic_image=niftymic_image, pre_command=pre_command
         ),
-        name="reconstruction",
+        name="recon",
     )
 
     niftymic_pipe.connect(inputnode, "input_stacks", recon, "input_stacks")

@@ -6,8 +6,9 @@ from fetpype.nodes.niftymic import niftymic_recon
 from nipype.interfaces.ants.segmentation import DenoiseImage
 from ..nodes.niftymic import (
     NiftymicReconstruction,
+    NiftymicBrainExtraction
 )
-from ..nodes.preprocessing import niftymic_brain_extraction
+#from ..nodes.preprocessing import niftymic_brain_extraction
 
 # from nipype import config
 # config.enable_debug_mode()
@@ -51,22 +52,13 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     # PREPROCESSING
     # 1. Brain extraction
     brain_extraction = pe.Node(
-        interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "niftymic_image"],
-            output_names=["bmasks"],
-            function=niftymic_brain_extraction,
+        NiftymicBrainExtraction(
+            niftymic_image=niftymic_image, pre_command=pre_command
         ),
         name="brain_extraction",
     )
-    if "general" in params.keys():
-        brain_extraction.inputs.pre_command = params["general"].get(
-            "pre_command", ""
-        )
-        brain_extraction.inputs.niftymic_image = params["general"].get(
-            "niftymic_image", ""
-        )
 
-    niftymic_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
+    niftymic_pipe.connect(inputnode, "stacks", brain_extraction, "input_stacks")
 
     # 2. RECONSTRUCTION
     # recon Node
@@ -78,7 +70,7 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     )
 
     niftymic_pipe.connect(inputnode, "stacks", recon, "input_stacks")
-    niftymic_pipe.connect(brain_extraction, "bmasks", recon, "input_masks")
+    niftymic_pipe.connect(brain_extraction, "output_bmasks", recon, "input_masks")
 
     # output node
     outputnode = pe.Node(

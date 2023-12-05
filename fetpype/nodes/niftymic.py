@@ -113,13 +113,10 @@ class NiftymicReconstruction(CommandLine):
     output_spec = NiftymicReconstructionOutputSpec
 
     def __init__(self, **inputs):
-        self._cmd = "nesvor reconstruct"
-        super(NiftymicReconstruction, self).__init__(**inputs)
-
         self._cmd = (
             f"{self.inputs.pre_command} "
             f"{self.inputs.niftymic_image} "
-            "niftymic_run_reconstruction_pipeline"
+            "niftymic_reconstruct_volume" # "niftymic_run_reconstruction_pipeline"
         )
         # bias field correction was already performed
         self._cmd += " --bias-field-correction 1"
@@ -127,6 +124,7 @@ class NiftymicReconstruction(CommandLine):
         # outliers rejection parameters
         self._cmd += " --run-bias-field-correction 1"
         self._cmd += " --run-diagnostics 0"
+        super(NiftymicReconstruction, self).__init__(**inputs)
 
     # def _run_interface(self, runtime, correct_return_codes=(0,)):
     #     if "docker" in self.cmdline:
@@ -209,6 +207,17 @@ class NiftymicBrainExtractionInputSpec(CommandLineInputSpec):
     Attributes
     ----------
     """
+    input_stacks = traits.List(File(exists=True),
+        desc="List of input stacks to be processed",
+        argstr="--filenames %s",
+        mandatory=True,
+    )
+    input_bmasks = traits.List(File(exists=True),
+        desc="List of input masks corresponding to the stacks to be processed",
+        argstr="--filenames-masks %s",
+        genfile=True,
+        mandatory=False,
+    )
 
 
 class NiftymicBrainExtractionOutputSpec(TraitedSpec):
@@ -219,32 +228,91 @@ class NiftymicBrainExtractionOutputSpec(TraitedSpec):
     Attributes
     ----------
     """
+    output_bmasks = traits.List(File(exists=True),
+        desc="List of output brain masks",
+        mandatory=True,
+    )
 
 
 class NiftymicBrainExtraction(CommandLine):
     """
-    Class for the Niftymic brain extraction function.
-    Inherits from CommandLine.
+    Function wrapping niftymic_segment_fetal_brains for use with nipype.
 
-    Attributes
-    ----------
-    _cmd : str
-        Command to be run.
-    input_spec : NiftymicBrainExtractionInputSpec
-        Class containing the input specification for the NeSVoRSeg
-        nipype interface.
-    output_spec : NiftymicBrainExtractionOutputSpec
-        Class containing the output specification for the NeSVoRSeg
-        nipype interface.
+    Inputs:
+        raw_T2s:
+            Raw T2 file names
+        pre_command:
+            Command to run niftymic_image (e.g. docker run or singularity run)
+        niftymic_image:
+            niftymic_image name (e.g. renbem/niftymic:latest)
 
-    _format_arg
+    Outputs:
+        bmasks:
+            Brain masks for each T2 low-resolution stack given in raw_T2s.
     """
-
     input_spec = NiftymicBrainExtractionInputSpec
     output_spec = NiftymicBrainExtractionOutputSpec
 
     def __init__(self, **inputs):
-        return
+        self._cmd = (
+            f"{self.inputs.pre_command} "
+            f"{self.inputs.niftymic_image} "
+            "niftymic_segment_fetal_brains"
+        )
+        super(NiftymicBrainExtraction, self).__init__(**inputs)
+
+    # Customize how arguments are formatted
+    def _format_arg(self, name, trait_spec, value):
+        if name == "pre_command":
+            return ""  # if the argument is 'pre_command', ignore it
+        elif name == "niftymic_image":
+            return ""  # if the argument is 'pre_command', ignore it
+        return super()._format_arg(name, trait_spec, value)
+
+    def _gen_filename(self, name: str) -> str:
+        """
+        Generates an output filename if not defined.
+
+        Parameters
+        ----------
+        name : str
+            The name of the file for which to generate a name.
+
+        Returns
+        -------
+        str
+            The generated filename.
+        """
+        if name == "input_bmasks":
+            input_bmasks = self.inputs.input_bmasks
+            if not isdefined(input_bmasks):
+                # Why do we do [:-7] + .nii.gz?
+                input_bmasks = [
+                    os.path.abspath(
+                        os.path.basename(s)[:-7].replace("_T2w", "_mask") + ".nii.gz",
+                    )
+                    for s in self.inputs.input_stacks
+                ]
+
+            return input_bmasks
+
+        return None
+
+    def _list_outputs(self) -> dict:
+        """
+        Lists the outputs of the class.
+
+        Returns
+        -------
+        dict
+            The dictionary of outputs.
+        """
+        outputs = self._outputs().get()
+        if isdefined(self.inputs.input_bmasks):
+            outputs["output_bmasks"] = self.inputs.input_bmasks
+        else:
+            outputs["output_bmasks"] = self._gen_filename("input_bmasks")
+        return outputs
 
 
 def niftymic_recon(stacks, masks, pre_command="", niftymic_image=""):

@@ -92,10 +92,10 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
                           recon, "input_masks")
     #niftymic_pipe.connect(brain_extraction, "bmasks", recon, "input_masks")
 
-    # output node
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=["dir_output"]), name="outputnode"
-    )
+    ## output node
+    #outputnode = pe.Node(
+        #niu.IdentityInterface(fields=["dir_output"]), name="outputnode"
+    #)
 
-    niftymic_pipe.connect(recon, "dir_output", outputnode, "dir_output")
+    #niftymic_pipe.connect(recon, "dir_output", outputnode, "dir_output")
     return niftymic_pipe

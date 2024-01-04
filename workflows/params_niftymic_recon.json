@@ -2,7 +2,7 @@
     "general":
     {
         "pipeline": "niftymic_recon",
-        "pre_command": "singularity exec -B /scratch:/scratch –nv",
+        "pre_command": "singularity exec -B /scratch:/scratch -–nv",
         "niftymic_image": " /scratch/gauzias/softs/niftymic.multifact_latest.sif "
     }
 }

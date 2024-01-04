@@ -88,7 +88,8 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     )
 
     niftymic_pipe.connect(inputnode, "stacks", recon, "input_stacks")
-    niftymic_pipe.connect(brain_extraction, "output_bmasks", recon, "input_masks")
+    niftymic_pipe.connect(brain_extraction, "output_bmasks",
+                          recon, "input_masks")
     #niftymic_pipe.connect(brain_extraction, "bmasks", recon, "input_masks")
 
     # output node

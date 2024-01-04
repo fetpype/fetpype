@@ -113,13 +113,13 @@ class NiftymicReconstruction(CommandLine):
     output_spec = NiftymicReconstructionOutputSpec
 
     def __init__(self, **inputs):
-        self._cmd = "niftymic_reconstruct_volume"
+        self._cmd = "niftymic_run_reconstruction_pipeline"
         super(NiftymicReconstruction, self).__init__(**inputs)
 
         self._cmd = (
             f"{self.inputs.pre_command} "
             f"{self.inputs.niftymic_image} "
-            "niftymic_reconstruct_volume" # "niftymic_run_reconstruction_pipeline"
+            "niftymic_run_reconstruction_pipeline" # "niftymic_run_reconstruction_pipeline"
         )
         # bias field correction was already performed
         self._cmd += " --bias-field-correction 1"

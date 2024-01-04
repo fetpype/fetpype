@@ -176,7 +176,7 @@ class NiftymicReconstruction(CommandLine):
                 # output = os.path.join(cwd, "recon")
                 #
                 # # create the folder if it does not exist
-                # os.makedirs(output, exist_ok=True)
+                os.makedirs(dir_output, exist_ok=True)
                 #
                 # # add the name of the file
                 # dir_outputoutput = os.path.join(output, "recon.nii.gz")

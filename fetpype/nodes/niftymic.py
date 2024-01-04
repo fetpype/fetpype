@@ -169,7 +169,7 @@ class NiftymicReconstruction(CommandLine):
         if name == "dir_output":
             dir_output = self.inputs.dir_output
             if not isdefined(dir_output):
-                dir_output = os.path.abspath("srr_reconstruction")
+                dir_output = os.path.abspath(os.path.join("srr_reconstruction", "preprocessing_n4itk"))
                 # cwd = os.environ["PWD"]
                 #
                 # # add the name of the folder

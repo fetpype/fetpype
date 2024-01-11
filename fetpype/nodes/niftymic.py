@@ -80,6 +80,11 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
         mandatory=True
     )
 
+    recon_mask_file = traits.File(
+        desc="reconstructed mask file",
+        mandatory=False
+    )
+
     # pre command and niftymic image
     # these two commands are not used in the command line
     pre_command = traits.Str(
@@ -106,6 +111,11 @@ class NiftymicReconstructionOutputSpec(TraitedSpec):
     """
     recon_file = traits.File(
         desc="reconstructed file",
+        exists=True,
+    )
+
+    recon_mask_file = traits.File(
+        desc="reconstructed mask_file",
         exists=True,
     )
 
@@ -177,6 +187,16 @@ class NiftymicReconstruction(CommandLine):
                 recon_file = os.path.abspath(fname + "_recon" + ext)
             return recon_file
 
+        if name == "recon_mask_file":
+            recon_mask_file = self.inputs.recon_mask_file
+            if not isdefined(recon_mask_file):
+                assert 1 <= len(self.inputs.input_stacks), \
+                    "Error input stacks should have at least one element"
+                path, fname, ext = split_f(self.inputs.input_stacks[0])
+
+                recon_mask_file = os.path.abspath(fname + "_recon_mask" + ext)
+            return recon_mask_file
+
         return None
 
     def _list_outputs(self) -> dict:
@@ -189,10 +209,16 @@ class NiftymicReconstruction(CommandLine):
             The dictionary of outputs.
         """
         outputs = self._outputs().get()
-        if isdefined(self.inputs.dir_output):
-            outputs["dir_output"] = self.inputs.dir_output
+        if isdefined(self.inputs.recon_file):
+            outputs["recon_file"] = self.inputs.recon_file
         else:
-            outputs["dir_output"] = self._gen_filename("dir_output")
+            outputs["recon_file"] = self._gen_filename("recon_file")
+
+        if isdefined(self.inputs.recon_mask_file):
+            outputs["recon_mask_file"] = self.inputs.recon_mask_file
+        else:
+            outputs["recon_mask_file"] = self._gen_filename("recon_mask_file")
+
         return outputs
 
 

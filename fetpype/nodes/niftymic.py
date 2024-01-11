@@ -52,12 +52,11 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
         mandatory=True,
     )
 
-    dir_output = traits.Directory(
-        desc="Path to save output reconstruction files",
-        argstr="--dir-output %s",
+    recon_file = traits.File(
+        desc="reconstructed file",
+        argstr="--output %s",
         genfile=True,
-        hash_files=False,
-        mandatory=False,
+        mandatory=True
     )
     # pre command and niftymic image
     # these two commands are not used in the command line
@@ -83,9 +82,9 @@ class NiftymicReconstructionOutputSpec(TraitedSpec):
     dir_output : traits.Directory
         The reconstructed image.
     """
-    dir_output = traits.Directory(
-        desc="Path to save output reconstruction files",
-        mandatory=True,
+    recon_file = traits.File(
+        desc="reconstructed file",
+        exists=True,
     )
 
 
@@ -128,22 +127,6 @@ class NiftymicReconstruction(CommandLine):
         self._cmd += " --run-bias-field-correction 1"
         self._cmd += " --run-diagnostics 0"
 
-
-    # def _run_interface(self, runtime, correct_return_codes=(0,)):
-    #     if "docker" in self.cmdline:
-    #         stacks_dir = os.path.commonpath(self.inputs.input_stacks)
-    #         stack_masks = os.path.commonpath(self.inputs.stack_masks)
-    #         out_dir = os.path.dirname(self._list_outputs()["output_volume"])
-    #         new_cmd = self.inputs.pre_command + (
-    #             f"-v {stacks_dir}:{stacks_dir} "
-    #             f"-v {stack_masks}:{stack_masks} "
-    #             f"-v {out_dir}:{out_dir} "
-    #             f"{self.inputs.niftymic_image} "
-    #             "nesvor reconstruct"
-    #         )
-    #         self._cmd = new_cmd
-    #     super()._run_interface(runtime, correct_return_codes)
-
     # Customize how arguments are formatted
     def _format_arg(self, name, trait_spec, value):
         if name == "pre_command":
@@ -166,22 +149,17 @@ class NiftymicReconstruction(CommandLine):
         str
             The generated filename.
         """
-        if name == "dir_output":
-            dir_output = self.inputs.dir_output
-            if not isdefined(dir_output):
-                dir_output = os.path.abspath(os.path.join("srr_reconstruction"))
-                # cwd = os.environ["PWD"]
-                #
-                # # add the name of the folder
-                # output = os.path.join(cwd, "recon")
-                #
-                # # create the folder if it does not exist
-                os.makedirs(dir_output, exist_ok=True)
-                #
-                # # add the name of the file
-                # dir_outputoutput = os.path.join(output, "recon.nii.gz")
+        from nipype.utils.filemanip import split_filename as split_f
 
-            return dir_output
+        if name == "recon_file":
+            recon_file = self.inputs.recon_file
+            if not isdefined(recon_file):
+                assert 1 <= len(self.inputs.input_stacks), \
+                    "Error input stacks should have at least one element"
+                path, fname, ext = split_f(self.inputs.input_stacks[0])
+
+                recon_file = os.path.abspath(fname + "_recon" + ext)
+            return recon_file
 
         return None
 

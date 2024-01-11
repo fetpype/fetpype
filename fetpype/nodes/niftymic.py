@@ -61,14 +61,16 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
         usedefault=True,
         argstr="--bias-field-correction %d",
         desc="bias field correction",
-        mandatory=True)
+        mandatory=True,
+    )
 
     isotropic_resolution = traits.Float(
         0.5,
         usedefault=True,
         argstr="--isotropic-resolution %f",
         desc="isotropic resolution",
-        mandatory=True)
+        mandatory=True,
+    )
 
     # output
     recon_file = traits.File(

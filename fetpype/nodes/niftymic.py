@@ -52,13 +52,13 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
         mandatory=True,
     )
 
-    #dir_output = traits.Directory(
-        #desc="Path to save output reconstruction files",
-        #argstr="--dir-output %s",
-        #genfile=True,
-        #hash_files=False,
-        #mandatory=False,
-    #)
+    dir_output = traits.Directory(
+        desc="Path to save output reconstruction files",
+        argstr="--dir-output %s",
+        genfile=True,
+        hash_files=False,
+        mandatory=False,
+    )
     # pre command and niftymic image
     # these two commands are not used in the command line
     pre_command = traits.Str(
@@ -83,11 +83,10 @@ class NiftymicReconstructionOutputSpec(TraitedSpec):
     dir_output : traits.Directory
         The reconstructed image.
     """
-    #dir_output = traits.Directory(
-        #desc="Path to save output reconstruction files",
-        #mandatory=True,
-    #)
-    pass
+    dir_output = traits.Directory(
+        desc="Path to save output reconstruction files",
+        mandatory=True,
+    )
 
 
 class NiftymicReconstruction(CommandLine):
@@ -153,55 +152,54 @@ class NiftymicReconstruction(CommandLine):
             return ""  # if the argument is 'pre_command', ignore it
         return super()._format_arg(name, trait_spec, value)
 
-    #def _gen_filename(self, name: str) -> str:
-        #"""
-        #Generates an output filename if not defined.
+    def _gen_filename(self, name: str) -> str:
+        """
+        Generates an output filename if not defined.
 
-        #Parameters
-        #----------
-        #name : str
-            #The name of the file for which to generate a name.
+        Parameters
+        ----------
+        name : str
+            The name of the file for which to generate a name.
 
-        #Returns
-        #-------
-        #str
-            #The generated filename.
-        #"""
+        Returns
+        -------
+        str
+            The generated filename.
+        """
+        if name == "dir_output":
+            dir_output = self.inputs.dir_output
+            if not isdefined(dir_output):
+                dir_output = os.path.abspath(os.path.join("srr_reconstruction", "preprocessing_n4itk"))
+                # cwd = os.environ["PWD"]
+                #
+                # # add the name of the folder
+                # output = os.path.join(cwd, "recon")
+                #
+                # # create the folder if it does not exist
+                os.makedirs(dir_output, exist_ok=True)
+                #
+                # # add the name of the file
+                # dir_outputoutput = os.path.join(output, "recon.nii.gz")
 
-        #if name == "dir_output":
-            #dir_output = self.inputs.dir_output
-            #if not isdefined(dir_output):
-                #dir_output = os.path.abspath(os.path.join("srr_reconstruction"))
-                ## cwd = os.environ["PWD"]
-                ##
-                ## # add the name of the folder
-                ## output = os.path.join(cwd, "recon")
-                ##
-                ## # create the folder if it does not exist
-                #os.makedirs(dir_output, exist_ok=True)
-                ##
-                ## # add the name of the file
-                ## dir_outputoutput = os.path.join(output, "recon.nii.gz")
+            return dir_output
 
-            #return dir_output
+        return None
 
-        #return None
+    def _list_outputs(self) -> dict:
+        """
+        Lists the outputs of the class.
 
-    #def _list_outputs(self) -> dict:
-        #"""
-        #Lists the outputs of the class.
-
-        #Returns
-        #-------
-        #dict
-            #The dictionary of outputs.
-        #"""
-        #outputs = self._outputs().get()
-        #if isdefined(self.inputs.dir_output):
-            #outputs["dir_output"] = self.inputs.dir_output
-        #else:
-            #outputs["dir_output"] = self._gen_filename("dir_output")
-        #return outputs
+        Returns
+        -------
+        dict
+            The dictionary of outputs.
+        """
+        outputs = self._outputs().get()
+        if isdefined(self.inputs.dir_output):
+            outputs["dir_output"] = self.inputs.dir_output
+        else:
+            outputs["dir_output"] = self._gen_filename("dir_output")
+        return outputs
 
 
 class NiftymicBrainExtractionInputSpec(CommandLineInputSpec):

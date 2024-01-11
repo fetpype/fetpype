@@ -40,24 +40,44 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
 
     """
 
-    input_stacks = traits.List(File(exists=True),
+    # inputs
+    input_stacks = traits.List(
+        File(exists=True),
         desc="List of input stacks to be processed",
         argstr="--filenames %s",
         mandatory=True,
     )
 
-    input_masks = traits.List(File(exists=True),
+    input_masks = traits.List(
+        File(exists=True),
         desc="List of input masks corresponding to the stacks to be processed",
         argstr="--filenames-masks %s",
         mandatory=True,
     )
 
+    # args
+    bias_field_correction = traits.Bool(
+        False,
+        usedefault=True,
+        argstr="--bias-field-correction %d",
+        desc="bias field correction",
+        mandatory=True)
+
+    isotropic_resolution = traits.Float(
+        0.5,
+        usedefault=True,
+        argstr="--isotropic-resolution %f",
+        desc="isotropic resolution",
+        mandatory=True)
+
+    # output
     recon_file = traits.File(
         desc="reconstructed file",
         argstr="--output %s",
         genfile=True,
         mandatory=True
     )
+
     # pre command and niftymic image
     # these two commands are not used in the command line
     pre_command = traits.Str(
@@ -120,9 +140,6 @@ class NiftymicReconstruction(CommandLine):
             f"{self.inputs.niftymic_image} "
             "niftymic_reconstruct_volume" # "niftymic_run_reconstruction_pipeline"
         )
-        # bias field correction was already performed
-        self._cmd += " --bias-field-correction 0"
-        self._cmd += " --isotropic-resolution 0.5"
 
     # Customize how arguments are formatted
     def _format_arg(self, name, trait_spec, value):

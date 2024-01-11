@@ -77,7 +77,7 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
         desc="reconstructed file",
         argstr="--output %s",
         genfile=True,
-        mandatory=True
+        mandatory=False
     )
 
     recon_mask_file = traits.File(

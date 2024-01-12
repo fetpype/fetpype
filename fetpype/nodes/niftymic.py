@@ -14,7 +14,6 @@ from nipype.interfaces.base import (
     traits,
     isdefined,
 )
-from typing import Optional, List
 
 
 class NiftymicReconstructionInputSpec(CommandLineInputSpec):
@@ -246,13 +245,15 @@ class NiftymicReconstructionPipelineInputSpec(CommandLineInputSpec):
 
     """
 
-    input_stacks = traits.List(File(exists=True),
+    input_stacks = traits.List(
+        File(exists=True),
         desc="List of input stacks to be processed",
         argstr="--filenames %s",
         mandatory=True,
     )
 
-    input_masks = traits.List(File(exists=True),
+    input_masks = traits.List(
+        File(exists=True),
         desc="List of input masks corresponding to the stacks to be processed",
         argstr="--filenames-masks %s",
         mandatory=True,
@@ -325,7 +326,8 @@ class NiftymicReconstructionPipeline(CommandLine):
         self._cmd = (
             f"{self.inputs.pre_command} "
             f"{self.inputs.niftymic_image} "
-            "niftymic_run_reconstruction_pipeline" # "niftymic_run_reconstruction_pipeline"
+            "niftymic_run_reconstruction_pipeline"
+            # "niftymic_run_reconstruction_pipeline"
         )
         # bias field correction was already performed
         self._cmd += " --bias-field-correction 1"
@@ -334,24 +336,8 @@ class NiftymicReconstructionPipeline(CommandLine):
         self._cmd += " --run-bias-field-correction 1"
         self._cmd += " --run-diagnostics 0"
 
-
-    # def _run_interface(self, runtime, correct_return_codes=(0,)):
-    #     if "docker" in self.cmdline:
-    #         stacks_dir = os.path.commonpath(self.inputs.input_stacks)
-    #         stack_masks = os.path.commonpath(self.inputs.stack_masks)
-    #         out_dir = os.path.dirname(self._list_outputs()["output_volume"])
-    #         new_cmd = self.inputs.pre_command + (
-    #             f"-v {stacks_dir}:{stacks_dir} "
-    #             f"-v {stack_masks}:{stack_masks} "
-    #             f"-v {out_dir}:{out_dir} "
-    #             f"{self.inputs.niftymic_image} "
-    #             "nesvor reconstruct"
-    #         )
-    #         self._cmd = new_cmd
-    #     super()._run_interface(runtime, correct_return_codes)
-
-    # Customize how arguments are formatted
     def _format_arg(self, name, trait_spec, value):
+
         if name == "pre_command":
             return ""  # if the argument is 'pre_command', ignore it
         elif name == "niftymic_image":
@@ -375,18 +361,9 @@ class NiftymicReconstructionPipeline(CommandLine):
         if name == "dir_output":
             dir_output = self.inputs.dir_output
             if not isdefined(dir_output):
-                dir_output = os.path.abspath(os.path.join("srr_reconstruction"))
-                # cwd = os.environ["PWD"]
-                #
-                # # add the name of the folder
-                # output = os.path.join(cwd, "recon")
-                #
-                # # create the folder if it does not exist
+                dir_output = os.path.abspath(
+                    os.path.join("srr_reconstruction"))
                 os.makedirs(dir_output, exist_ok=True)
-                #
-                # # add the name of the file
-                # dir_outputoutput = os.path.join(output, "recon.nii.gz")
-
             return dir_output
 
         return None
@@ -416,17 +393,21 @@ class NiftymicBrainExtractionInputSpec(CommandLineInputSpec):
     Attributes
     ----------
     """
-    input_stacks = traits.List(File(exists=True),
+    input_stacks = traits.List(
+        File(exists=True),
         desc="List of input stacks to be processed",
         argstr="--filenames %s",
         mandatory=True,
     )
-    input_bmasks = traits.List(File(exists=True),
+
+    input_bmasks = traits.List(
+        File(exists=True),
         desc="List of input masks corresponding to the stacks to be processed",
         argstr="--filenames-masks %s",
         genfile=True,
-        mandatory=False,
+        mandatory=False
     )
+
     # pre command and niftymic image
     # these two commands are not used in the command line
     pre_command = traits.Str(
@@ -439,6 +420,7 @@ class NiftymicBrainExtractionInputSpec(CommandLineInputSpec):
         mandatory=True,
     )
 
+
 class NiftymicBrainExtractionOutputSpec(TraitedSpec):
     """
     Class for the output specification for the NeSVoRSeg nipype interface.
@@ -447,9 +429,10 @@ class NiftymicBrainExtractionOutputSpec(TraitedSpec):
     Attributes
     ----------
     """
-    output_bmasks = traits.List(File(exists=True),
+    output_bmasks = traits.List(
+        File(exists=True),
         desc="List of output brain masks",
-        mandatory=True,
+        mandatory=True
     )
 
 
@@ -482,7 +465,6 @@ class NiftymicBrainExtraction(CommandLine):
             "niftymic_segment_fetal_brains"
         )
 
-
     # Customize how arguments are formatted
     def _format_arg(self, name, trait_spec, value):
         if name == "pre_command":
@@ -511,8 +493,8 @@ class NiftymicBrainExtraction(CommandLine):
                 # Why do we do [:-7] + .nii.gz?
                 input_bmasks = [
                     os.path.abspath(
-                        os.path.basename(s)[:-7].replace("_T2w", "_mask") + ".nii.gz",
-                    )
+                        os.path.basename(s)[:-7].replace(
+                            "_T2w", "_mask") + ".nii.gz")
                     for s in self.inputs.input_stacks
                 ]
 

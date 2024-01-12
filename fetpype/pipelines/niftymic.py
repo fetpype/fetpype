@@ -1,9 +1,6 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
-from fetpype.nodes.niftymic import niftymic_recon
-
-from nipype.interfaces.ants.segmentation import DenoiseImage
 from ..nodes.niftymic import (
     NiftymicReconstruction,
     NiftymicBrainExtraction
@@ -58,25 +55,8 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
         name="brain_extraction",
     )
 
-    niftymic_pipe.connect(inputnode, "stacks", brain_extraction, "input_stacks")
-
-    # old version
-    # brain_extraction = pe.Node(
-    #     interface=niu.Function(
-    #         input_names=["raw_T2s", "pre_command", "niftymic_image"],
-    #         output_names=["bmasks"],
-    #         function=niftymic_brain_extraction,
-    #     ),
-    #     name="brain_extraction",
-    # )
-    # if "general" in params.keys():
-    #     brain_extraction.inputs.pre_command = params["general"].get(
-    #         "pre_command", ""
-    #     )
-    #     brain_extraction.inputs.niftymic_image = params["general"].get(
-    #         "niftymic_image", ""
-    #     )
-    # niftymic_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
+    niftymic_pipe.connect(inputnode, "stacks",
+                          brain_extraction, "input_stacks")
 
     # 2. RECONSTRUCTION
     # recon Node
@@ -90,12 +70,14 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     niftymic_pipe.connect(inputnode, "stacks", recon, "input_stacks")
     niftymic_pipe.connect(brain_extraction, "output_bmasks",
                           recon, "input_masks")
-    #niftymic_pipe.connect(brain_extraction, "bmasks", recon, "input_masks")
 
-    ## output node
-    #outputnode = pe.Node(
-        #niu.IdentityInterface(fields=["dir_output"]), name="outputnode"
-    #)
+    # output node
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["recon_file", "recon_mask_file"]),
+        name="outputnode"
+    )
 
-    #niftymic_pipe.connect(recon, "dir_output", outputnode, "dir_output")
+    niftymic_pipe.connect(recon, "recon_file", outputnode, "recon_file")
+    niftymic_pipe.connect(recon, "recon_mask_file",
+                          outputnode, "recon_mask_file")
     return niftymic_pipe

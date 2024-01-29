@@ -17,6 +17,7 @@ from nipype.interfaces.base import (
     isdefined,
 )
 from typing import Optional, List
+from .container import ContainerCommandLine
 
 
 class NesvorSegmentationInputSpec(CommandLineInputSpec):
@@ -532,7 +533,7 @@ class NesvorReconstruction(CommandLine):
 class NesvorFullReconstructionInputSpec(CommandLineInputSpec):
     """
     Class for the input for the NeSVoRRecon nipype interface.
-    Inherits from CommandLineInputSpec.
+    Inherits from ContainerCommandLine.
 
     Some attributes are missing. Need to be implemented later to complete the
     nipype interface.
@@ -627,17 +628,6 @@ class NesvorFullReconstructionInputSpec(CommandLineInputSpec):
         desc="Isotropic resolution of the reconstructed volume.",
         argstr="--output-resolution %s",
     )
-    # pre command and nesvor image
-    # these two commands are not used in the command line
-    pre_command = traits.Str(
-        desc="Pre-command to be run",
-        mandatory=True,
-    )
-
-    nesvor_image = traits.Str(
-        desc="Singularity Nesvor command",
-        mandatory=True,
-    )
 
 
 class NesvorFullReconstructionOutputSpec(TraitedSpec):
@@ -663,15 +653,17 @@ class NesvorFullReconstructionOutputSpec(TraitedSpec):
     )
 
 
-class NesvorFullReconstruction(CommandLine):
+class NesvorFullReconstruction(ContainerCommandLine):
     """
     Class for the NeSVoRRecon nipype interface.
-    Inherits from CommandLine.
+    Inherits from ContainerCommandLine.
 
     Attributes
     ----------
     _cmd : str
         Command to be run.
+    _mount_keys : list
+        List of keys to be mounted on the docker image.
     input_spec : NesvorFullReconstructionInputSpec
         Class containing the input specification for the NeSVoRRecon
         nipype interface.
@@ -682,40 +674,14 @@ class NesvorFullReconstruction(CommandLine):
 
     input_spec = NesvorFullReconstructionInputSpec
     output_spec = NesvorFullReconstructionOutputSpec
+
     _cmd = "nesvor reconstruct"
+    _mount_keys = ["input_stacks", "stack_masks", "output_volume"]
 
-    def __init__(self, **inputs):
-        self._cmd = "nesvor reconstruct"
-        super(NesvorFullReconstruction, self).__init__(**inputs)
-        # update the command
-        self._cmd = (
-            f"{self.inputs.pre_command} "
-            f"{self.inputs.nesvor_image} "
-            "nesvor reconstruct"
+    def __init__(self, pre_command, container_image, **inputs):
+        super(NesvorFullReconstruction, self).__init__(
+            pre_command=pre_command, container_image=container_image, **inputs
         )
-
-    def _run_interface(self, runtime, correct_return_codes=(0,)):
-        if "docker" in self.cmdline:
-            stacks_dir = os.path.commonpath(self.inputs.input_stacks)
-            stack_masks = os.path.commonpath(self.inputs.stack_masks)
-            out_dir = os.path.dirname(self._list_outputs()["output_volume"])
-            new_cmd = self.inputs.pre_command + (
-                f"-v {stacks_dir}:{stacks_dir} "
-                f"-v {stack_masks}:{stack_masks} "
-                f"-v {out_dir}:{out_dir} "
-                f"{self.inputs.nesvor_image} "
-                "nesvor reconstruct"
-            )
-            self._cmd = new_cmd
-        super()._run_interface(runtime, correct_return_codes)
-
-    # Customize how arguments are formatted
-    def _format_arg(self, name, trait_spec, value):
-        if name == "pre_command":
-            return ""  # if the argument is 'pre_command', ignore it
-        elif name == "nesvor_image":
-            return ""  # if the argument is 'nesvor_image', ignore it
-        return super()._format_arg(name, trait_spec, value)
 
     def _gen_filename(self, name: str) -> str:
         """
@@ -734,16 +700,13 @@ class NesvorFullReconstruction(CommandLine):
         if name == "output_volume":
             output = self.inputs.output_volume
             if not isdefined(output):
-                cwd = os.getcwd()
+                # Create the output path from the
+                # current working directory
+                output = os.path.join(os.getcwd(), "recon/recon.nii.gz")
 
-                # add the name of the folder
-                output = os.path.join(cwd, "recon")
+                # Create the folder if it does not exist
+                os.makedirs(os.path.dirname(output), exist_ok=True)
 
-                # create the folder if it does not exist
-                os.makedirs(output, exist_ok=True)
-
-                # add the name of the file
-                output = os.path.join(output, "recon.nii.gz")
             return output
 
         return None

@@ -180,10 +180,9 @@ def get_recon(params):
         rec_pipe.connect(inputnode, "masks", recon, "masks")
     elif pipeline == "nesvor":
         nesvor_image = params["general"].get("nesvor_image", "")
-
         recon = pe.Node(
             NesvorFullReconstruction(
-                nesvor_image=nesvor_image, pre_command=pre_command
+                container_image=nesvor_image, pre_command=pre_command
             ),
             name="full_recon",
         )

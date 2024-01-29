@@ -47,16 +47,16 @@ from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
     create_minimal_subpipes,
 )
+from fetpype.pipelines.niftymic import create_niftymic_subpipes
+
 from fetpype.utils.utils_bids import create_datasource
 
 import os
 import os.path as op
 import json
 import argparse
-import nipype.interfaces.fsl as fsl
 import nipype.pipeline.engine as pe
 
-fsl.FSLCommand.set_default_output_type("NIFTI_GZ")
 ###############################################################################
 
 
@@ -134,6 +134,8 @@ def create_main_workflow(
         fet_pipe = create_fet_subpipes(params=params)
     elif params["general"]["pipeline"] == "minimal":
         fet_pipe = create_minimal_subpipes(params=params)
+    elif params["general"]["pipeline"] == "niftymic_recon":
+        fet_pipe = create_niftymic_subpipes(params=params)
 
     output_query = {
         "stacks": {

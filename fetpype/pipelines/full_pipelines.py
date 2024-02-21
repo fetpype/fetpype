@@ -18,6 +18,8 @@ from ..nodes.preprocessing import (
 )
 from ..nodes.dhcp import dhcp_pipeline
 
+# NodeParams, parse_key
+from ..utils.utils_nodes import NodeParams
 from ..utils.misc import parse_key
 
 # from nipype import config
@@ -346,7 +348,7 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
 
     # PREPROCESSING
     # 1. Brain extraction
-    brain_extraction = pe.NodeParams(
+    brain_extraction = NodeParams(
         interface=niu.Function(
             input_names=["raw_T2s", "pre_command", "niftymic_image"],
             output_names=["bmasks"],

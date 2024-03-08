@@ -58,26 +58,14 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
         ),
         name="mask",
     )
-
     nesvor_pipe.connect(inputnode, "stacks", mask, "input_stacks")
 
-    # 2. Cropping
-    cropping = pe.MapNode(
-        interface=CropStacksAndMasks(),
-        iterfield=["input_image", "input_mask"],
-        name="cropping",
-    )
-
-    nesvor_pipe.connect(inputnode, "stacks", cropping, "input_image")
-    nesvor_pipe.connect(mask, "output_bmasks", cropping, "input_mask")
-
-    # PREPROCESSING
-    # 1. Denoising
+    # 2 denoising
     denoising = pe.MapNode(
         interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
     )
 
-    nesvor_pipe.connect(cropping, "output_image", denoising, "input_image")
+    nesvor_pipe.connect(inputnode, "stacks", denoising, "input_image")
 
     # merge_denoise
     merge_denoise = pe.Node(
@@ -86,12 +74,26 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
 
     nesvor_pipe.connect(denoising, "output_image", merge_denoise, "in1")
 
+    # 3. Cropping
+    cropping = pe.MapNode(
+        interface=CropStacksAndMasks(),
+        iterfield=["input_image", "input_mask"],
+        name="cropping",
+    )
+
+    nesvor_pipe.connect(merge_denoise, "out", cropping, "input_image")
+    nesvor_pipe.connect(mask, "output_bmasks", cropping, "input_mask")
+
     # merge_masks
+    merge_crops = pe.Node(
+        interface=niu.Merge(1, ravel_inputs=True), name="merge_crops"
+    )
     merge_masks = pe.Node(
         interface=niu.Merge(1, ravel_inputs=True), name="merge_masks"
     )
 
     nesvor_pipe.connect(cropping, "output_mask", merge_masks, "in1")
+    nesvor_pipe.connect(cropping, "output_image", merge_crops, "in1")
 
     # 3. FULL PIPELINE
     recon = pe.Node(
@@ -101,9 +103,13 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
         name="full_recon",
     )
 
+    # parameters
+    recon.inputs.bias_field_correction = True
+    recon.inputs.n_levels_bias = 1
+
     nesvor_pipe.connect(
         [
-            (merge_denoise, recon, [("out", "input_stacks")]),
+            (merge_crops, recon, [("out", "input_stacks")]),
             (merge_masks, recon, [("out", "stack_masks")]),
         ]
     )

@@ -50,7 +50,7 @@ from fetpype.pipelines.full_pipelines import (
 from fetpype.pipelines.niftymic_pipeline import create_niftymic_subpipes
 from fetpype.pipelines.nesvor_pipeline import create_nesvor_subpipes
 
-from fetpype.utils.utils_bids import create_datasource
+from fetpype.utils.utils_bids import create_datasource, create_datasink
 
 import os
 import os.path as op
@@ -160,6 +160,29 @@ def create_main_workflow(
     # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
+    # DataSink
+    datasink_name = os.path.join("derivatives", process_dir)
+
+    if "regex_subs" in params.keys():
+        params_regex_subs = params["regex_subs"]
+    else:
+        params_regex_subs = {}
+
+    if "subs" in params.keys():
+        params_subs = params["rsubs"]
+    else:
+        params_subs = {}
+
+    print(datasource.iterables)
+    # datasink = create_datasink(
+    #     iterables=datasource.iterables,
+    #     name=datasink_name,
+    #     params_subs=params_subs,
+    #     params_regex_subs=params_regex_subs,
+    # )
+
+    # datasink.inputs.base_directory = process_dir
+
     # check if the parameter general/no_graph exists and is set to True
     # added as an option, as graph drawing fails in UPF cluster
     if "no_graph" in params["general"] and params["general"]["no_graph"]:
@@ -169,8 +192,9 @@ def create_main_workflow(
 
     if nprocs is None:
         nprocs = 4
-    # main_workflow.run()
-    main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
+    main_workflow.run()
+    # main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
+
 
 
 def main():

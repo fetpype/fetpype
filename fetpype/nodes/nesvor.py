@@ -146,22 +146,10 @@ class NesvorSegmentation(ContainerCommandLine):
         if name == "output_stack_masks":
             output = self.inputs.output_stack_masks
             if not isdefined(output):
-                output = []
-
-                # get current working dir
-                cwd = os.getcwd()
-
-                for stack in self.inputs.input_stacks:
-                    # remove .nii.gz extension and full path
-                    base = os.path.basename(stack)
-                    # get filename including extension
-                    filename, _ = os.path.splitext(base)
-                    # split the extension once
-                    filename, _ = os.path.splitext(filename)
-                    # split the extension again
-
-                    # add the full path to the output
-                    output.append(os.path.join(cwd, filename + "_mask.nii.gz"))
+                output = [
+                    os.path.abspath(s.replace("_T2w.nii.gz", "_mask.nii.gz"))
+                    for s in self.inputs.input_stacks
+                ]
 
             return output
         return None
@@ -601,12 +589,20 @@ class NesvorFullReconstructionInputSpec(CommandLineInputSpec):
     bias_field_correction = traits.Bool(
         desc="Apply bias field correction to each input stack.",
         argstr="--bias-field-correction",
-        default_value=True,
     )
     n_levels_bias = traits.Int(
         desc="Number of levels for the bias field correction.",
         argstr="--n-levels-bias %s",
         default_value=1,
+    )
+    registration = traits.Enum(
+        "svort",
+        "svort-only",
+        "svort-stack",
+        "stack",
+        "none",
+        desc="Type of registration to be used.",
+        argstr="--registration %s",
     )
 
 

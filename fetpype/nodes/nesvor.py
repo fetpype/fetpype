@@ -8,15 +8,14 @@ TODO:
 """
 
 import os
+from typing import Optional, List
 from nipype.interfaces.base import (
     CommandLineInputSpec,
     File,
     TraitedSpec,
-    CommandLine,
     traits,
     isdefined,
 )
-from typing import Optional, List
 from .container import ContainerCommandLine
 
 
@@ -93,7 +92,9 @@ class NesvorSegmentation(ContainerCommandLine):
     Inherits from ContainerCommandLine.
 
     This class calls the docker or the singularity container. There is no need
-    to implement _run_interface, as it is inherited from ContainerCommandLine and we just need to change the _cmd attribute. Docker mounts are also managed by ContainerCommandLine
+    to implement _run_interface, as it is inherited from
+    ContainerCommandLine and we just need to change the _cmd
+    attribute. Docker mounts are also managed by ContainerCommandLine
 
     Attributes
     ----------
@@ -265,7 +266,9 @@ class NesvorRegistration(ContainerCommandLine):
     It inherits from ContainerCommandLine.
 
     This class calls the docker or the singularity container. There is no need
-    to implement _run_interface, as it is inherited from ContainerCommandLine and we just need to change the _cmd attribute. Docker mounts are also managed by ContainerCommandLine
+    to implement _run_interface, as it is inherited from
+    ContainerCommandLine and we just need to change the _cmd
+    attribute. Docker mounts are also managed by ContainerCommandLine
 
     Attributes
     ----------
@@ -409,13 +412,16 @@ class NesvorReconstructionOutputSpec(TraitedSpec):
         desc="The reconstructed image",
     )
 
+
 class NesvorReconstruction(ContainerCommandLine):
     """
     NesvorReconstruction is a class for the NeSVoR nipype interface.
     It inherits from ContainerCommandLine.
 
     This class calls the docker or the singularity container. There is no need
-    to implement _run_interface, as it is inherited from ContainerCommandLine and we just need to change the _cmd attribute. Docker mounts are also managed by ContainerCommandLine
+    to implement _run_interface, as it is inherited from
+    ContainerCommandLine and we just need to change the _cmd
+    attribute. Docker mounts are also managed by ContainerCommandLine
 
     Attributes
     ----------
@@ -439,7 +445,6 @@ class NesvorReconstruction(ContainerCommandLine):
 
     _cmd = "nesvor reconstruct"
     _mount_keys = ["input_slices", "output_volume"]
-
 
     def __init__(self, pre_command, container_image, **inputs):
         super(NesvorReconstruction, self).__init__(

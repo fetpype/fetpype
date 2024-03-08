@@ -3,9 +3,6 @@ import nipype.pipeline.engine as pe
 from nipype.interfaces.ants.segmentation import DenoiseImage
 
 from ..nodes.nesvor import (
-    NesvorSegmentation,
-    NesvorRegistration,
-    NesvorReconstruction,
     NesvorFullReconstruction
 )
 
@@ -17,6 +14,8 @@ from ..nodes.niftymic import (
 from ..nodes.preprocessing import (
     CropStacksAndMasks,
 )
+
+
 def create_nesvor_subpipes(name="nesvor_pipe", params={}):
     """Nesvor based pipeline for fetal MRI
 
@@ -56,7 +55,6 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
         NiftymicBrainExtraction(
             container_image=niftymic_image,
             pre_command=pre_command,
-            # no_augmentation_seg=True,
         ),
         name="mask",
     )
@@ -117,4 +115,3 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
 
     nesvor_pipe.connect(recon, "output_volume", outputnode, "output_volume")
     return nesvor_pipe
-

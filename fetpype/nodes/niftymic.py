@@ -10,11 +10,11 @@ from nipype.interfaces.base import (
     CommandLineInputSpec,
     File,
     TraitedSpec,
-    CommandLine,
     traits,
     isdefined,
 )
 from .container import ContainerCommandLine
+
 
 class NiftymicReconstructionInputSpec(CommandLineInputSpec):
     """
@@ -112,7 +112,9 @@ class NiftymicReconstruction(ContainerCommandLine):
     It inherits from ContainerCommandLine.
 
     This class calls the docker or the singularity container. There is no need
-    to implement _run_interface, as it is inherited from ContainerCommandLine and we just need to change the _cmd attribute. Docker mounts are also managed by ContainerCommandLine
+    to implement _run_interface, as it is inherited from
+    ContainerCommandLine and we just need to change the _cmd
+    attribute. Docker mounts are also managed by ContainerCommandLine
 
     Attributes
     ----------
@@ -136,8 +138,8 @@ class NiftymicReconstruction(ContainerCommandLine):
     output_spec = NiftymicReconstructionOutputSpec
 
     _cmd = "niftymic_reconstruct_volume"
-    _mount_keys = ["input_stacks", "input_masks"] # folders to be mounted on the container if using docker
-
+    # folders to be mounted on the container if using docker
+    _mount_keys = ["input_stacks", "input_masks"]
 
     def __init__(self, pre_command, container_image, **inputs):
         super(NiftymicReconstruction, self).__init__(
@@ -278,11 +280,14 @@ class NiftymicReconstructionPipelineOutputSpec(TraitedSpec):
 
 class NiftymicReconstructionPipeline(ContainerCommandLine):
     """
-    NiftymicReconstructionPipeline is a class for the Niftymic nipype interface.
+    NiftymicReconstructionPipeline is a class for the Niftymic
+    nipype interface.
     It inherits from ContainerCommandLine.
 
-    This class calls the container for Niftymic reconstruction pipeline. 
-    There is no need to implement _run_interface, as it is inherited from ContainerCommandLine and we just need to change the _cmd attribute.
+    This class calls the container for Niftymic reconstruction pipeline.
+    There is no need to implement _run_interface, as it is inherited
+    from ContainerCommandLine and we just need to change the _cmd
+    attribute.
 
     Attributes
     ----------
@@ -291,9 +296,11 @@ class NiftymicReconstructionPipeline(ContainerCommandLine):
     _mount_keys : list
         List of keys to be mounted on the docker image.
     input_spec : NiftymicReconstructionPipelineInputSpec
-        The input specifications for the Niftymic reconstruction pipeline interface.
+        The input specifications for the Niftymic reconstruction
+        pipeline interface.
     output_spec : NiftymicReconstructionPipelineOutputSpec
-        The output specifications for the Niftymic reconstruction pipeline interface.
+        The output specifications for the Niftymic reconstruction
+        pipeline interface.
 
     Methods
     -------
@@ -310,16 +317,16 @@ class NiftymicReconstructionPipeline(ContainerCommandLine):
     _mount_keys = ["input_stacks", "input_masks", "dir_output"]
 
     def __init__(self, pre_command, container_image, **inputs):
-        super(NiftymicReconstructionPipeline, self).__init__(pre_command=pre_command, container_image=container_image, **inputs)
-
-        # TODO: add those parameters as inputs?
+        super(NiftymicReconstructionPipeline, self).__init__(
+            pre_command=pre_command, container_image=container_image,
+            **inputs
+        )
         # bias field correction was already performed
         self._cmd += " --bias-field-correction 1"
         self._cmd += " --isotropic-resolution 0.5"
         # outliers rejection parameters
         self._cmd += " --run-bias-field-correction 1"
         self._cmd += " --run-diagnostics 0"
-
 
     def _gen_filename(self, name: str) -> str:
         """
@@ -413,7 +420,8 @@ class NiftymicBrainExtraction(ContainerCommandLine):
     input_spec : NiftymicBrainExtractionInputSpec
         Specification of the input parameters for the brain extraction process.
     output_spec : NiftymicBrainExtractionOutputSpec
-        Specification of the output parameters for the brain extraction process.
+        Specification of the output parameters for the brain
+        extraction process.
     _cmd : str
         The command to be run by the container.
     _mount_keys : list
@@ -431,7 +439,8 @@ class NiftymicBrainExtraction(ContainerCommandLine):
     Inputs
     ------
     pre_command : str
-        Command to run `niftymic_image` (e.g., `docker run` or `singularity run`).
+        Command to run `niftymic_image` (e.g., `docker run` or
+        `singularity run`).
     niftymic_image : str
         `niftymic_image` name (e.g., `renbem/niftymic:latest`).
 
@@ -445,7 +454,8 @@ class NiftymicBrainExtraction(ContainerCommandLine):
     output_spec = NiftymicBrainExtractionOutputSpec
 
     _cmd = "niftymic_segment_fetal_brains"
-    _mount_keys = ["input_stacks", "input_bmasks"] # folders to be mounted on the container if using docker
+    # folders to be mounted on the container if using docker
+    _mount_keys = ["input_stacks", "input_bmasks"]
 
     def __init__(self, pre_command, container_image, **inputs):
         super(NiftymicBrainExtraction, self).__init__(
@@ -475,7 +485,7 @@ class NiftymicBrainExtraction(ContainerCommandLine):
                 ]
 
             return input_bmasks
-            
+           
         return None
 
     def _list_outputs(self) -> dict:
@@ -518,7 +528,6 @@ def niftymic_recon(stacks, masks, pre_command="", niftymic_image=""):
             Directory containing the reconstructed files
     """
     import os
-
     reconst_dir = os.path.abspath("srr_reconstruction")
 
     if "docker" in pre_command:

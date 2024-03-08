@@ -3,7 +3,8 @@ import nipype.pipeline.engine as pe
 
 from ..nodes.niftymic import (
     NiftymicReconstruction,
-    NiftymicBrainExtraction
+    NiftymicBrainExtraction,
+    NiftymicReconstructionPipeline
 )
 # from ..nodes.preprocessing import niftymic_brain_extraction
 
@@ -46,11 +47,13 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
         niu.IdentityInterface(fields=["stacks", "masks"]), name="inputnode"
     )
 
+    #TODO add denoising?
+
     # PREPROCESSING
     # 1. Brain extraction
     brain_extraction = pe.Node(
         NiftymicBrainExtraction(
-            niftymic_image=niftymic_image, pre_command=pre_command
+            container_image=niftymic_image, pre_command=pre_command
         ),
         name="brain_extraction",
     )
@@ -61,8 +64,8 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     # 2. RECONSTRUCTION
     # recon Node
     recon = pe.Node(
-        NiftymicReconstruction(
-            niftymic_image=niftymic_image, pre_command=pre_command
+        NiftymicReconstructionPipeline(
+            container_image=niftymic_image, pre_command=pre_command
         ),
         name="recon",
     )
@@ -77,7 +80,7 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
         name="outputnode"
     )
 
-    niftymic_pipe.connect(recon, "recon_file", outputnode, "recon_file")
-    niftymic_pipe.connect(recon, "recon_mask_file",
+    niftymic_pipe.connect(recon, "dir_output", outputnode, "recon_file")
+    niftymic_pipe.connect(recon, "dir_output",
                           outputnode, "recon_mask_file")
     return niftymic_pipe

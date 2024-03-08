@@ -1,6 +1,6 @@
 {
     "general": {
-        "pipeline": "nesvor",
+        "pipeline": "nesvor_recon",
         "pre_command": "singularity exec --bind /gpfs:/gpfs --nv ",
         "niftymic_image": " /scratch/apron/softs/niftymic.multifact_latest.sif ",
         "nesvor_image": "/home/gmarti/SINGULARITY/nesvor_latest.sif",

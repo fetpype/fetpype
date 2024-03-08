@@ -47,7 +47,8 @@ from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
     create_minimal_subpipes,
 )
-from fetpype.pipelines.niftymic import create_niftymic_subpipes
+from fetpype.pipelines.niftymic_pipeline import create_niftymic_subpipes
+from fetpype.pipelines.nesvor_pipeline import create_nesvor_subpipes
 
 from fetpype.utils.utils_bids import create_datasource
 
@@ -132,6 +133,8 @@ def create_main_workflow(
     main_workflow.base_dir = process_dir
     if params["general"]["pipeline"] in ["niftymic", "nesvor"]:
         fet_pipe = create_fet_subpipes(params=params)
+    elif params["general"]["pipeline"] == "nesvor_recon":
+        fet_pipe = create_nesvor_subpipes(params=params)
     elif params["general"]["pipeline"] == "minimal":
         fet_pipe = create_minimal_subpipes(params=params)
     elif params["general"]["pipeline"] == "niftymic_recon":

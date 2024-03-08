@@ -56,7 +56,7 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
         NiftymicBrainExtraction(
             container_image=niftymic_image,
             pre_command=pre_command,
-            no_augmentation_seg=True,
+            # no_augmentation_seg=True,
         ),
         name="mask",
     )
@@ -71,7 +71,7 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
     )
 
     nesvor_pipe.connect(inputnode, "stacks", cropping, "input_image")
-    nesvor_pipe.connect(mask, "output_stack_masks", cropping, "input_mask")
+    nesvor_pipe.connect(mask, "output_bmasks", cropping, "input_mask")
 
     # PREPROCESSING
     # 1. Denoising

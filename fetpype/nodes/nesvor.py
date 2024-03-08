@@ -148,7 +148,6 @@ class NesvorSegmentation(ContainerCommandLine):
                 output = []
 
                 # get current working dir
-                # os.getcwd() fails because of the (strange) way UPF HPC works
                 cwd = os.getcwd()
 
                 for stack in self.inputs.input_stacks:
@@ -592,6 +591,17 @@ class NesvorFullReconstructionInputSpec(CommandLineInputSpec):
     output_resolution = traits.Float(
         desc="Isotropic resolution of the reconstructed volume.",
         argstr="--output-resolution %s",
+        default_value=0.8,
+    )
+    bias_field_correction = traits.Bool(
+        desc="Apply bias field correction to each input stack.",
+        argstr="--bias-field-correction",
+        default_value=True,
+    )
+    n_levels_bias = traits.Int(
+        desc="Number of levels for the bias field correction.",
+        argstr="--n-levels-bias %s",
+        default_value=1,
     )
 
 

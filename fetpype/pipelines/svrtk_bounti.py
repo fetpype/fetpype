@@ -61,7 +61,7 @@ def create_svrtk_bounti_subpipes(name="svrtk_bounti_pipe", params={}):
     # recon Node
     recon = pe.Node(
         SvrtkBountiReconstruction(
-            svrtk_bounti_image=svrtk_bounti_image, pre_command=pre_command
+            container_image=svrtk_bounti_image, pre_command=pre_command
         ),
         name="recon",
     )

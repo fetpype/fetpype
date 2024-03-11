@@ -50,7 +50,7 @@ from fetpype.pipelines.full_pipelines import (
 from fetpype.pipelines.niftymic_pipeline import create_niftymic_subpipes
 from fetpype.pipelines.nesvor_pipeline import create_nesvor_subpipes
 
-from fetpype.utils.utils_bids import create_datasource, create_datasink
+from fetpype.utils.utils_bids import create_datasource, create_datasink, create_description_file
 
 import os
 import os.path as op
@@ -161,7 +161,15 @@ def create_main_workflow(
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
     # DataSink
-    datasink_name = os.path.join("derivatives", process_dir)
+    pipeline_name = params["general"]["pipeline"]
+    datasink_path = os.path.join(data_dir, "derivatives")
+
+    # Create directory if not existing
+    os.makedirs(datasink_path, exist_ok=True)
+    
+    # Create json file to make it BIDS compliant if doesnt exist
+    # TODO: eventually, add all parameters to the json file
+    create_description_file(os.path.join(datasink_path, pipeline_name), pipeline_name)
 
     if "regex_subs" in params.keys():
         params_regex_subs = params["regex_subs"]
@@ -173,15 +181,20 @@ def create_main_workflow(
     else:
         params_subs = {}
 
+    # Create datasink
     print(datasource.iterables)
-    # datasink = create_datasink(
-    #     iterables=datasource.iterables,
-    #     name=datasink_name,
-    #     params_subs=params_subs,
-    #     params_regex_subs=params_regex_subs,
-    # )
+    datasink = create_datasink(
+        iterables=datasource.iterables,
+        name=f"datasink_{pipeline_name}",
+        params_subs=params_subs,
+        params_regex_subs=params_regex_subs,
+    )
 
-    # datasink.inputs.base_directory = process_dir
+    # Add the base directory
+    datasink.inputs.base_directory = datasink_path
+
+    # Connect the pipeline to the datasink
+    main_workflow.connect(fet_pipe, "outputnode.recon_file", datasink, pipeline_name)
 
     # check if the parameter general/no_graph exists and is set to True
     # added as an option, as graph drawing fails in UPF cluster
@@ -215,7 +228,6 @@ def main():
         required=True,  # nargs='+',
         help="Output directory, where all outputs will be saved.",
     )
-
     parser.add_argument(
         "-subjects",
         "-sub",

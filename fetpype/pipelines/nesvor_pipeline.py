@@ -116,8 +116,8 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
 
     # output node
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["output_volume"]), name="outputnode"
+        niu.IdentityInterface(fields=["recon_file"]), name="outputnode"
     )
 
-    nesvor_pipe.connect(recon, "output_volume", outputnode, "output_volume")
+    nesvor_pipe.connect(recon, "output_volume", outputnode, "recon_file")
     return nesvor_pipe

@@ -1,7 +1,7 @@
 import os.path as op
 
 import json
-
+import os
 from bids.layout import BIDSLayout
 
 import nipype.interfaces.io as nio
@@ -129,17 +129,18 @@ def create_datasink(
     print("Datasink name: ", name)
 
     # Create the datasink node
-    datasink = pe.Node(nio.DataSink(container=name), name="datasink")
+    datasink = pe.Node(nio.DataSink(), name=name)
 
     # Generate subject folders with session and subject information
     subjFolders = [
         (
-            "_session_%s_subject_%s" % (ses, sub),
+            "_acquisition_haste_session_%s_subject_%s" % (ses, sub),
             "sub-%s/ses-%s/anat" % (sub, ses),
         )
-        for ses in iterables[1][1]
-        for sub in iterables[0][1]
+        for (sub, ses, _) in iterables[1]  # doublecheck
     ]
+
+    print("subjFolders: ", subjFolders)
 
     # Load parameter substitutions from the 'subs.json' file 
     json_subs = op.join(op.dirname(op.abspath(__file__)), "subs.json")
@@ -222,3 +223,40 @@ def get_gestational_age(bids_dir, T2):
         )
 
     return gestational_age
+
+
+def create_description_file(recon_dir, algorithm):
+    """Create a dataset_description.json file in the derivatives folder.
+
+    Parameters
+    ----------
+    args : dictionary
+        Dictionary containing the arguments passed to the script.
+    container_type : string
+        Type of container used to run the algorithm.
+
+    TODO: should look for the extra parameters and also add them
+    """
+    if not os.path.exists(os.path.join(recon_dir, "dataset_description.json")):
+        description = {
+            "Name": algorithm,
+            "Version": "1.0",
+            "BIDSVersion": "1.7.0",
+            "PipelineDescription": {
+                "Name": algorithm,
+            },
+            "GeneratedBy": [
+                {
+                    "Name": algorithm,
+                }
+            ],
+        }
+        with open(
+            os.path.join(
+                recon_dir,
+                "dataset_description.json",
+            ),
+            "w",
+            encoding="utf-8",
+        ) as outfile:
+            json.dump(description, outfile)

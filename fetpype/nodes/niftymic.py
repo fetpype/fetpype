@@ -322,11 +322,12 @@ class NiftymicReconstructionPipeline(ContainerCommandLine):
             **inputs
         )
         # bias field correction was already performed
-        self._cmd += " --bias-field-correction 1"
-        self._cmd += " --isotropic-resolution 0.5"
+        self._cmd += " --isotropic-resolution 0.8"
         # outliers rejection parameters
         self._cmd += " --run-bias-field-correction 1"
         self._cmd += " --run-diagnostics 0"
+        self._cmd += " --automatic-target-stack 1"
+        self._cmd += " --alpha 0.01"
 
     def _gen_filename(self, name: str) -> str:
         """

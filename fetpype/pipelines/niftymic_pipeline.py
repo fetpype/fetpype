@@ -1,5 +1,6 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
+from nipype.interfaces.ants.segmentation import DenoiseImage
 
 from ..nodes.niftymic import (
     NiftymicReconstruction,
@@ -7,6 +8,9 @@ from ..nodes.niftymic import (
     NiftymicReconstructionPipeline
 )
 # from ..nodes.preprocessing import niftymic_brain_extraction
+from ..nodes.preprocessing import (
+    CropStacksAndMasks,
+)
 
 # from nipype import config
 # config.enable_debug_mode()
@@ -61,6 +65,42 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     niftymic_pipe.connect(inputnode, "stacks",
                           brain_extraction, "input_stacks")
 
+    # 2 denoising
+    denoising = pe.MapNode(
+        interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
+    )
+
+    niftymic_pipe.connect(inputnode, "stacks", denoising, "input_image")
+
+    # merge_denoise
+    merge_denoise = pe.Node(
+        interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
+    )
+
+    niftymic_pipe.connect(denoising, "output_image", merge_denoise, "in1")
+
+    # 3. Cropping
+    cropping = pe.MapNode(
+        interface=CropStacksAndMasks(),
+        iterfield=["input_image", "input_mask"],
+        name="cropping",
+    )
+
+    niftymic_pipe.connect(merge_denoise, "out", cropping, "input_image")
+    niftymic_pipe.connect(brain_extraction, "output_bmasks", cropping, "input_mask")
+
+    # merge_masks
+    merge_crops = pe.Node(
+        interface=niu.Merge(1, ravel_inputs=True), name="merge_crops"
+    )
+    merge_masks = pe.Node(
+        interface=niu.Merge(1, ravel_inputs=True), name="merge_masks"
+    )
+
+    niftymic_pipe.connect(cropping, "output_mask", merge_masks, "in1")
+    niftymic_pipe.connect(cropping, "output_image", merge_crops, "in1")
+
+
     # 2. RECONSTRUCTION
     # recon Node
     recon = pe.Node(
@@ -70,8 +110,8 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
         name="recon",
     )
 
-    niftymic_pipe.connect(inputnode, "stacks", recon, "input_stacks")
-    niftymic_pipe.connect(brain_extraction, "output_bmasks",
+    niftymic_pipe.connect(merge_crops, "out", recon, "input_stacks")
+    niftymic_pipe.connect(merge_masks, "out",
                           recon, "input_masks")
 
     # output node

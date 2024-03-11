@@ -50,7 +50,7 @@ class SvrtkBountiReconstructionOutputSpec(TraitedSpec):
     )
 
 
-class SvrtkBountiReconstruction(CommandLine):
+class SvrtkBountiReconstruction(ContainerCommandLine):
 
     input_spec = SvrtkBountiReconstructionInputSpec
     output_spec = SvrtkBountiReconstructionOutputSpec

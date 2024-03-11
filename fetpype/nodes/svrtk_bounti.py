@@ -40,6 +40,7 @@ class SvrtkBountiReconstructionInputSpec(CommandLineInputSpec):
     output_dir = traits.Directory(
         desc="output directory",
         argstr="%s",
+        genfile=True,
     )
 
 
@@ -78,12 +79,10 @@ class SvrtkBountiReconstruction(ContainerCommandLine):
             The generated filename.
         """
         if name == "output_dir":
-            output_dir = self.inputs.output_dir
-            if not isdefined(output_dir):
-                # Create the output path from the
-                # current working directory
-                output_dir = os.path.abspath("")
-                self.inputs.output_dir = output_dir
+            # Create the output path from the
+            # current working directory
+            output_dir = os.path.abspath("")
+            self.inputs.output_dir = output_dir
             return output_dir
 
         return

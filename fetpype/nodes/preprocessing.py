@@ -400,10 +400,9 @@ def copy_header(in_file, ref_file):
 
     # Save the file
     # out_file = os.path.abspath("header_copied.nii.gz")
-
-    # remove old file
-    os.remove(in_file)
     
-    # save new
-    ni.save(new_img, in_file)
-    return in_file
+    # save new file, which has the same name, but adding _flipped to the end before the extension
+    in_file_new = in_file.replace(".nii.gz", "_flipped.nii.gz")
+
+    ni.save(new_img, in_file_new)
+    return in_file_new

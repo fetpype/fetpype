@@ -165,7 +165,7 @@ def create_main_workflow(
     datasink_path = os.path.join(data_dir, "derivatives")
 
     # Create directory if not existing
-    os.makedirs(datasink_path, exist_ok=True)
+    os.makedirs(os.path.join(datasink_path, pipeline_name), exist_ok=True)
     
     # Create json file to make it BIDS compliant if doesnt exist
     # TODO: eventually, add all parameters to the json file

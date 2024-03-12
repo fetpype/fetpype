@@ -304,7 +304,7 @@ class CropStacksAndMasks(BaseInterface):
 
         new_origin = list(
             ni.affines.apply_affine(
-                mask_ni.affine, [x_range[0], y_range[0], z_range[0]]
+                image_ni.affine, [x_range[0], y_range[0], z_range[0]]
             )
         ) + [1]
 
@@ -380,3 +380,30 @@ class CropStacksAndMasks(BaseInterface):
         outputs["output_image"] = self._gen_filename("output_image")
         outputs["output_mask"] = self._gen_filename("output_mask")
         return outputs
+
+
+def copy_header(in_file, ref_file):
+    import nibabel as ni
+    import os
+
+    # Load the data
+    in_ni = ni.load(in_file)
+    ref_ni = ni.load(ref_file)
+
+    data = in_ni.get_fdata()
+
+    #flip dimensions x and z
+    data = data[::-1, :, :]
+
+    # Copy the header
+    new_img = in_ni.__class__(data, ref_ni.affine, ref_ni.header)
+
+    # Save the file
+    # out_file = os.path.abspath("header_copied.nii.gz")
+
+    # remove old file
+    os.remove(in_file)
+    
+    # save new
+    ni.save(new_img, in_file)
+    return in_file

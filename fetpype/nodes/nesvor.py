@@ -123,6 +123,9 @@ class NesvorSegmentation(ContainerCommandLine):
     _cmd = "nesvor segment-stack"
     _mount_keys = ["input_stacks", "output_stack_masks"]
 
+    # add no augmentation seg
+
+
     def __init__(self, pre_command, container_image, **inputs):
         super(NesvorSegmentation, self).__init__(
             pre_command=pre_command, container_image=container_image, **inputs
@@ -147,7 +150,7 @@ class NesvorSegmentation(ContainerCommandLine):
             output = self.inputs.output_stack_masks
             if not isdefined(output):
                 output = [
-                    os.path.abspath(s.replace("_T2w.nii.gz", "_mask.nii.gz"))
+                    os.path.abspath(s.replace(".nii.gz", "_mask.nii.gz"))
                     for s in self.inputs.input_stacks
                 ]
 

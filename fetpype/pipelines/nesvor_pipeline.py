@@ -3,7 +3,8 @@ import nipype.pipeline.engine as pe
 from nipype.interfaces.ants.segmentation import DenoiseImage
 
 from ..nodes.nesvor import (
-    NesvorFullReconstruction
+    NesvorFullReconstruction,
+    NesvorSegmentation
 )
 
 from ..nodes.niftymic import (
@@ -13,6 +14,7 @@ from ..nodes.niftymic import (
 
 from ..nodes.preprocessing import (
     CropStacksAndMasks,
+    copy_header
 )
 
 
@@ -50,29 +52,37 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
         niu.IdentityInterface(fields=["stacks"]), name="inputnode"
     )
 
-    # 1. Brain extraction
-    mask = pe.Node(
-        NiftymicBrainExtraction(
-            container_image=niftymic_image,
-            pre_command=pre_command,
-        ),
-        name="mask",
-    )
-    nesvor_pipe.connect(inputnode, "stacks", mask, "input_stacks")
-
-    # 2 denoising
+    # 1 denoising
     denoising = pe.MapNode(
         interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
     )
 
     nesvor_pipe.connect(inputnode, "stacks", denoising, "input_image")
 
-    # merge_denoise
-    merge_denoise = pe.Node(
-        interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
+    # 2. Brain extraction
+    mask = pe.Node(
+        NesvorSegmentation(
+            container_image=nesvor_image,
+            pre_command=pre_command,
+        ),
+        name="mask",
     )
 
-    nesvor_pipe.connect(denoising, "output_image", merge_denoise, "in1")
+    # mandatory for curr version, else, error
+    mask.inputs.no_augmentation_seg = True
+    nesvor_pipe.connect(inputnode, "stacks", mask, "input_stacks")
+
+    # 1.1 quick node to copy the header of the input image to the denoise output
+    copy_header_node = pe.MapNode(
+        interface=niu.Function(
+            input_names=["in_file", "ref_file"], output_names="out_file", function=copy_header
+        ),
+        iterfield=["in_file", "ref_file"],
+        name="copy_header",
+    )
+
+    nesvor_pipe.connect(mask, "output_stack_masks", copy_header_node, "ref_file")
+    nesvor_pipe.connect(denoising, "output_image", copy_header_node, "in_file")
 
     # 3. Cropping
     cropping = pe.MapNode(
@@ -81,8 +91,8 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
         name="cropping",
     )
 
-    nesvor_pipe.connect(merge_denoise, "out", cropping, "input_image")
-    nesvor_pipe.connect(mask, "output_bmasks", cropping, "input_mask")
+    nesvor_pipe.connect(mask, "output_stack_masks", cropping, "input_mask")
+    nesvor_pipe.connect(copy_header_node, "out_file", cropping, "input_image")
 
     # merge_masks
     merge_crops = pe.Node(

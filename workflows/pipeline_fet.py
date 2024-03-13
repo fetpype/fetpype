@@ -43,6 +43,12 @@
 
 # Authors : David Meunier (david.meunier@univ-amu.fr)
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
+import os
+import json
+import argparse
+import nipype.pipeline.engine as pe
+import os.path as op
+
 from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
     create_minimal_subpipes,
@@ -50,13 +56,11 @@ from fetpype.pipelines.full_pipelines import (
 from fetpype.pipelines.niftymic_pipeline import create_niftymic_subpipes
 from fetpype.pipelines.nesvor_pipeline import create_nesvor_subpipes
 
-from fetpype.utils.utils_bids import create_datasource, create_datasink, create_description_file
-
-import os
-import os.path as op
-import json
-import argparse
-import nipype.pipeline.engine as pe
+from fetpype.utils.utils_bids import (
+    create_datasource,
+    create_datasink,
+    create_description_file
+)
 
 ###############################################################################
 
@@ -168,8 +172,10 @@ def create_main_workflow(
     os.makedirs(os.path.join(datasink_path, pipeline_name), exist_ok=True)
     
     # Create json file to make it BIDS compliant if doesnt exist
-    # TODO: eventually, add all parameters to the json file
-    create_description_file(os.path.join(datasink_path, pipeline_name), pipeline_name)
+    # Eventually, add all parameters to the json file
+    create_description_file(os.path.join(datasink_path, pipeline_name),
+                            pipeline_name
+                            )
 
     if "regex_subs" in params.keys():
         params_regex_subs = params["regex_subs"]
@@ -194,7 +200,10 @@ def create_main_workflow(
     datasink.inputs.base_directory = datasink_path
 
     # Connect the pipeline to the datasink
-    main_workflow.connect(fet_pipe, "outputnode.recon_file", datasink, pipeline_name)
+    main_workflow.connect(fet_pipe,
+                          "outputnode.recon_file",
+                          datasink,
+                          pipeline_name)
 
     # check if the parameter general/no_graph exists and is set to True
     # added as an option, as graph drawing fails in UPF cluster
@@ -205,9 +214,8 @@ def create_main_workflow(
 
     if nprocs is None:
         nprocs = 4
-    main_workflow.run()
-    # main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
-
+    # main_workflow.run()
+    main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
 
 
 def main():
@@ -219,7 +227,9 @@ def main():
         dest="data",
         type=str,
         required=True,
-        help="BIDS-formatted directory containing low-resolution T2w MRI scans.",
+        help=(
+            "BIDS-formatted directory containing anatomical MRI scans"
+        ),
     )
     parser.add_argument(
         "-out",

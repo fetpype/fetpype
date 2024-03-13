@@ -7,11 +7,6 @@ from ..nodes.nesvor import (
     NesvorSegmentation
 )
 
-from ..nodes.niftymic import (
-    NiftymicBrainExtraction
-)
-
-
 from ..nodes.preprocessing import (
     CropStacksAndMasks,
     copy_header
@@ -42,7 +37,6 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
     if "general" in params.keys():
         pre_command = params["general"].get("pre_command", "")
         nesvor_image = params["general"].get("nesvor_image", "")
-        niftymic_image = params["general"].get("niftymic_image", "")
 
     # Creating pipeline
     nesvor_pipe = pe.Workflow(name=name)
@@ -72,16 +66,21 @@ def create_nesvor_subpipes(name="nesvor_pipe", params={}):
     mask.inputs.no_augmentation_seg = True
     nesvor_pipe.connect(inputnode, "stacks", mask, "input_stacks")
 
-    # 1.1 quick node to copy the header of the input image to the denoise output
+    # 1.1 node to copy the header of the input image to the denoise output
     copy_header_node = pe.MapNode(
         interface=niu.Function(
-            input_names=["in_file", "ref_file"], output_names="out_file", function=copy_header
+            input_names=["in_file", "ref_file"],
+            output_names="out_file",
+            function=copy_header
         ),
         iterfield=["in_file", "ref_file"],
         name="copy_header",
     )
 
-    nesvor_pipe.connect(mask, "output_stack_masks", copy_header_node, "ref_file")
+    nesvor_pipe.connect(mask,
+                        "output_stack_masks",
+                        copy_header_node,
+                        "ref_file")
     nesvor_pipe.connect(denoising, "output_image", copy_header_node, "in_file")
 
     # 3. Cropping

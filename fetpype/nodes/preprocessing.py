@@ -384,7 +384,6 @@ class CropStacksAndMasks(BaseInterface):
 
 def copy_header(in_file, ref_file):
     import nibabel as ni
-    import os
 
     # Load the data
     in_ni = ni.load(in_file)
@@ -392,16 +391,14 @@ def copy_header(in_file, ref_file):
 
     data = in_ni.get_fdata()
 
-    #flip dimensions x and z
+    # flip dimensions x and z
     data = data[::-1, :, :]
 
     # Copy the header
     new_img = in_ni.__class__(data, ref_ni.affine, ref_ni.header)
 
-    # Save the file
-    # out_file = os.path.abspath("header_copied.nii.gz")
-    
-    # save new file, which has the same name, but adding _flipped to the end before the extension
+    # save new file, which has the same name, but adding _flipped to the end
+    # before the extension
     in_file_new = in_file.replace(".nii.gz", "_flipped.nii.gz")
 
     ni.save(new_img, in_file_new)

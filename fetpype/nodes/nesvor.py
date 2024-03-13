@@ -125,7 +125,6 @@ class NesvorSegmentation(ContainerCommandLine):
 
     # add no augmentation seg
 
-
     def __init__(self, pre_command, container_image, **inputs):
         super(NesvorSegmentation, self).__init__(
             pre_command=pre_command, container_image=container_image, **inputs

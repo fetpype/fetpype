@@ -142,7 +142,7 @@ def create_datasink(
 
     print("subjFolders: ", subjFolders)
 
-    # Load parameter substitutions from the 'subs.json' file 
+    # Load parameter substitutions from the 'subs.json' file
     json_subs = op.join(op.dirname(op.abspath(__file__)), "subs.json")
     dict_subs = json.load(open(json_subs, encoding="utf-8"))
     dict_subs.update(params_subs)  # Override with any provided substitutions

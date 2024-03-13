@@ -486,7 +486,6 @@ class NiftymicBrainExtraction(ContainerCommandLine):
                 ]
 
             return input_bmasks
-           
         return None
 
     def _list_outputs(self) -> dict:

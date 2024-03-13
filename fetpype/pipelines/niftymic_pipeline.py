@@ -3,7 +3,6 @@ import nipype.pipeline.engine as pe
 from nipype.interfaces.ants.segmentation import DenoiseImage
 
 from ..nodes.niftymic import (
-    NiftymicReconstruction,
     NiftymicBrainExtraction,
     NiftymicReconstructionPipeline
 )
@@ -51,8 +50,6 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
         niu.IdentityInterface(fields=["stacks", "masks"]), name="inputnode"
     )
 
-    #TODO add denoising?
-
     # PREPROCESSING
     # 1. Brain extraction
     brain_extraction = pe.Node(
@@ -87,7 +84,10 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     )
 
     niftymic_pipe.connect(merge_denoise, "out", cropping, "input_image")
-    niftymic_pipe.connect(brain_extraction, "output_bmasks", cropping, "input_mask")
+    niftymic_pipe.connect(brain_extraction,
+                          "output_bmasks",
+                          cropping,
+                          "input_mask")
 
     # merge_masks
     merge_crops = pe.Node(
@@ -99,7 +99,6 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
 
     niftymic_pipe.connect(cropping, "output_mask", merge_masks, "in1")
     niftymic_pipe.connect(cropping, "output_image", merge_crops, "in1")
-
 
     # 2. RECONSTRUCTION
     # recon Node

@@ -1,11 +1,15 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
+from nipype.interfaces.ants.segmentation import DenoiseImage
 
 from ..nodes.niftymic import (
-    NiftymicReconstruction,
-    NiftymicBrainExtraction
+    NiftymicBrainExtraction,
+    NiftymicReconstructionPipeline
 )
 # from ..nodes.preprocessing import niftymic_brain_extraction
+from ..nodes.preprocessing import (
+    CropStacksAndMasks,
+)
 
 # from nipype import config
 # config.enable_debug_mode()
@@ -50,7 +54,7 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     # 1. Brain extraction
     brain_extraction = pe.Node(
         NiftymicBrainExtraction(
-            niftymic_image=niftymic_image, pre_command=pre_command
+            container_image=niftymic_image, pre_command=pre_command
         ),
         name="brain_extraction",
     )
@@ -58,17 +62,55 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
     niftymic_pipe.connect(inputnode, "stacks",
                           brain_extraction, "input_stacks")
 
+    # 2 denoising
+    denoising = pe.MapNode(
+        interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
+    )
+
+    niftymic_pipe.connect(inputnode, "stacks", denoising, "input_image")
+
+    # merge_denoise
+    merge_denoise = pe.Node(
+        interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
+    )
+
+    niftymic_pipe.connect(denoising, "output_image", merge_denoise, "in1")
+
+    # 3. Cropping
+    cropping = pe.MapNode(
+        interface=CropStacksAndMasks(),
+        iterfield=["input_image", "input_mask"],
+        name="cropping",
+    )
+
+    niftymic_pipe.connect(merge_denoise, "out", cropping, "input_image")
+    niftymic_pipe.connect(brain_extraction,
+                          "output_bmasks",
+                          cropping,
+                          "input_mask")
+
+    # merge_masks
+    merge_crops = pe.Node(
+        interface=niu.Merge(1, ravel_inputs=True), name="merge_crops"
+    )
+    merge_masks = pe.Node(
+        interface=niu.Merge(1, ravel_inputs=True), name="merge_masks"
+    )
+
+    niftymic_pipe.connect(cropping, "output_mask", merge_masks, "in1")
+    niftymic_pipe.connect(cropping, "output_image", merge_crops, "in1")
+
     # 2. RECONSTRUCTION
     # recon Node
     recon = pe.Node(
-        NiftymicReconstruction(
-            niftymic_image=niftymic_image, pre_command=pre_command
+        NiftymicReconstructionPipeline(
+            container_image=niftymic_image, pre_command=pre_command
         ),
         name="recon",
     )
 
-    niftymic_pipe.connect(inputnode, "stacks", recon, "input_stacks")
-    niftymic_pipe.connect(brain_extraction, "output_bmasks",
+    niftymic_pipe.connect(merge_crops, "out", recon, "input_stacks")
+    niftymic_pipe.connect(merge_masks, "out",
                           recon, "input_masks")
 
     # output node
@@ -77,7 +119,7 @@ def create_niftymic_subpipes(name="niftymic_pipe", params={}):
         name="outputnode"
     )
 
-    niftymic_pipe.connect(recon, "recon_file", outputnode, "recon_file")
-    niftymic_pipe.connect(recon, "recon_mask_file",
+    niftymic_pipe.connect(recon, "dir_output", outputnode, "recon_file")
+    niftymic_pipe.connect(recon, "dir_output",
                           outputnode, "recon_mask_file")
     return niftymic_pipe

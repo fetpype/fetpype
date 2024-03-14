@@ -8,15 +8,14 @@ TODO:
 """
 
 import os
+from typing import Optional, List
 from nipype.interfaces.base import (
     CommandLineInputSpec,
     File,
     TraitedSpec,
-    CommandLine,
     traits,
     isdefined,
 )
-from typing import Optional, List
 from .container import ContainerCommandLine
 
 
@@ -69,18 +68,6 @@ class NesvorSegmentationInputSpec(CommandLineInputSpec):
         ),
     )
 
-    # pre command and nesvor image
-    # these two commands are not used in the command line
-    pre_command = traits.Str(
-        desc="Pre-command to be run",
-        mandatory=True,
-    )
-
-    nesvor_image = traits.Str(
-        desc="Singularity Nesvor command",
-        mandatory=True,
-    )
-
 
 class NesvorSegmentationOutputSpec(TraitedSpec):
     """
@@ -99,15 +86,22 @@ class NesvorSegmentationOutputSpec(TraitedSpec):
     )
 
 
-class NesvorSegmentation(CommandLine):
+class NesvorSegmentation(ContainerCommandLine):
     """
     Class for the NeSVoRSeg nipype interface.
-    Inherits from CommandLine.
+    Inherits from ContainerCommandLine.
+
+    This class calls the docker or the singularity container. There is no need
+    to implement _run_interface, as it is inherited from
+    ContainerCommandLine and we just need to change the _cmd
+    attribute. Docker mounts are also managed by ContainerCommandLine
 
     Attributes
     ----------
     _cmd : str
         Command to be run.
+    _mount_keys : list
+        List of keys to be mounted on the docker image.
     input_spec : NesvorSegmentationInputSpec
         Class containing the input specification for the NeSVoRSeg
         nipype interface.
@@ -115,29 +109,26 @@ class NesvorSegmentation(CommandLine):
         Class containing the output specification for the NeSVoRSeg
         nipype interface.
 
-    _format_arg
+    Methods
+    -------
+    _gen_filename(name: str) -> Optional[List[str]]
+        Generate output filename if not defined.
+    _list_outputs() -> dict
+        List the outputs of the NesvorSegmentation.
     """
 
     input_spec = NesvorSegmentationInputSpec
     output_spec = NesvorSegmentationOutputSpec
 
-    def __init__(self, **inputs):
-        self._cmd = "nesvor segment-stack"
-        super(NesvorSegmentation, self).__init__(**inputs)
-        # update the command
-        self._cmd = (
-            f"{self.inputs.pre_command} "
-            f"{self.inputs.nesvor_image} "
-            "nesvor segment-stack"
-        )
+    _cmd = "nesvor segment-stack"
+    _mount_keys = ["input_stacks", "output_stack_masks"]
 
-    # Customize how arguments are formatted
-    def _format_arg(self, name, trait_spec, value):
-        if name == "pre_command":
-            return ""  # if the argument is 'pre_command', ignore it
-        elif name == "nesvor_image":
-            return ""  # if the argument is 'pre_command', ignore it
-        return super()._format_arg(name, trait_spec, value)
+    # add no augmentation seg
+
+    def __init__(self, pre_command, container_image, **inputs):
+        super(NesvorSegmentation, self).__init__(
+            pre_command=pre_command, container_image=container_image, **inputs
+        )
 
     def _gen_filename(self, name: str) -> Optional[List[str]]:
         """
@@ -157,23 +148,10 @@ class NesvorSegmentation(CommandLine):
         if name == "output_stack_masks":
             output = self.inputs.output_stack_masks
             if not isdefined(output):
-                output = []
-
-                # get current working dir
-                # os.getcwd() fails because of the (strange) way UPF HPC works
-                cwd = os.getcwd()
-
-                for stack in self.inputs.input_stacks:
-                    # remove .nii.gz extension and full path
-                    base = os.path.basename(stack)
-                    # get filename including extension
-                    filename, _ = os.path.splitext(base)
-                    # split the extension once
-                    filename, _ = os.path.splitext(filename)
-                    # split the extension again
-
-                    # add the full path to the output
-                    output.append(os.path.join(cwd, filename + "_mask.nii.gz"))
+                output = [
+                    os.path.abspath(s.replace(".nii.gz", "_mask.nii.gz"))
+                    for s in self.inputs.input_stacks
+                ]
 
             return output
         return None
@@ -194,7 +172,7 @@ class NesvorSegmentation(CommandLine):
             outputs["output_stack_masks"] = self._gen_filename(
                 "output_stack_masks"
             )
-        print(outputs)
+
         return outputs
 
 
@@ -255,18 +233,6 @@ class NesvorRegisterInputSpec(CommandLineInputSpec):
         keep_extension=True,
     )
 
-    # pre command and nesvor image
-    # these two commands are not used in the command line
-    pre_command = traits.Str(
-        desc="Pre-command to be run",
-        mandatory=True,
-    )
-
-    nesvor_image = traits.Str(
-        desc="Singularity Nesvor command",
-        mandatory=True,
-    )
-
 
 class NesvorRegisterOutputSpec(TraitedSpec):
     """
@@ -284,14 +250,15 @@ class NesvorRegisterOutputSpec(TraitedSpec):
     )
 
 
-class NesvorRegistration(CommandLine):
+class NesvorRegistration(ContainerCommandLine):
     """
     NesvorRegistration is a class for the NeSVoRReg nipype interface.
-    It inherits from CommandLine.
+    It inherits from ContainerCommandLine.
 
-    This class calls the singularity container for NeSVoRReg. There's no
-    need to implement _run_interface, as it is inherited from CommandLine
-    and we just need to change the _cmd attribute.
+    This class calls the docker or the singularity container. There is no need
+    to implement _run_interface, as it is inherited from
+    ContainerCommandLine and we just need to change the _cmd
+    attribute. Docker mounts are also managed by ContainerCommandLine
 
     Attributes
     ----------
@@ -303,29 +270,24 @@ class NesvorRegistration(CommandLine):
     output_spec : NesvorRegisterOutputSpec
         Class containing the output specification for the NeSVoRReg
         nipype interface.
-
-    TODO: if installed, use the docker version?
+    Methods
+    -------
+    _gen_filename(self, name: str) -> str:
+        Generates an output filename if not defined.
+    _list_outputs(self) -> dict:
+        Lists the outputs of the class if not defined.
     """
 
     input_spec = NesvorRegisterInputSpec
     output_spec = NesvorRegisterOutputSpec
 
-    def __init__(self, **inputs):
-        self._cmd = "nesvor register"
-        super(NesvorRegistration, self).__init__(**inputs)
-        self._cmd = (
-            f"{self.inputs.pre_command} "
-            f"{self.inputs.nesvor_image} "
-            "nesvor register"
-        )
+    _cmd = "nesvor register"
+    _mount_keys = ["input_stacks", "stack_masks", "output_slices"]
 
-    # Customize how arguments are formatted
-    def _format_arg(self, name, trait_spec, value):
-        if name == "pre_command":
-            return ""  # if the argument is 'pre_command', ignore it
-        elif name == "nesvor_image":
-            return ""  # if the argument is 'pre_command', ignore it
-        return super()._format_arg(name, trait_spec, value)
+    def __init__(self, pre_command, container_image, **inputs):
+        super(NesvorRegistration, self).__init__(
+            pre_command=pre_command, container_image=container_image, **inputs
+        )
 
     def _gen_filename(self, name: str) -> str:
         """
@@ -441,15 +403,15 @@ class NesvorReconstructionOutputSpec(TraitedSpec):
     )
 
 
-class NesvorReconstruction(CommandLine):
+class NesvorReconstruction(ContainerCommandLine):
     """
     NesvorReconstruction is a class for the NeSVoR nipype interface.
-    It inherits from CommandLine.
+    It inherits from ContainerCommandLine.
 
-    This class calls the singularity container for NeSVoRRec. There is no need
-    to implement _run_interface,
-    as it is inherited from CommandLine and we just need to change the
-    _cmd attribute.
+    This class calls the docker or the singularity container. There is no need
+    to implement _run_interface, as it is inherited from
+    ContainerCommandLine and we just need to change the _cmd
+    attribute. Docker mounts are also managed by ContainerCommandLine
 
     Attributes
     ----------
@@ -459,28 +421,25 @@ class NesvorReconstruction(CommandLine):
         The input specifications for the NeSVoRRec interface.
     output_spec : NesvorReconstructionOutputSpec
         The output specifications for the NeSVoRRec interface.
+    Methods
+    -------
+    _gen_filename(self, name: str) -> str:
+        Generates an output filename if not defined.
+    _list_outputs(self) -> dict:
+        Lists the outputs of the class if not defined.
+
     """
 
     input_spec = NesvorReconstructionInputSpec
     output_spec = NesvorReconstructionOutputSpec
 
-    def __init__(self, **inputs):
-        self._cmd = "nesvor reconstruct"
-        super(NesvorReconstruction, self).__init__(**inputs)
+    _cmd = "nesvor reconstruct"
+    _mount_keys = ["input_slices", "output_volume"]
 
-        self._cmd = (
-            f"{self.inputs.pre_command} "
-            f"{self.inputs.nesvor_image} "
-            "nesvor reconstruct"
+    def __init__(self, pre_command, container_image, **inputs):
+        super(NesvorReconstruction, self).__init__(
+            pre_command=pre_command, container_image=container_image, **inputs
         )
-
-    # Customize how arguments are formatted
-    def _format_arg(self, name, trait_spec, value):
-        if name == "pre_command":
-            return ""  # if the argument is 'pre_command', ignore it
-        elif name == "nesvor_image":
-            return ""  # if the argument is 'pre_command', ignore it
-        return super()._format_arg(name, trait_spec, value)
 
     def _gen_filename(self, name: str) -> str:
         """
@@ -627,6 +586,25 @@ class NesvorFullReconstructionInputSpec(CommandLineInputSpec):
     output_resolution = traits.Float(
         desc="Isotropic resolution of the reconstructed volume.",
         argstr="--output-resolution %s",
+        default_value=0.8,
+    )
+    bias_field_correction = traits.Bool(
+        desc="Apply bias field correction to each input stack.",
+        argstr="--bias-field-correction",
+    )
+    n_levels_bias = traits.Int(
+        desc="Number of levels for the bias field correction.",
+        argstr="--n-levels-bias %s",
+        default_value=1,
+    )
+    registration = traits.Enum(
+        "svort",
+        "svort-only",
+        "svort-stack",
+        "stack",
+        "none",
+        desc="Type of registration to be used.",
+        argstr="--registration %s",
     )
 
 

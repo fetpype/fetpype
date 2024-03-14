@@ -103,7 +103,6 @@ class SvrtkBountiReconstruction(ContainerCommandLine):
             print("output_dir not defined"
             )
         print(outputs)
-        cmd = "mv /home/tmp_proc {}".format(self.inputs.output_dir)
-        os.system(cmd)
+
         return outputs
 

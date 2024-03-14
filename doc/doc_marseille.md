@@ -1,8 +1,6 @@
 This is a documentation file specific to Marseille
 
-
 # Install:
-
 - generate singularity image from a docker image
 singularity pull docker://nomdelimagedockerarecuperer
 

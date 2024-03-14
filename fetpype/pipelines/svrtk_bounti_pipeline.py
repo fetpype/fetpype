@@ -70,12 +70,12 @@ def create_svrtk_bounti_subpipes(name="svrtk_bounti_pipe", params={}):
 
     # output node
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["output_dir"]),
+        niu.IdentityInterface(fields=["output_dir", "recon_file"]),
         name="outputnode"
     )
 
     svrtk_bounti_pipe.connect(recon, "output_dir", outputnode, "output_dir")
-
+    svrtk_bounti_pipe.connect(recon, "recon_file", outputnode, "recon_file")
     return svrtk_bounti_pipe
 
 

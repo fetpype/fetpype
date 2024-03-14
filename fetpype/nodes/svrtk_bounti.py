@@ -50,6 +50,10 @@ class SvrtkBountiReconstructionOutputSpec(TraitedSpec):
         desc="output directory",
     )
 
+    recon_file = traits.file(
+        desc="reconstruction file",
+    )
+
 
 class SvrtkBountiReconstruction(ContainerCommandLine):
 
@@ -99,6 +103,7 @@ class SvrtkBountiReconstruction(ContainerCommandLine):
         outputs = self._outputs().get()
         if isdefined(self.inputs.output_dir):
             outputs["output_dir"] = self.inputs.output_dir
+            outputs["recon_file"] = os.path.join(self.inputs.output_dir, "reo-SVR-output-brain.nii.gz")
         else:
             print("output_dir not defined"
             )

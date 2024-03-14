@@ -10,9 +10,7 @@ TODO:
 import os
 from nipype.interfaces.base import (
     CommandLineInputSpec,
-    File,
     TraitedSpec,
-    CommandLine,
     traits,
     isdefined,
 )
@@ -50,7 +48,7 @@ class SvrtkBountiReconstructionOutputSpec(TraitedSpec):
         desc="output directory",
     )
 
-    recon_file = traits.file(
+    recon_file = traits.File(
         desc="reconstruction file",
     )
 

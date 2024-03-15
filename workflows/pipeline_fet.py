@@ -13,18 +13,21 @@
 
     Arguments
     -----------
-    -data:
+    -data
         Path to the BIDS directory that contain subjects' MRI data.
 
-    -out:
+    -out
         Nipype's processing directory.
         It's where all the outputs will be saved.
 
-    -subjects:
+    -sub
         IDs list of subjects to process.
 
     -ses
         session (leave blank if None)
+
+    -acq [optional]
+        type of acquisition (e.g. haste or trufisp)
 
     -params
         json parameter file; leave blank if None
@@ -53,8 +56,10 @@ from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
     create_minimal_subpipes,
 )
+
 from fetpype.pipelines.niftymic_pipeline import create_niftymic_subpipes
 from fetpype.pipelines.nesvor_pipeline import create_nesvor_subpipes
+from fetpype.pipelines.svrtk_bounti_pipeline import create_svrtk_bounti_subpipes
 
 from fetpype.utils.utils_bids import (
     create_datasource,
@@ -143,6 +148,8 @@ def create_main_workflow(
         fet_pipe = create_minimal_subpipes(params=params)
     elif params["general"]["pipeline"] == "niftymic_recon":
         fet_pipe = create_niftymic_subpipes(params=params)
+    elif params["general"]["pipeline"] == "svrtk_bounti":
+        fet_pipe = create_svrtk_bounti_subpipes(params=params)
 
     output_query = {
         "stacks": {

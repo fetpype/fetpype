@@ -1,0 +1,7 @@
+{
+    "general": {
+        "pipeline": "svrtk_bounti",
+        "pre_command": "singularity run -B /scratch/gauzias/softs/svrtk_bounti:/home --bind /scratch:/scratch ",
+        "svrtk_bounti_image": " /scratch/gauzias/softs/svrtk_auto.sif "
+    }
+}

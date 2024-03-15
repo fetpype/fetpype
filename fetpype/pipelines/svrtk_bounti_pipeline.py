@@ -77,5 +77,3 @@ def create_svrtk_bounti_subpipes(name="svrtk_bounti_pipe", params={}):
     svrtk_bounti_pipe.connect(recon, "output_dir", outputnode, "output_dir")
     svrtk_bounti_pipe.connect(recon, "recon_file", outputnode, "recon_file")
     return svrtk_bounti_pipe
-
-

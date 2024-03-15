@@ -14,7 +14,7 @@ from nipype.interfaces.base import (
     traits,
     isdefined,
 )
-from typing import Optional, List
+
 from .container import ContainerCommandLine
 
 
@@ -29,7 +29,8 @@ def copy_T2stacks(T2_stacks):
 
 class SvrtkBountiReconstructionInputSpec(CommandLineInputSpec):
 
-    input_dir = traits.Directory(exists=True,
+    input_dir = traits.Directory(
+        exists=True,
         desc="input fodler containing the LR stacks",
         argstr="%s",
         mandatory=True,
@@ -101,11 +102,11 @@ class SvrtkBountiReconstruction(ContainerCommandLine):
         outputs = self._outputs().get()
         if isdefined(self.inputs.output_dir):
             outputs["output_dir"] = self.inputs.output_dir
-            outputs["recon_file"] = os.path.join(self.inputs.output_dir, "reo-SVR-output-brain.nii.gz")
+            outputs["recon_file"] = os.path.join(
+                self.inputs.output_dir,
+                "reo-SVR-output-brain.nii.gz")
         else:
-            print("output_dir not defined"
-            )
+            print("output_dir not defined")
         print(outputs)
 
         return outputs
-

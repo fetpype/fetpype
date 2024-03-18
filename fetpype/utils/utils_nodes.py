@@ -22,9 +22,19 @@ class NodeParams(Node):
             name,
             params={}):
 
-        super(NodeParams, self).__init__(interface=interface, name=name)
-
         self.load_inputs_from_dict(params)
+
+        if "pre_command" in params.keys() and \
+                "container_image" in params.keys():
+
+            super(NodeParams, self).__init__(
+                interface=interface,
+                pre_command=params["pre_command"],
+                container_image=params["container_image"],
+                name=name)
+        else:
+            super(NodeParams, self).__init__(interface=interface, name=name)
+
 
     def load_inputs_from_dict(self, params, overwrite=True):
 

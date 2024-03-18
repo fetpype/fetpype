@@ -48,8 +48,8 @@ class ContainerCommandLine(CommandLine):
     _mount_keys = []
     _mounted = False
 
-    def __init__(self, pre_command="", container_image=""):
-        super(ContainerCommandLine, self).__init__()
+    def __init__(self, pre_command="", container_image="", **inputs):
+        super(ContainerCommandLine, self).__init__(**inputs)
         self.load_container_strings(pre_command, container_image)
 
     def load_container_strings(self, pre_command="", container_image=""):

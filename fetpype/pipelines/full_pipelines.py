@@ -8,12 +8,17 @@ from ..nodes.nesvor import (
     NesvorFullReconstruction,
 )
 
+from ..nodes.niftymic import NiftymicBrainExtraction
+
 from ..nodes.preprocessing import (
     nesvor_brain_extraction,
-    niftymic_brain_extraction,
     CropStacksAndMasks,
 )
 from ..nodes.dhcp import dhcp_pipeline
+
+# NodeParams, parse_key
+from ..utils.utils_nodes import NodeParams
+from ..utils.misc import parse_key
 
 # from nipype import config
 # config.enable_debug_mode()
@@ -249,30 +254,19 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
 
     # PREPROCESSING
     # 1. Brain extraction
-    brain_extraction = pe.Node(
-        interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "niftymic_image"],
-            output_names=["bmasks"],
-            function=niftymic_brain_extraction,
-        ),
+    brain_extraction = NodeParams(
+        interface=NiftymicBrainExtraction(),
+        params=parse_key(params, "brain_extraction"),
         name="brain_extraction",
     )
-    if "general" in params.keys():
-        brain_extraction.inputs.pre_command = params["general"].get(
-            "pre_command", ""
-        )
-        brain_extraction.inputs.niftymic_image = params["general"].get(
-            "niftymic_image", ""
-        )
-
-    minimal_pipe.connect(inputnode, "stacks", brain_extraction, "raw_T2s")
+    minimal_pipe.connect(inputnode, "stacks", brain_extraction, "input_stacks")
 
     # OUTPUT
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["masks"]), name="outputnode"
     )
 
-    minimal_pipe.connect(brain_extraction, "bmasks", outputnode, "masks")
+    minimal_pipe.connect(brain_extraction, "output_bmasks", outputnode, "masks")
 
     return minimal_pipe
 

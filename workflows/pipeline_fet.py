@@ -77,6 +77,7 @@ def create_main_workflow(
     sessions,
     acquisitions,
     params_file,
+    deriv,
     nprocs,
     wf_name="fetpype",
     bids=False,
@@ -168,49 +169,52 @@ def create_main_workflow(
         acquisitions,
     )
 
+
     # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
-    # DataSink
-    pipeline_name = params["general"]["pipeline"]
-    datasink_path = os.path.join(data_dir, "derivatives")
+    if deriv:
 
-    # Create directory if not existing
-    os.makedirs(os.path.join(datasink_path, pipeline_name), exist_ok=True)
-    
-    # Create json file to make it BIDS compliant if doesnt exist
-    # Eventually, add all parameters to the json file
-    create_description_file(os.path.join(datasink_path, pipeline_name),
-                            pipeline_name
-                            )
+        # DataSink
+        pipeline_name = params["general"]["pipeline"]
+        datasink_path = os.path.join(data_dir, "derivatives")
 
-    if "regex_subs" in params.keys():
-        params_regex_subs = params["regex_subs"]
-    else:
-        params_regex_subs = {}
+        # Create directory if not existing
+        os.makedirs(os.path.join(datasink_path, pipeline_name), exist_ok=True)
 
-    if "subs" in params.keys():
-        params_subs = params["rsubs"]
-    else:
-        params_subs = {}
+        # Create json file to make it BIDS compliant if doesnt exist
+        # Eventually, add all parameters to the json file
+        create_description_file(os.path.join(datasink_path, pipeline_name),
+                                pipeline_name
+                                )
 
-    # Create datasink
-    print(datasource.iterables)
-    datasink = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
-    )
+        if "regex_subs" in params.keys():
+            params_regex_subs = params["regex_subs"]
+        else:
+            params_regex_subs = {}
 
-    # Add the base directory
-    datasink.inputs.base_directory = datasink_path
+        if "subs" in params.keys():
+            params_subs = params["rsubs"]
+        else:
+            params_subs = {}
 
-    # Connect the pipeline to the datasink
-    main_workflow.connect(fet_pipe,
-                          "outputnode.recon_file",
-                          datasink,
-                          pipeline_name)
+        # Create datasink
+        print(datasource.iterables)
+        datasink = create_datasink(
+            iterables=datasource.iterables,
+            name=f"datasink_{pipeline_name}",
+            params_subs=params_subs,
+            params_regex_subs=params_regex_subs,
+        )
+
+        # Add the base directory
+        datasink.inputs.base_directory = datasink_path
+
+        # Connect the pipeline to the datasink
+        main_workflow.connect(fet_pipe,
+                            "outputnode.recon_file",
+                            datasink,
+                            pipeline_name)
 
     # check if the parameter general/no_graph exists and is set to True
     # added as an option, as graph drawing fails in UPF cluster
@@ -294,6 +298,14 @@ def main():
         ),
         required=True,
     )
+
+    parser.add_argument(
+        "-deriv",
+        dest="deriv",
+        action='store_true',
+        help="output derivatives in BIDS orig directory",
+        required=False)
+
     parser.add_argument(
         "-nprocs",
         dest="nprocs",
@@ -313,6 +325,7 @@ def main():
         sessions=args.ses,
         acquisitions=args.acq,
         params_file=args.params_file,
+        deriv=args.deriv,
         nprocs=args.nprocs,
     )
 

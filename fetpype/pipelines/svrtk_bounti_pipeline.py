@@ -56,6 +56,8 @@ def create_svrtk_bounti_subpipes(name="svrtk_bounti_pipe", params={}):
 
     svrtk_bounti_pipe.connect(inputnode, "stacks", copy_T2, "T2_stacks")
 
+    print(parse_key(params, "recon"))
+
     # 1. RECONSTRUCTION
     # recon Node
     recon = NodeParams(

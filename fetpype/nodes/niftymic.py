@@ -458,10 +458,8 @@ class NiftymicBrainExtraction(ContainerCommandLine):
     # folders to be mounted on the container if using docker
     _mount_keys = ["input_stacks", "input_bmasks"]
 
-    def __init__(self, pre_command, container_image, **inputs):
-        super(NiftymicBrainExtraction, self).__init__(
-            pre_command=pre_command, container_image=container_image, **inputs
-        )
+    #def __init__(self, **inputs):
+        #super(NiftymicBrainExtraction, self).__init__(**inputs)
 
     def _gen_filename(self, name: str) -> str:
         """

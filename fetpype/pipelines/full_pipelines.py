@@ -266,7 +266,7 @@ def create_minimal_subpipes(name="minimal_pipe", params={}):
         niu.IdentityInterface(fields=["masks"]), name="outputnode"
     )
 
-    minimal_pipe.connect(brain_extraction, "bmasks", outputnode, "masks")
+    minimal_pipe.connect(brain_extraction, "output_bmasks", outputnode, "masks")
 
     return minimal_pipe
 

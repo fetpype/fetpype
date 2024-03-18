@@ -24,19 +24,14 @@ class NodeParams(Node):
 
         self.load_inputs_from_dict(params)
 
-        print(interface)
-        0/0
+        super(NodeParams, self).__init__(interface=interface, name=name)
 
+        # special case of ContainierCommandLine interface
         if "pre_command" in params.keys() and \
                 "container_image" in params.keys():
-
-            super(NodeParams, self).__init__(
-                interface=interface,
+            self._interface.load_container_strings(
                 pre_command=params["pre_command"],
-                container_image=params["container_image"],
-                name=name)
-        else:
-            super(NodeParams, self).__init__(interface=interface, name=name)
+                container_image=params["container_image"])
 
 
     def load_inputs_from_dict(self, params, overwrite=True):

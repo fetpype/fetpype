@@ -48,11 +48,19 @@ class ContainerCommandLine(CommandLine):
     _mount_keys = []
     _mounted = False
 
-    def __init__(self, pre_command, container_image, **inputs):
+    def __init__(self, pre_command ="", container_image = "", **inputs):
         super(ContainerCommandLine, self).__init__(**inputs)
-        self._cmd_prefix = add_final_space(pre_command)
-        self._container_image = container_image
-        self._cmd = f"{self._container_image} " + self._cmd
+
+        self.load_container_strings(pre_command, container_image)
+
+    def load_container_strings(pre_command ="", container_image = "")
+
+        if len(pre_command):
+            self._cmd_prefix = add_final_space(pre_command)
+
+        if len(container_image):
+            self._container_image = container_image
+            self._cmd = f"{self._container_image} " + self._cmd
 
     def _get_directory(self, entry):
         """

@@ -24,6 +24,9 @@ class NodeParams(Node):
 
         self.load_inputs_from_dict(params)
 
+        print(interface)
+        0/0
+
         if "pre_command" in params.keys() and \
                 "container_image" in params.keys():
 

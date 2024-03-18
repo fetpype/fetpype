@@ -53,8 +53,7 @@ class ContainerCommandLine(CommandLine):
 
         self.load_container_strings(pre_command, container_image)
 
-    def load_container_strings(pre_command ="", container_image = "")
-
+    def load_container_strings(self, pre_command ="", container_image = ""):
         if len(pre_command):
             self._cmd_prefix = add_final_space(pre_command)
 

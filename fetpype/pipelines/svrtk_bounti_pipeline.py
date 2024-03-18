@@ -7,7 +7,7 @@ from ..nodes.svrtk_bounti import (
 )
 
 from ..utils.utils_nodes import NodeParams
-from ..misc import parse_key
+from ..utils.misc import parse_key
 
 # from nipype import config
 # config.enable_debug_mode()

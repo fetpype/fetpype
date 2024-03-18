@@ -6,6 +6,9 @@ from ..nodes.svrtk_bounti import (
     copy_T2stacks
 )
 
+from ..utils.utils_nodes import NodeParams
+from ..misc import parse_key
+
 # from nipype import config
 # config.enable_debug_mode()
 
@@ -33,10 +36,6 @@ def create_svrtk_bounti_subpipes(name="svrtk_bounti_pipe", params={}):
     """
 
     # get parameters
-    if "general" in params.keys():
-        pre_command = params["general"].get("pre_command", "")
-        svrtk_bounti_image = params["general"].get("svrtk_bounti_image", "")
-
     # Creating pipeline
     svrtk_bounti_pipe = pe.Workflow(name=name)
 
@@ -59,10 +58,9 @@ def create_svrtk_bounti_subpipes(name="svrtk_bounti_pipe", params={}):
 
     # 1. RECONSTRUCTION
     # recon Node
-    recon = pe.Node(
-        SvrtkBountiReconstruction(
-            container_image=svrtk_bounti_image, pre_command=pre_command
-        ),
+    recon = NodeParams(
+        SvrtkBountiReconstruction(),
+        params=parse_key(params, "recon"),
         name="recon",
     )
 

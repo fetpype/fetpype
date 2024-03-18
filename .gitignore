@@ -135,3 +135,6 @@ crash*
 # local scripts
 local/
 HPC/
+
+# pycharm
+.idea/

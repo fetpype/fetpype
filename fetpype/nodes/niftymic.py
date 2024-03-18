@@ -10,10 +10,10 @@ from nipype.interfaces.base import (
     CommandLineInputSpec,
     File,
     TraitedSpec,
-    CommandLine,
     traits,
     isdefined,
 )
+from .container import ContainerCommandLine
 
 
 class NiftymicReconstructionInputSpec(CommandLineInputSpec):
@@ -24,9 +24,9 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
 
     Attributes
     ----------
-    input_stacks:traits.List(File)
+    input_stacks: traits.List(File)
         Preprocessed T2 file names
-    input_masks:traits.List(File)
+    input_masks: traits.List(File)
         Brain masks for each T2 low-resolution stack given in stacks.
     dir_output:traits.Directory
         The path where the output reconstruction is saved.
@@ -36,7 +36,6 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
         niftymic_image name (e.g. renbem/niftymic:latest)
 
     TODO:
-
     """
 
     # inputs
@@ -64,14 +63,14 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
     )
 
     isotropic_resolution = traits.Float(
-        0.5,
+        0.8,
         usedefault=True,
         argstr="--isotropic-resolution %f",
         desc="isotropic resolution",
         mandatory=True,
     )
 
-    # output
+    # output (should not be here, right?)
     recon_file = traits.File(
         desc="reconstructed file",
         argstr="--output %s",
@@ -82,18 +81,6 @@ class NiftymicReconstructionInputSpec(CommandLineInputSpec):
     recon_mask_file = traits.File(
         desc="reconstructed mask file",
         mandatory=False
-    )
-
-    # pre command and niftymic image
-    # these two commands are not used in the command line
-    pre_command = traits.Str(
-        desc="Pre-command to be run",
-        mandatory=True,
-    )
-
-    niftymic_image = traits.Str(
-        desc="Singularity Niftymic command",
-        mandatory=True,
     )
 
 
@@ -119,47 +106,45 @@ class NiftymicReconstructionOutputSpec(TraitedSpec):
     )
 
 
-class NiftymicReconstruction(CommandLine):
+class NiftymicReconstruction(ContainerCommandLine):
     """
     NiftymicReconstruction is a class for the Niftymic nipype interface.
-    It inherits from CommandLine.
+    It inherits from ContainerCommandLine.
 
-    This class calls the singularity container for NeSVoRRec. There is no need
-    to implement _run_interface,
-    as it is inherited from CommandLine and we just need to change the
-    _cmd attribute.
+    This class calls the docker or the singularity container. There is no need
+    to implement _run_interface, as it is inherited from
+    ContainerCommandLine and we just need to change the _cmd
+    attribute. Docker mounts are also managed by ContainerCommandLine
 
     Attributes
     ----------
     _cmd : str
-        The command to be run by the singularity container.
+        The command to be run by the  container.
+    _mount_keys : list
+        List of keys to be mounted on the docker image.
     input_spec : NiftymicReconstructionInputSpec
         The input specifications for the NeSVoRRec interface.
     output_spec : NiftymicReconstructionOutputSpec
         The output specifications for the NeSVoRRec interface.
+    Methods
+    -------
+    _gen_filename(self, name: str) -> str:
+        Generates an output filename if not defined.
+    _list_outputs(self) -> dict:
+        Lists the outputs of the class if not defined.
     """
 
     input_spec = NiftymicReconstructionInputSpec
     output_spec = NiftymicReconstructionOutputSpec
 
-    def __init__(self, **inputs):
-        self._cmd = "niftymic_reconstruct_volume"
-        super(NiftymicReconstruction, self).__init__(**inputs)
+    _cmd = "niftymic_reconstruct_volume"
+    # folders to be mounted on the container if using docker
+    _mount_keys = ["input_stacks", "input_masks"]
 
-        self._cmd = (
-            f"{self.inputs.pre_command} "
-            f"{self.inputs.niftymic_image} "
-            "niftymic_reconstruct_volume"
-            # "niftymic_run_reconstruction_pipeline"
+    def __init__(self, pre_command, container_image, **inputs):
+        super(NiftymicReconstruction, self).__init__(
+            pre_command=pre_command, container_image=container_image, **inputs
         )
-
-    # Customize how arguments are formatted
-    def _format_arg(self, name, trait_spec, value):
-        if name == "pre_command":
-            return ""  # if the argument is 'pre_command', ignore it
-        elif name == "niftymic_image":
-            return ""  # if the argument is 'pre_command', ignore it
-        return super()._format_arg(name, trait_spec, value)
 
     def _gen_filename(self, name: str) -> str:
         """
@@ -240,9 +225,6 @@ class NiftymicReconstructionPipelineInputSpec(CommandLineInputSpec):
         Command to run niftymic_image (e.g. docker run or singularity run)
     niftymic_image:
         niftymic_image name (e.g. renbem/niftymic:latest)
-
-    TODO:
-
     """
 
     input_stacks = traits.List(
@@ -268,15 +250,15 @@ class NiftymicReconstructionPipelineInputSpec(CommandLineInputSpec):
     )
     # pre command and niftymic image
     # these two commands are not used in the command line
-    pre_command = traits.Str(
-        desc="Pre-command to be run",
-        mandatory=True,
-    )
+    # pre_command = traits.Str(
+    #     desc="Pre-command to be run",
+    #     mandatory=True,
+    # )
 
-    niftymic_image = traits.Str(
-        desc="Singularity Niftymic command",
-        mandatory=True,
-    )
+    # niftymic_image = traits.Str(
+    #     desc="Singularity Niftymic command",
+    #     mandatory=True,
+    # )
 
 
 class NiftymicReconstructionPipelineOutputSpec(TraitedSpec):
@@ -296,53 +278,56 @@ class NiftymicReconstructionPipelineOutputSpec(TraitedSpec):
     )
 
 
-class NiftymicReconstructionPipeline(CommandLine):
+class NiftymicReconstructionPipeline(ContainerCommandLine):
     """
-    NiftymicReconstruction is a class for the Niftymic nipype interface.
-    It inherits from CommandLine.
+    NiftymicReconstructionPipeline is a class for the Niftymic
+    nipype interface.
+    It inherits from ContainerCommandLine.
 
-    This class calls the singularity container for NeSVoRRec. There is no need
-    to implement _run_interface,
-    as it is inherited from CommandLine and we just need to change the
-    _cmd attribute.
+    This class calls the container for Niftymic reconstruction pipeline.
+    There is no need to implement _run_interface, as it is inherited
+    from ContainerCommandLine and we just need to change the _cmd
+    attribute.
 
     Attributes
     ----------
     _cmd : str
-        The command to be run by the singularity container.
-    input_spec : NiftymicReconstructionInputSpec
-        The input specifications for the NeSVoRRec interface.
-    output_spec : NiftymicReconstructionOutputSpec
-        The output specifications for the NeSVoRRec interface.
+        The command to be run by the container.
+    _mount_keys : list
+        List of keys to be mounted on the docker image.
+    input_spec : NiftymicReconstructionPipelineInputSpec
+        The input specifications for the Niftymic reconstruction
+        pipeline interface.
+    output_spec : NiftymicReconstructionPipelineOutputSpec
+        The output specifications for the Niftymic reconstruction
+        pipeline interface.
+
+    Methods
+    -------
+    _gen_filename(self, name: str) -> str:
+        Generates an output filename if not defined.
+    _list_outputs(self) -> dict:
+        Lists the outputs of the class if not defined.
     """
 
     input_spec = NiftymicReconstructionPipelineInputSpec
     output_spec = NiftymicReconstructionPipelineOutputSpec
 
-    def __init__(self, **inputs):
-        self._cmd = "niftymic_run_reconstruction_pipeline"
-        super(NiftymicReconstruction, self).__init__(**inputs)
+    _cmd = "niftymic_run_reconstruction_pipeline"
+    _mount_keys = ["input_stacks", "input_masks", "dir_output"]
 
-        self._cmd = (
-            f"{self.inputs.pre_command} "
-            f"{self.inputs.niftymic_image} "
-            "niftymic_run_reconstruction_pipeline"
-            # "niftymic_run_reconstruction_pipeline"
+    def __init__(self, pre_command, container_image, **inputs):
+        super(NiftymicReconstructionPipeline, self).__init__(
+            pre_command=pre_command, container_image=container_image,
+            **inputs
         )
         # bias field correction was already performed
-        self._cmd += " --bias-field-correction 1"
-        self._cmd += " --isotropic-resolution 0.5"
+        self._cmd += " --isotropic-resolution 0.8"
         # outliers rejection parameters
         self._cmd += " --run-bias-field-correction 1"
         self._cmd += " --run-diagnostics 0"
-
-    def _format_arg(self, name, trait_spec, value):
-
-        if name == "pre_command":
-            return ""  # if the argument is 'pre_command', ignore it
-        elif name == "niftymic_image":
-            return ""  # if the argument is 'pre_command', ignore it
-        return super()._format_arg(name, trait_spec, value)
+        self._cmd += " --automatic-target-stack 1"
+        self._cmd += " --alpha 0.01"
 
     def _gen_filename(self, name: str) -> str:
         """
@@ -408,18 +393,6 @@ class NiftymicBrainExtractionInputSpec(CommandLineInputSpec):
         mandatory=False
     )
 
-    # pre command and niftymic image
-    # these two commands are not used in the command line
-    pre_command = traits.Str(
-        desc="Pre-command to be run",
-        mandatory=True,
-    )
-
-    niftymic_image = traits.Str(
-        desc="Singularity Niftymic command",
-        mandatory=True,
-    )
-
 
 class NiftymicBrainExtractionOutputSpec(TraitedSpec):
     """
@@ -428,6 +401,8 @@ class NiftymicBrainExtractionOutputSpec(TraitedSpec):
 
     Attributes
     ----------
+    output_bmasks : traits.List(File)
+        Brain masks for each T2 low-resolution stack given in `input_stacks`.
     """
     output_bmasks = traits.List(
         File(exists=True),
@@ -436,42 +411,57 @@ class NiftymicBrainExtractionOutputSpec(TraitedSpec):
     )
 
 
-class NiftymicBrainExtraction(CommandLine):
+class NiftymicBrainExtraction(ContainerCommandLine):
     """
-    Function wrapping niftymic_segment_fetal_brains for use with nipype.
+    Class wrapping `niftymic_segment_fetal_brains` for use with nipype.
+    Inherits from `ContainerCommandLine`.
 
-    Inputs:
-        raw_T2s:
-            Raw T2 file names
-        pre_command:
-            Command to run niftymic_image (e.g. docker run or singularity run)
-        niftymic_image:
-            niftymic_image name (e.g. renbem/niftymic:latest)
+    Attributes
+    ----------
+    input_spec : NiftymicBrainExtractionInputSpec
+        Specification of the input parameters for the brain extraction process.
+    output_spec : NiftymicBrainExtractionOutputSpec
+        Specification of the output parameters for the brain
+        extraction process.
+    _cmd : str
+        The command to be run by the container.
+    _mount_keys : list
+        List of keys to be mounted on the docker image.
 
-    Outputs:
-        bmasks:
-            Brain masks for each T2 low-resolution stack given in raw_T2s.
+    Methods
+    -------
+    __init__(self, **inputs):
+        Initializes the brain extraction process with the given inputs.
+    _gen_filename(self, name: str) -> str:
+        Generates an output filename if not defined.
+    _list_outputs(self) -> dict:
+        Lists the outputs of the class.
+
+    Inputs
+    ------
+    pre_command : str
+        Command to run `niftymic_image` (e.g., `docker run` or
+        `singularity run`).
+    niftymic_image : str
+        `niftymic_image` name (e.g., `renbem/niftymic:latest`).
+
+    Outputs
+    -------
+    bmasks : List[File]
+        Brain masks for each T2 low-resolution stack given in `raw_T2s`.
     """
+
     input_spec = NiftymicBrainExtractionInputSpec
     output_spec = NiftymicBrainExtractionOutputSpec
 
-    def __init__(self, **inputs):
-        self._cmd = "niftymic_segment_fetal_brains"
-        super(NiftymicBrainExtraction, self).__init__(**inputs)
+    _cmd = "niftymic_segment_fetal_brains"
+    # folders to be mounted on the container if using docker
+    _mount_keys = ["input_stacks", "input_bmasks"]
 
-        self._cmd = (
-            f"{self.inputs.pre_command} "
-            f"{self.inputs.niftymic_image} "
-            "niftymic_segment_fetal_brains"
+    def __init__(self, pre_command, container_image, **inputs):
+        super(NiftymicBrainExtraction, self).__init__(
+            pre_command=pre_command, container_image=container_image, **inputs
         )
-
-    # Customize how arguments are formatted
-    def _format_arg(self, name, trait_spec, value):
-        if name == "pre_command":
-            return ""  # if the argument is 'pre_command', ignore it
-        elif name == "niftymic_image":
-            return ""  # if the argument is 'pre_command', ignore it
-        return super()._format_arg(name, trait_spec, value)
 
     def _gen_filename(self, name: str) -> str:
         """
@@ -490,16 +480,12 @@ class NiftymicBrainExtraction(CommandLine):
         if name == "input_bmasks":
             input_bmasks = self.inputs.input_bmasks
             if not isdefined(input_bmasks):
-                # Why do we do [:-7] + .nii.gz?
                 input_bmasks = [
-                    os.path.abspath(
-                        os.path.basename(s)[:-7].replace(
-                            "_T2w", "_mask") + ".nii.gz")
+                    os.path.abspath(s.replace("_T2w.nii.gz", "_mask.nii.gz"))
                     for s in self.inputs.input_stacks
                 ]
 
             return input_bmasks
-
         return None
 
     def _list_outputs(self) -> dict:
@@ -525,6 +511,8 @@ def niftymic_recon(stacks, masks, pre_command="", niftymic_image=""):
     This is a quick and dirty implementation, to be replaced by a proper nipype
     interface in the future.
 
+    This is an OLD function. It should eventually be deprecated and removed.
+
     Inputs:
         stacks:
             Preprocessed T2 file names
@@ -540,7 +528,6 @@ def niftymic_recon(stacks, masks, pre_command="", niftymic_image=""):
             Directory containing the reconstructed files
     """
     import os
-
     reconst_dir = os.path.abspath("srr_reconstruction")
 
     if "docker" in pre_command:

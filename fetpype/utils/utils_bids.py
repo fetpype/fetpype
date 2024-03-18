@@ -1,7 +1,7 @@
 import os.path as op
 
 import json
-
+import os
 from bids.layout import BIDSLayout
 
 import nipype.interfaces.io as nio
@@ -105,50 +105,63 @@ def create_datasink(
     iterables, name="output", params_subs={}, params_regex_subs={}
 ):
     """
-    Description: reformating relevant outputs.
+    Creates a data sink node for reformatting and organizing relevant outputs.
+
+    From: https://github.com/Macatools/macapype (adapted)
+
+    Args:
+        iterables (list or tuple): A collection of iterables, containing
+                                   subject and session information.
+        name (str, optional): The name for the data sink container.
+                              Defaults to "output".
+        params_subs (dict, optional): A dictionary of parameter substitutions
+                                      to apply to output paths. Defaults to
+                                      an empty dictionary.
+        params_regex_subs (dict, optional): A dictionary of regular
+                                            expression-based substitutions
+                                            to apply to output paths.
+                                            Defaults to an empty dictionary.
+
+    Returns:
+        pe.Node: A Pipeline Engine Node representing the configured datasink.
     """
 
     print("Datasink name: ", name)
 
-    datasink = pe.Node(nio.DataSink(container=name), name="datasink")
+    # Create the datasink node
+    datasink = pe.Node(nio.DataSink(), name=name)
 
+    # Generate subject folders with session and subject information
     subjFolders = [
         (
-            "_session_%s_subject_%s" % (ses, sub),
+            "_acquisition_haste_session_%s_subject_%s" % (ses, sub),
             "sub-%s/ses-%s/anat" % (sub, ses),
         )
-        for ses in iterables[1][1]
-        for sub in iterables[0][1]
+        for (sub, ses, _) in iterables[1]  # doublecheck
     ]
 
-    # subs
+    print("subjFolders: ", subjFolders)
+
+    # Load parameter substitutions from the 'subs.json' file
     json_subs = op.join(op.dirname(op.abspath(__file__)), "subs.json")
-
     dict_subs = json.load(open(json_subs, encoding="utf-8"))
-
-    dict_subs.update(params_subs)
-
-    print(dict_subs)
+    dict_subs.update(params_subs)  # Override with any provided substitutions
 
     subs = [(key, value) for key, value in dict_subs.items()]
-
-    subjFolders.extend(subs)
-
-    print(subjFolders)
+    subjFolders.extend(subs)  # Add parameter substitutions to folders
 
     datasink.inputs.substitutions = subjFolders
 
-    # regex_subs
+    # Load regex-based substitutions from the 'regex_subs.json' file
     json_regex_subs = op.join(
         op.dirname(op.abspath(__file__)), "regex_subs.json"
     )
-
     dict_regex_subs = json.load(open(json_regex_subs, encoding="utf-8"))
 
+    # Update with provided regex substitutions
     dict_regex_subs.update(params_regex_subs)
 
     regex_subs = [(key, value) for key, value in dict_regex_subs.items()]
-
     datasink.inputs.regexp_substitutions = regex_subs
 
     return datasink
@@ -210,3 +223,40 @@ def get_gestational_age(bids_dir, T2):
         )
 
     return gestational_age
+
+
+def create_description_file(recon_dir, algorithm):
+    """Create a dataset_description.json file in the derivatives folder.
+
+    Parameters
+    ----------
+    args : dictionary
+        Dictionary containing the arguments passed to the script.
+    container_type : string
+        Type of container used to run the algorithm.
+
+    TODO: should look for the extra parameters and also add them
+    """
+    if not os.path.exists(os.path.join(recon_dir, "dataset_description.json")):
+        description = {
+            "Name": algorithm,
+            "Version": "1.0",
+            "BIDSVersion": "1.7.0",
+            "PipelineDescription": {
+                "Name": algorithm,
+            },
+            "GeneratedBy": [
+                {
+                    "Name": algorithm,
+                }
+            ],
+        }
+        with open(
+            os.path.join(
+                recon_dir,
+                "dataset_description.json",
+            ),
+            "w",
+            encoding="utf-8",
+        ) as outfile:
+            json.dump(description, outfile)

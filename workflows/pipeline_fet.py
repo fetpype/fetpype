@@ -13,18 +13,21 @@
 
     Arguments
     -----------
-    -data:
+    -data
         Path to the BIDS directory that contain subjects' MRI data.
 
-    -out:
+    -out
         Nipype's processing directory.
         It's where all the outputs will be saved.
 
-    -subjects:
+    -sub
         IDs list of subjects to process.
 
     -ses
         session (leave blank if None)
+
+    -acq [optional]
+        type of acquisition (e.g. haste or trufisp)
 
     -params
         json parameter file; leave blank if None
@@ -43,19 +46,26 @@
 
 # Authors : David Meunier (david.meunier@univ-amu.fr)
 #           Alexandre Pron (alexandre.pron@univ-amu.fr)
+import os
+import json
+import argparse
+import nipype.pipeline.engine as pe
+import os.path as op
+
 from fetpype.pipelines.full_pipelines import (
     create_fet_subpipes,
     create_minimal_subpipes,
 )
-from fetpype.pipelines.niftymic import create_niftymic_subpipes
 
-from fetpype.utils.utils_bids import create_datasource
+from fetpype.pipelines.niftymic_pipeline import create_niftymic_subpipes
+from fetpype.pipelines.nesvor_pipeline import create_nesvor_subpipes
+from fetpype.pipelines.svrtk_bounti_pipeline import create_svrtk_bounti_subpipes
 
-import os
-import os.path as op
-import json
-import argparse
-import nipype.pipeline.engine as pe
+from fetpype.utils.utils_bids import (
+    create_datasource,
+    create_datasink,
+    create_description_file
+)
 
 ###############################################################################
 
@@ -132,10 +142,14 @@ def create_main_workflow(
     main_workflow.base_dir = process_dir
     if params["general"]["pipeline"] in ["niftymic", "nesvor"]:
         fet_pipe = create_fet_subpipes(params=params)
+    elif params["general"]["pipeline"] == "nesvor_recon":
+        fet_pipe = create_nesvor_subpipes(params=params)
     elif params["general"]["pipeline"] == "minimal":
         fet_pipe = create_minimal_subpipes(params=params)
     elif params["general"]["pipeline"] == "niftymic_recon":
         fet_pipe = create_niftymic_subpipes(params=params)
+    elif params["general"]["pipeline"] == "svrtk_bounti":
+        fet_pipe = create_svrtk_bounti_subpipes(params=params)
 
     output_query = {
         "stacks": {
@@ -156,6 +170,47 @@ def create_main_workflow(
 
     # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
+
+    # DataSink
+    pipeline_name = params["general"]["pipeline"]
+    datasink_path = os.path.join(data_dir, "derivatives")
+
+    # Create directory if not existing
+    os.makedirs(os.path.join(datasink_path, pipeline_name), exist_ok=True)
+    
+    # Create json file to make it BIDS compliant if doesnt exist
+    # Eventually, add all parameters to the json file
+    create_description_file(os.path.join(datasink_path, pipeline_name),
+                            pipeline_name
+                            )
+
+    if "regex_subs" in params.keys():
+        params_regex_subs = params["regex_subs"]
+    else:
+        params_regex_subs = {}
+
+    if "subs" in params.keys():
+        params_subs = params["rsubs"]
+    else:
+        params_subs = {}
+
+    # Create datasink
+    print(datasource.iterables)
+    datasink = create_datasink(
+        iterables=datasource.iterables,
+        name=f"datasink_{pipeline_name}",
+        params_subs=params_subs,
+        params_regex_subs=params_regex_subs,
+    )
+
+    # Add the base directory
+    datasink.inputs.base_directory = datasink_path
+
+    # Connect the pipeline to the datasink
+    main_workflow.connect(fet_pipe,
+                          "outputnode.recon_file",
+                          datasink,
+                          pipeline_name)
 
     # check if the parameter general/no_graph exists and is set to True
     # added as an option, as graph drawing fails in UPF cluster
@@ -179,7 +234,9 @@ def main():
         dest="data",
         type=str,
         required=True,
-        help="BIDS-formatted directory containing low-resolution T2w MRI scans.",
+        help=(
+            "BIDS-formatted directory containing anatomical MRI scans"
+        ),
     )
     parser.add_argument(
         "-out",
@@ -188,7 +245,6 @@ def main():
         required=True,  # nargs='+',
         help="Output directory, where all outputs will be saved.",
     )
-
     parser.add_argument(
         "-subjects",
         "-sub",

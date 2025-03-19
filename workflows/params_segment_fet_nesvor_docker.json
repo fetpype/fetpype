@@ -1,8 +1,0 @@
-{
-    "general": {
-        "pipeline": "nesvor_recon",
-        "pre_command": "docker run --gpus=all ",
-        "nesvor_image": "junshenxu/nesvor:latest ",
-        "niftymic_image": "renbem/niftymic "
-    }
-}

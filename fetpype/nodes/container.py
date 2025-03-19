@@ -48,11 +48,13 @@ class ContainerCommandLine(CommandLine):
     _mount_keys = []
     _mounted = False
 
-    def __init__(self, pre_command, container_image, **inputs):
-        super(ContainerCommandLine, self).__init__(**inputs)
+    def __init__(self, command=None, mount_keys=None, pre_command=None, container_image=None, **inputs):
+        super(ContainerCommandLine, self).__init__(command, **inputs)
         self._cmd_prefix = add_final_space(pre_command)
         self._container_image = container_image
+        self._mount_keys = mount_keys or getattr(self, "_mount_keys", None)
         self._cmd = f"{self._container_image} " + self._cmd
+     
 
     def _get_directory(self, entry):
         """
@@ -60,7 +62,6 @@ class ContainerCommandLine(CommandLine):
         If entry is a list, it returns the common path.
         If entry is a string, it returns the dirname.
         """
-
         if isinstance(entry, list):
             return os.path.commonpath(entry)
         elif isinstance(entry, str):
@@ -78,14 +79,16 @@ class ContainerCommandLine(CommandLine):
 
         # Construct the mount dictionary
         for k in self._mount_keys:
-            mount_dict[k] = getattr(self.inputs, k)
-            if not isdefined(mount_dict[k]):
+            # Get it only if it is in self.inputs
+            mount_dict[k] = getattr(self.inputs, k, None)
+            if mount_dict[k] is None or not isdefined(mount_dict[k]):
                 mount_dict[k] = self._gen_filename(k)
-                assert isdefined(
-                    mount_dict[k]
-                ), f"The variable {k} is not defined"
+            assert isdefined(
+                mount_dict[k]
+            ), f"The variable {k} is not defined"
 
         # Get the common path for each mount
+        print(mount_dict)
         mount_dir_dict = {
             k: self._get_directory(v) for k, v in mount_dict.items()
         }
@@ -102,4 +105,6 @@ class ContainerCommandLine(CommandLine):
         """
         if "docker" in self.cmdline and not self._mounted:
             self._cmd_prefix += add_final_space(self._get_mount_str())
+        print(self.cmdline)
+        raise NotImplementedError
         return runtime

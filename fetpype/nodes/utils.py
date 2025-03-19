@@ -27,6 +27,8 @@ def get_mount_docker(*args):
     docker image. The folders to be mounted are defined
     in _mount_keys.
     """
+    for arg in args:
+        os.makedirs(arg, exist_ok=True)
     return " ".join([f"-v {arg}:{arg}" for arg in args])
 
 

@@ -211,7 +211,12 @@ def create_main_workflow(
     )
 
     if cfg.save_graph:
-        main_workflow.write_graph(graph2use="colored")
+        main_workflow.write_graph(
+            dotfilename="graph.dot",
+            graph2use="colored",
+            format="png",
+            simple_form=True,
+        )
 
     main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
 

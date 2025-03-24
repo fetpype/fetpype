@@ -1,9 +1,9 @@
 site_name: Fetpype 
 
 theme:
-  name: mkdocs  
-  logo: null # Path to your logo file
-  favicon: null  # Path to your favicon file
+  name: readthedocs  
+  logo: media/fetpype_logo.png  # Path to your logo file
+  favicon: media/fetpype_favicon.png  # Path to your favicon file
 
 plugins:
 - mkdocstrings:

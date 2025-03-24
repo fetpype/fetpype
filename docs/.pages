@@ -1,0 +1,11 @@
+nav:
+    - Home:
+        - index.md
+    - Pipeline:
+        - preprocessing.md
+        - reconstruction.md
+        - segmentation.md
+        - surface.md
+    - Usage:
+        - usage.md
+   

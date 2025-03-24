@@ -103,7 +103,6 @@ def create_datasource(
 
 def create_bids_datasink(
     data_dir,
-    output_dir,
     pipeline_name,
     step_name,
     subjects=None,
@@ -125,8 +124,6 @@ def create_bids_datasink(
     ----------
     data_dir : str
         Path to the BIDS data directory (where derivatives folder will be created)
-    output_dir : str
-        Path to the output directory where processed data will be stored temporarily
     pipeline_name : str
         Name of the pipeline (e.g., 'niftymic', 'nesvor', 'dhcp')
     step_name : str
@@ -150,12 +147,7 @@ def create_bids_datasink(
     -------
     datasink : nipype.pipeline.engine.Node
         Configured datasink node
-    """
-    import os.path as op
-    import json
-    import nipype.interfaces.io as nio
-    import nipype.pipeline.engine as pe
-    
+    """    
     # Set default name if not provided
     if name is None:
         name = f"{step_name}_datasink"
@@ -185,6 +177,10 @@ def create_bids_datasink(
         subs.extend([
             ("_T2w_mask.nii.gz", f"_T2w_mask.nii.gz"),
             ("_mask.nii.gz", f"_mask.nii.gz"),
+        ])
+    elif step_name == 'denoising':
+        subs.extend([
+            ("_denoised.nii.gz", f"_desc-denoised_T2w.nii.gz"),
         ])
     
     # Critical substitutions for proper BIDS structure
@@ -246,7 +242,6 @@ def create_bids_datasink(
     datasink.inputs.regexp_substitutions = regex_subs
     
     return datasink
-
 
 
 def create_datasink(

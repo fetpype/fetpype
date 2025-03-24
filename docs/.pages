@@ -1,6 +1,5 @@
 nav:
-    - Home:
-        - index.md
+    - Home: index.md
     - Pipeline:
         - preprocessing.md
         - reconstruction.md

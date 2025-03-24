@@ -1,5 +1,4 @@
 # Fetpype
-
 ## About
 Fetpype is a library that aims at facilitating the analysis of fetal brain MRI by integrating the variety of tools commonly used in processing pipelines. Starting from clinical acquisition of fetal brain MRI (T2-weighted fast spin echo sequences), it performs [pre-processing](preprocessing.md), [reconstruction](reconstruction.md), [segmentation](segmentation.md) and [surface extraction](surface.md).
 
@@ -72,34 +71,16 @@ This config defines a pipeline that will run the default preprocessing step (def
 
 The details of the configs, the attributes and methods implemented is available [in this page](methods.md).
 
-#### Just run it
-Once you chose the pipeline that you are going to run, you can then run it by calling the following python function:
-
+#### Just run it!
+Once you chose the pipeline that you are going to run, you can then run it by calling 
 ```
-usage: pipeline_fet.py [-h] --data DATA --out OUT [--subjects SUB [SUB ...]] [--sessions SES [SES ...]] [--acquisitions ACQ [ACQ ...]] [--config CFG_PATH] [-nprocs NPROCS]
-
-Run the entire Fetpype pipeline -- pre-processing, reconstruction and segmentation
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --data DATA           BIDS-formatted directory containing anatomical fetal brain MRI scans
-  --out OUT             Output directory, where all outputs will be saved.
-  --subjects SUB [SUB ...], -sub SUB [SUB ...]
-                        List of subjects to process (default: every subject in thedata directory).
-  --sessions SES [SES ...], -ses SES [SES ...]
-                        List of sessions to process (default: every session for each subject).
-  --acquisitions ACQ [ACQ ...], -acq ACQ [ACQ ...]
-                        List of acquisitions to process (default: every acquisition for each subject/session combination).
-  --config CFG_PATH     Parameters yaml file specifying the parameters, containers and functions to be used in the pipeline.
-  -nprocs NPROCS        Number of processes to allocate.
+fetpype_run --data <THE_PATH_TO_YOUR_DATA> --out <THE_PATH_TO_YOUR_DATA>/derivatives/fetpype
 ```
 
-If you are currently in the root fetpype folder, a good first command would be:
-```
-python workflows pipeline_fet.py --data <THE_PATH_TO_YOUR_DATA> --out <THE_PATH_TO_YOUR_DATA>/derivatives/fetpype
-```
+Additional options are available when calling `fetpype_run --help`. Then just wait and see your results! 
 
-Then just wait and see your results! In the meantime, you can read about other parts of the pipeline: 
+#### While you're waiting for the results
+Feel free to explore how fetpype works and what it can do!
 
 - [Output data formatting](output_data.md)
 - [Running parts of the pipeline](run_parts.md)

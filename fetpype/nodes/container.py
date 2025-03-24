@@ -48,13 +48,19 @@ class ContainerCommandLine(CommandLine):
     _mount_keys = []
     _mounted = False
 
-    def __init__(self, command=None, mount_keys=None, pre_command=None, container_image=None, **inputs):
+    def __init__(
+        self,
+        command=None,
+        mount_keys=None,
+        pre_command=None,
+        container_image=None,
+        **inputs,
+    ):
         super(ContainerCommandLine, self).__init__(command, **inputs)
         self._cmd_prefix = add_final_space(pre_command)
         self._container_image = container_image
         self._mount_keys = mount_keys or getattr(self, "_mount_keys", None)
         self._cmd = f"{self._container_image} " + self._cmd
-     
 
     def _get_directory(self, entry):
         """
@@ -83,9 +89,7 @@ class ContainerCommandLine(CommandLine):
             mount_dict[k] = getattr(self.inputs, k, None)
             if mount_dict[k] is None or not isdefined(mount_dict[k]):
                 mount_dict[k] = self._gen_filename(k)
-            assert isdefined(
-                mount_dict[k]
-            ), f"The variable {k} is not defined"
+            assert isdefined(mount_dict[k]), f"The variable {k} is not defined"
 
         # Get the common path for each mount
         print(mount_dict)

@@ -380,10 +380,12 @@ class CropStacksAndMasks(BaseInterface):
             )
         else:
             os.system(
-                f"cp {self.inputs.input_image} {self._gen_filename('output_image')}"
+                f"cp {self.inputs.input_image} "
+                f"{self._gen_filename('output_image')}"
             )
             os.system(
-                f"cp {self.inputs.input_mask} {self._gen_filename('output_mask')}"
+                f"cp {self.inputs.input_mask} "
+                f"{self._gen_filename('output_mask')}"
             )
 
     def _list_outputs(self):

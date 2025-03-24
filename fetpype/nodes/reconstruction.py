@@ -42,9 +42,10 @@ def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
     if "<output_dir>" in cmd:
         cmd = cmd.replace("<output_dir>", output_dir)
         # Assert that args.path_to_output is defined
-        assert (
-            cfg.path_to_output is not None
-        ), "<output_dir> found in the command of reconstruction, but path_to_output is not defined."
+        assert cfg.path_to_output is not None, (
+            "<output_dir> found in the command of reconstruction, "
+            "but path_to_output is not defined."
+        )
         output_volume = os.path.join(output_dir, cfg.path_to_output)
     if "<input_tp>" in cmd:
         try:
@@ -56,7 +57,8 @@ def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
         except Exception as e:
 
             raise ValueError(
-                f"Error when calculating <input_tp>: {e}\n{traceback.format_exc()}"
+                f"Error when calculating <input_tp>: {e}"
+                f"\n{traceback.format_exc()}"
             )
 
     if "<output_res>" in cmd:

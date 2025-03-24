@@ -1,6 +1,5 @@
 import os
 import re
-from nipype.interfaces.base import isdefined
 
 
 def is_docker(pre_command):
@@ -37,5 +36,5 @@ def is_valid_cmd(cmd, valid_tags):
         if tag not in valid_tags:
             raise ValueError(f"Invalid tag {tag} in command {cmd}")
 
-    if "docker" in cmd and not "<mount>" in cmd:
+    if "docker" in cmd and "<mount>" not in cmd:
         raise ValueError("Docker command must have a <mount> tag")

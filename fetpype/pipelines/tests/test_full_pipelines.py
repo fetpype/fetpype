@@ -30,28 +30,5 @@ def test_create_subpipes_no_args() -> None:
     )
 
 
-# def test_create_minimal_subpipes_no_args():
-
-#     params = {
-#         "general": {
-#             "pipeline": "minimal",
-#             "pre_command": "docker run ",
-#             "niftymic_image": "renbem/niftymic:v0.9 ",
-#             "no_graph": False,
-#         }
-#     }
-
-#     # running workflow
-#     pipeline_fet = create_minimal_subpipes(
-#         params=params, name="test_create_minimal_subpipes_no_args"
-#     )
-
-#     pipeline_fet.write_graph(graph2use="colored")
-
-#     assert op.exists(
-#         op.join(data_path, "test_create_minimal_subpipes_no_args", "graph.png")
-#     )
-
-
 if __name__ == "__main__":
     test_create_subpipes_no_args

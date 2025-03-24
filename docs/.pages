@@ -6,6 +6,9 @@ nav:
         - reconstruction.md
         - segmentation.md
         - surface.md
-    - Usage:
-        - usage.md
+    - In-depth:
+        - output_data.md
+        - run_parts.md
+        - contributing.md
+
    

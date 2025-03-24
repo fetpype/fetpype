@@ -30,7 +30,7 @@ def get_prepro(cfg, disable_cropping=False):
     cfg_prepro = cfg.preprocessing
     be_config = cfg_prepro.brain_extraction[container]
 
-    prepro_pipe = pe.Workflow(name="Pre-processing")
+    prepro_pipe = pe.Workflow(name="Preprocessing")
     # Creating input node
     input = pe.Node(niu.IdentityInterface(fields=["stacks"]), name="inputnode")
     output = pe.Node(

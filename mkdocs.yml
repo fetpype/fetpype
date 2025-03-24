@@ -20,8 +20,14 @@ plugins:
 - search
 - autorefs
 - awesome-pages
+- bibtex:
+      bib_file: "docs/biblio.bib"
 
 markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - footnotes
+
+
+  

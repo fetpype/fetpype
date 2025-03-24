@@ -50,6 +50,8 @@ sub-myname
             sub-myname_[ses-01]_run-2_T2w.nii.gz
             sub-myname_[ses-01]_run-3_T2w.nii.gz
 ```
+
+
 Here, [ses-XX] is an optional tag/folder level. The `anat` folder will contain the different runs, which are the different stacks acquired for a given subject. More information about BIDS formatting is available [here](https://bids.neuroimaging.io/index.html).
 
 #### Choose what you will run

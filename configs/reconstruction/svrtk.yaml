@@ -1,11 +1,15 @@
 pipeline: "svrtk"
 docker: 
   cmd: " docker run <mount>
-  fetalsvrtk/svrtk:general_auto_amd
-  bash /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 
-  <input_dir> <output_dir> 1 <input_tp> <output_res> 1"
+    fetalsvrtk/svrtk:general_auto_amd
+    bash /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 
+    <input_dir> <output_dir> 1 <input_tp> <output_res> 1"
 singularity:
-  cmd: null
+  cmd: " singularity exec --bind /gpfs:/gpfs
+    fetalsvrtk/svrtk:general_auto_amd
+    /home/gmarti/SINGULARITY/svrtk_general_auto_amd.sif 
+    /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 
+    <input_dir> <output_dir> 1 <input_tp> <output_res> 1"
 path_to_output: "reo-SVR-output-brain.nii.gz"
 
 

@@ -10,8 +10,16 @@ docker:
     --bias-field-correction 
     --n-levels-bias 1"
 singularity:
-  cmd: null
+  cmd: "singularity exec --bind /gpfs:/gpfs --nv /home/gmarti/SINGULARITY/nesvor_latest.sif 
+    nesvor reconstruct 
+    --input-stacks <input_stacks> 
+    --stack-masks <input_masks> 
+    --output-volume <output_volume> 
+    --batch-size 4096 
+    --n-proc-n4 4
+    --bias-field-correction 
+    --n-levels-bias 1"
 args:
-    path_to_output: null
+    path_to_output: "nesvor.nii.gz"
 
 

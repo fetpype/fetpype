@@ -1,9 +1,12 @@
 pipeline: "bounti"
 docker: 
   cmd: "docker run --rm <mount>
-  fetalsvrtk/segmentation:general_auto_amd 
-  bash /home/auto-proc-svrtk/scripts/auto-brain-bounti-segmentation-fetal.sh 
-  <input_dir> <output_dir>"
+    fetalsvrtk/segmentation:general_auto_amd 
+    bash /home/auto-proc-svrtk/scripts/auto-brain-bounti-segmentation-fetal.sh 
+    <input_dir> <output_dir>"
 singularity:
-  cmd: null
+  cmd: "singularity exec --bind /gpfs:/gpfs --nv
+    /home/gmarti/SINGULARITY/bounti.sif
+    bash /home/auto-proc-svrtk/scripts/auto-brain-bounti-segmentation-fetal.sh 
+    <input_dir> <output_dir>"
 path_to_output: "<basename>-mask-brain_bounti-19.nii.gz"

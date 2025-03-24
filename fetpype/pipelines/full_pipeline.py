@@ -26,7 +26,7 @@ def print_files(files):
     return files
 
 
-def get_prepro(cfg):
+def get_prepro(cfg, disable_cropping=False):
     container = cfg.container
     cfg_prepro = cfg.preprocessing
     be_config = cfg_prepro.brain_extraction[container]
@@ -60,7 +60,7 @@ def get_prepro(cfg):
         iterfield=["input_image", "input_mask"],
         name="cropping",
     )
-
+    cropping.inputs.disabled = disable_cropping
     prepro_pipe.connect(input, "stacks", cropping, "input_image")
     prepro_pipe.connect(brain_extraction, "masks", cropping, "input_mask")
 
@@ -254,7 +254,10 @@ def create_fet_subpipes(cfg, name="full_fet_pipe"):
         niu.IdentityInterface(fields=["stacks"]), name="inputnode"
     )
 
-    prepro_pipe = get_prepro(cfg)
+    disable_cropping = (
+        True if cfg.reconstruction.pipeline == "svrtk" else False
+    )
+    prepro_pipe = get_prepro(cfg, disable_cropping=disable_cropping)
     recon = get_recon(cfg)
     segmentation = get_seg(cfg)
 

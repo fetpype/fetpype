@@ -231,14 +231,18 @@ def create_main_workflow(
 
 def main():
     # Command line parser
-    parser = argparse.ArgumentParser(description="PNH segmentation pipeline")
+    parser = argparse.ArgumentParser(
+        description="Run the entire Fetpype pipeline -- pre-processing, reconstruction and segmentation"
+    )
 
     parser.add_argument(
         "--data",
         dest="data",
         type=str,
         required=True,
-        help=("BIDS-formatted directory containing anatomical MRI scans"),
+        help=(
+            "BIDS-formatted directory containing anatomical fetal brain MRI scans"
+        ),
     )
     parser.add_argument(
         "--out",
@@ -255,7 +259,7 @@ def main():
         nargs="+",
         required=False,
         help=(
-            "List of subjects to process (default: all subjects in the"
+            "List of subjects to process (default: every subject in the"
             "data directory)."
         ),
     )
@@ -291,9 +295,7 @@ def main():
         type=str,
         help=(
             "Parameters yaml file specifying the parameters, containers and "
-            "functions to be used in the pipeline. For now, there is only "
-            "compatibility with singularity and docker containers and "
-            " niftymic/nesvor pipelines"
+            "functions to be used in the pipeline."
         ),
     )
     parser.add_argument(

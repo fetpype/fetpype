@@ -1,7 +1,7 @@
 site_name: Fetpype 
 
 theme:
-  name: readthedocs
+  name: material
   logo: media/fetpype_logo.png  # Path to your logo file
   favicon: media/fetpype_favicon.png  # Path to your favicon file
 

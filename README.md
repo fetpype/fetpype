@@ -1,6 +1,10 @@
-# fetpype
-Pipeline for processing MRI acquired in vivo in Human fetus
-collaborative effort shared across teams involved in the ERANET project MultiFact.
+#Fetpype
+
+[Documentation](https://fetpype.github.io/fetpype/)
+
+Pipeline for processing MRI acquired in vivo in human fetuses. 
+
+Collaborative effort shared across teams involved in the ERANET project MultiFact.
 
 # Basic principles
 - Principal constraint is on the reusability of the pipeline by other teams.

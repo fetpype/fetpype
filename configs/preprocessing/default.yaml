@@ -1,0 +1,6 @@
+brain_extraction:
+  docker:
+    image: "junshenxu/nesvor:latest "
+    pre_command: "docker run --gpus=all "
+  singularity:
+    image: null

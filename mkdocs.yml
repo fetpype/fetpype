@@ -1,0 +1,27 @@
+site_name: Fetpype 
+
+theme:
+  name: mkdocs  
+  logo: null # Path to your logo file
+  favicon: null  # Path to your favicon file
+
+plugins:
+- mkdocstrings:
+    enabled: !ENV [ENABLE_MKDOCSTRINGS, true]
+    default_handler: python
+    handlers:
+      python:
+        options:
+          show_source: true
+          members_order: source
+          relative_crossrefs: true
+
+        
+- search
+- autorefs
+- awesome-pages
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences

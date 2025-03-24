@@ -194,6 +194,9 @@ class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
         desc="Padding (in mm) to be set around the cropped image and mask",
         usedefault=True,
     )
+    disabled = traits.Bool(
+        False, desc="Disable cropping", usedefault=True, mandatory=False
+    )
 
 
 class CropStacksAndMasksOutputSpec(TraitedSpec):
@@ -366,14 +369,24 @@ class CropStacksAndMasks(BaseInterface):
         return range_list
 
     def _run_interface(self, runtime):
-        boundary = self.inputs.boundary
-        self._crop_stack_and_mask(
-            self.inputs.input_image,
-            self.inputs.input_mask,
-            boundary_i=boundary,
-            boundary_j=boundary,
-            boundary_k=boundary,
-        )
+        if not self.inputs.disabled:
+            boundary = self.inputs.boundary
+            self._crop_stack_and_mask(
+                self.inputs.input_image,
+                self.inputs.input_mask,
+                boundary_i=boundary,
+                boundary_j=boundary,
+                boundary_k=boundary,
+            )
+        else:
+            os.system(
+                f"cp {self.inputs.input_image} "
+                f"{self._gen_filename('output_image')}"
+            )
+            os.system(
+                f"cp {self.inputs.input_mask} "
+                f"{self._gen_filename('output_mask')}"
+            )
 
     def _list_outputs(self):
         outputs = self._outputs().get()

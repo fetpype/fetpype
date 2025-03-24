@@ -63,8 +63,11 @@ from fetpype.utils.utils_bids import (
     create_description_file,
 )
 import hydra
+from omegaconf import OmegaConf
 
 ###############################################################################
+
+__file_dir__ = os.path.dirname(os.path.abspath(__file__))
 
 
 def create_main_workflow(
@@ -119,14 +122,17 @@ def create_main_workflow(
         print("process_dir {} already exists".format(process_dir))
 
     # params
-    if cfg_path is None:
-        cfg_path = "../config/default.yaml"
+    cfg_path = op.abspath(cfg_path)
+    cfg_path = os.path.relpath(cfg_path, __file_dir__)
+    cfg_dir = os.path.dirname(cfg_path)
+    cfg_file = os.path.basename(cfg_path)
 
-    print("cfg_path: ", cfg_path)
     # Transform the path into a relative
     # assert op.exists(cfg_path), f"Error with file {cfg_path}"
-    with hydra.initialize(config_path="../configs"):
-        cfg = hydra.compose(config_name="default.yaml")
+    with hydra.initialize(config_path=cfg_dir):
+        cfg = hydra.compose(config_name=cfg_file)
+    # Show the configuration
+    print(OmegaConf.to_yaml(cfg))
 
     # params = json.load(open(params_file))
 
@@ -220,9 +226,6 @@ def create_main_workflow(
 
     main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
 
-    if nprocs is None:
-        nprocs = 4
-    # main_workflow.run()
     main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
 
 
@@ -284,6 +287,7 @@ def main():
     parser.add_argument(
         "--config",
         dest="cfg_path",
+        default="../config/default.yaml",
         type=str,
         help=(
             "Parameters yaml file specifying the parameters, containers and "
@@ -291,12 +295,12 @@ def main():
             "compatibility with singularity and docker containers and "
             " niftymic/nesvor pipelines"
         ),
-        required=True,
     )
     parser.add_argument(
         "-nprocs",
         dest="nprocs",
         type=int,
+        default=4,
         help="Number of processes to allocate.",
         required=False,
     )

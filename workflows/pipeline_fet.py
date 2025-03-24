@@ -1,23 +1,72 @@
-import sys
+#!/usr/bin/env python3
+"""
+Human fetal anatomical segmentation pipeline
+
+Adapted in Nipype from an original pipeline of Alexandre Pron by David
+Meunier.
+
+parser, params are derived from macapype pipeline
+
+Description
+--------------
+Fetal MRI processing pipeline with BIDS-compliant inputs and outputs.
+The pipeline performs brain extraction, reconstruction, and segmentation
+of fetal MRI data in a BIDS-organized directory structure.
+
+Arguments
+-----------
+-data
+    Path to the BIDS directory that contain subjects' MRI data.
+
+-out
+    Nipype's processing directory.
+    It's where all the outputs will be saved.
+
+-sub
+    IDs list of subjects to process.
+
+-ses
+    session (leave blank if None)
+
+-acq [optional]
+    type of acquisition (e.g. haste or trufisp)
+
+-params
+    json parameter file; leave blank if None
+
+-save_intermediates
+    When set, intermediate results from each processing step will
+    be saved in BIDS-compatible format in the derivatives folder
+
+Example
+---------
+python pipeline_fet.py -data [PATH_TO_BIDS] -out ../local_tests/ -subjects
+Elouk -save_intermediates
+
+Requirements
+--------------
+This workflow use:
+    - ANTS (denoise)
+    - nifyimic/nesvor/svrtk
+    - dhcp/bounti for segmentation
+"""
+
+# Authors : David Meunier (david.meunier@univ-amu.fr)
+#           Alexandre Pron (alexandre.pron@univ-amu.fr)
 import os
 import nipype.pipeline.engine as pe
 from fetpype.pipelines.full_pipeline import (
     create_full_pipeline,
 )
+
 from fetpype.utils.utils_bids import (
     create_datasource,
     create_datasink,
     create_description_file,
+    create_bids_datasink
 )
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from utils import (  # noqa: E402
-    get_default_parser,
-    init_and_load_cfg,
-    check_and_update_paths,
-    get_pipeline_name,
-    check_valid_pipeline,
-)
+import hydra
+from omegaconf import OmegaConf
 
 ###############################################################################
 
@@ -33,47 +82,83 @@ def create_main_workflow(
     acquisitions,
     cfg_path,
     nprocs,
+    save_intermediates=False,
+    wf_name="fetpype",
+    bids=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
 
-    Args:
-        data_dir (str):
-            Path to the BIDS directory that contains anatomical images.
-        out_dir (str):
-            Path to the output directory (will be created if not already
-            existing). Previous outputs may be overriden.
-        nipype_dir (str):
-            Path to the nipype directory.
-        subjects (list[str], optional):
-            List of subject IDs matching the BIDS specification
-            (e.g., sub-[SUB1], sub-[SUB2], ...).
-        sessions (list[str], optional):
-            List of session IDs matching the BIDS specification
-            (e.g., ses-[SES1], ses-[SES2], ...).
-        acquisitions (list[str], optional):
-            List of acquisition names matching the BIDS specification
-            (e.g., acq-[ACQ1], ...).
-        cfg_path (str):
-            Path to a hydra  configuration file (YAML) specifying pipeline
-            parameters.
-        nprocs (int):
-            Number of processes to be launched by MultiProc.
+    Params:
+        data_path: pathlike str
+            Path to the BIDS directory that contains anatomical images
 
+        process_dir: pathlike str
+            Path to the ouput directory (will be created if not alredy
+            existing). Previous outputs maybe overwritten.
+
+        subjects: list of str (optional)
+            Subject's IDs to match to BIDS specification (sub-[SUB1],
+            sub-[SUB2]...)
+
+        sessions: list of str (optional)
+            Session's IDs to match to BIDS specification (ses-[SES1],
+            ses-[SES2]...)
+
+        acquisitions: list of str (optional)
+            Acquisition name to match to BIDS specification (acq-[ACQ1]...)
+
+        params_file: path to a JSON file
+            JSON file that specify some parameters of the pipeline.
+
+        nprocs: integer
+            number of processes that will be launched by MultiProc
+            
+        save_intermediates: boolean
+            If True, intermediate results will be saved in BIDS format
+
+    Returns:
+        workflow: nipype.pipeline.engine.Workflow
     """
 
-    cfg = init_and_load_cfg(cfg_path, __file_dir__)
-    data_dir, out_dir, nipype_dir = check_and_update_paths(
-        data_dir, out_dir, nipype_dir, cfg
-    )
+    # formating args
+    data_dir = op.abspath(data_dir)
 
-    check_valid_pipeline(cfg)
-    # if general, pipeline is not in params ,create it and set it to niftymic
+    try:
+        os.makedirs(process_dir)
+    except OSError:
+        print("process_dir {} already exists".format(process_dir))
+
+    # params
+    cfg_path = op.abspath(cfg_path)
+    cfg_path = os.path.relpath(cfg_path, __file_dir__)
+    cfg_dir = os.path.dirname(cfg_path)
+    cfg_file = os.path.basename(cfg_path)
+
+    # Transform the path into a relative
+    # assert op.exists(cfg_path), f"Error with file {cfg_path}"
+    with hydra.initialize(config_path=cfg_dir):
+        cfg = hydra.compose(config_name=cfg_file)
+    # Show the configuration
+    print(OmegaConf.to_yaml(cfg))
 
     # main_workflow
-    main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
-    main_workflow.base_dir = nipype_dir
-    fet_pipe = create_full_pipeline(cfg)
+    main_workflow = pe.Workflow(name=wf_name)
+    main_workflow.base_dir = process_dir
+    
+    # Extract subject IDs without 'sub-' prefix for datasink creation
+    subject_ids = [sub.replace('sub-', '') if sub.startswith('sub-') else sub for sub in subjects] if subjects else None
+    session_ids = [ses.replace('ses-', '') if ses.startswith('ses-') else ses for ses in sessions] if sessions else None
+    acq_ids = [acq.replace('acq-', '') if acq.startswith('acq-') else acq for acq in acquisitions] if acquisitions else None
+        
+    if cfg.reconstruction.pipeline in [
+        "niftymic",
+        "nesvor",
+        "svrtk",
+    ] and cfg.segmentation.pipeline in ["bounti"]:
+        fet_pipe = create_fet_subpipes(
+            cfg,
+        )
 
     output_query = {
         "stacks": {
@@ -92,56 +177,78 @@ def create_main_workflow(
         acquisitions,
     )
 
-    # in both cases we connect datsource outputs to main pipeline
+    # in both cases we connect datasource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
-    # DataSink
-
-    # Reconstruction data sink:
+    # DataSink - Create BIDS-compliant outputs for final results
+    # Create json file to make it BIDS compliant if doesn't exist
+    # Setup final datasinks for reconstruction results
     pipeline_name = cfg.reconstruction.pipeline
-    datasink_path = os.path.join(out_dir, pipeline_name)
-    os.makedirs(datasink_path, exist_ok=True)
-    desc_file = create_description_file(
-        datasink_path, pipeline_name, ccfg=cfg.reconstruction
-    )
+    datasink_path = os.path.join(data_dir, "derivatives")
 
-    params_regex_subs = cfg.regex_subs if "regex_subs" in cfg.keys() else {}
-    params_subs = cfg.rsubs if "subs" in cfg.keys() else {}
+    # Create directory if not existing
+    os.makedirs(os.path.join(datasink_path, pipeline_name), exist_ok=True)
 
-    # Create datasink
-    datasink = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
-    )
-    datasink.inputs.base_directory = datasink_path
-
-    # Segmentation data sink
-    pipeline_name2 = (
-        cfg.reconstruction.pipeline + "_" + cfg.segmentation.pipeline
-    )
-
-    datasink_path2 = os.path.join(out_dir, pipeline_name2)
-    os.makedirs(datasink_path2, exist_ok=True)
+    # Create json file to make it BIDS compliant if doesn't exist
     create_description_file(
-        datasink_path2, pipeline_name2, desc_file, cfg.segmentation
+        os.path.join(datasink_path, pipeline_name), pipeline_name
     )
-    datasink2 = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name2}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
-    )
-    datasink2.inputs.base_directory = datasink_path2
-    # Add the base directory
 
-    # Connect the pipeline to the datasink
+    # Create a datasink for the preprocessing pipeline
+    preprocessing_datasink = create_bids_datasink(
+        data_dir=data_dir,
+        pipeline_name=pipeline_name,
+        step_name="preprocessing",
+        subjects=subject_ids,
+        sessions=session_ids,
+        acquisitions=acq_ids,
+        name="preprocessing_datasink"
+    )
+
+
+    # Create final datasinks using BIDS-compliant organization
+    recon_datasink = create_bids_datasink(
+        data_dir=data_dir,
+        pipeline_name=pipeline_name,
+        step_name="reconstruction",
+        subjects=subject_ids,
+        sessions=session_ids,
+        acquisitions=acq_ids,
+        name="final_recon_datasink"
+    )
+
+    # Setup final datasinks for segmentation results  
+    pipeline_name2 = f"{cfg.reconstruction.pipeline}_{cfg.segmentation.pipeline}"
+    os.makedirs(os.path.join(datasink_path, pipeline_name2), exist_ok=True)
+    
+    # Create description file for segmentation
+    create_description_file(
+        os.path.join(datasink_path, pipeline_name2), pipeline_name2
+    )
+
+    seg_datasink = create_bids_datasink(
+        data_dir=data_dir,
+        pipeline_name=pipeline_name2,
+        step_name="segmentation",
+        subjects=subject_ids,
+        sessions=session_ids,
+        acquisitions=acq_ids,
+        name="final_seg_datasink"
+    )
+
+    # Connect the pipeline to the datasinks
     main_workflow.connect(
-        fet_pipe, "outputnode.output_srr", datasink, pipeline_name
+        fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink, "stacks"
     )
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", datasink2, pipeline_name2
+        fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "masks"
+    )
+
+    main_workflow.connect(
+        fet_pipe, "outputnode.output_srr", recon_datasink, "reconstruction"
+    )
+    main_workflow.connect(
+        fet_pipe, "outputnode.output_seg", seg_datasink, "segmentation"
     )
 
     if cfg.save_graph:
@@ -157,9 +264,83 @@ def create_main_workflow(
 
 def main():
     # Command line parser
-    parser = get_default_parser(
-        "Run the entire Fetpype pipeline -- "
-        "pre-processing, reconstruction and segmentation"
+    parser = argparse.ArgumentParser(description="Fetal MRI processing pipeline")
+
+    parser.add_argument(
+        "--data",
+        dest="data",
+        type=str,
+        required=True,
+        help=("BIDS-formatted directory containing anatomical MRI scans"),
+    )
+    parser.add_argument(
+        "--out",
+        dest="out",
+        type=str,
+        required=True,  # nargs='+',
+        help="Output directory, where all outputs will be saved.",
+    )
+    parser.add_argument(
+        "--subjects",
+        "-sub",
+        dest="sub",
+        type=str,
+        nargs="+",
+        required=False,
+        help=(
+            "List of subjects to process (default: all subjects in the"
+            "data directory)."
+        ),
+    )
+    parser.add_argument(
+        "--sessions",
+        "-ses",
+        dest="ses",
+        type=str,
+        nargs="+",
+        required=False,
+        help=(
+            "List of sessions to process (default: every session for each "
+            "subject)."
+        ),
+    )
+    parser.add_argument(
+        "--acquisitions",
+        "-acq",
+        dest="acq",
+        type=str,
+        nargs="+",
+        default=None,
+        help=(
+            "List of acquisitions to process (default: every acquisition for "
+            "each subject/session combination)."
+        ),
+    )
+
+    parser.add_argument(
+        "--config",
+        dest="cfg_path",
+        default="../configs/default.yaml",
+        type=str,
+        help=(
+            "Parameters yaml file specifying the parameters, containers and "
+            "functions to be used in the pipeline. For now, there is only "
+            "compatibility with singularity and docker containers and "
+            " niftymic/nesvor pipelines"
+        ),
+    )
+    parser.add_argument(
+        "-nprocs",
+        dest="nprocs",
+        type=int,
+        default=4,
+        help="Number of processes to allocate.",
+        required=False,
+    )
+    parser.add_argument(
+        "--save_intermediates",
+        action="store_true",
+        help="Save intermediate results in BIDS format",
     )
 
     args = parser.parse_args()
@@ -175,6 +356,7 @@ def main():
         acquisitions=args.acq,
         cfg_path=args.cfg_path,
         nprocs=args.nprocs,
+        save_intermediates=args.save_intermediates
     )
 
 

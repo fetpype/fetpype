@@ -199,19 +199,26 @@ def create_main_workflow(
         os.path.join(datasink_path, pipeline_name), pipeline_name
     )
 
-    # Create a datasink for the preprocessing pipeline
-    preprocessing_datasink = create_bids_datasink(
-        data_dir=data_dir,
-        pipeline_name=pipeline_name,  # Use combined name
-        step_name="preprocessing",
-        subjects=subject_ids,
-        sessions=session_ids,
-        acquisitions=acq_ids,
-        name="preprocessing_datasink",
-        recon_method=recon_method,
-        seg_method=seg_method
-    )
-
+    if save_intermediates:
+        # Create a datasink for the preprocessing pipeline
+        preprocessing_datasink = create_bids_datasink(
+            data_dir=data_dir,
+            pipeline_name=pipeline_name,  # Use combined name
+            step_name="preprocessing",
+            subjects=subject_ids,
+            sessions=session_ids,
+            acquisitions=acq_ids,
+            name="preprocessing_datasink",
+            recon_method=recon_method,
+            seg_method=seg_method
+        )
+        # Connect the pipeline to the datasinks
+        main_workflow.connect(
+            fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink, "@stacks"
+        )
+        main_workflow.connect(
+            fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "@masks"
+        )
 
     # Create final datasinks using BIDS-compliant organization
     recon_datasink = create_bids_datasink(
@@ -239,13 +246,6 @@ def create_main_workflow(
         seg_method=seg_method
     )
 
-    # Connect the pipeline to the datasinks
-    main_workflow.connect(
-        fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink, "@stacks"
-    )
-    main_workflow.connect(
-        fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "@masks"
-    )
 
     main_workflow.connect(
         fet_pipe, "outputnode.output_srr", recon_datasink, "@reconstruction"

@@ -199,6 +199,8 @@ def create_main_workflow(
         os.path.join(datasink_path, pipeline_name), pipeline_name
     )
 
+    import pdb; pdb.set_trace()
+    
     if save_intermediates:
         # Create a datasink for the preprocessing pipeline
         preprocessing_datasink = create_bids_datasink(

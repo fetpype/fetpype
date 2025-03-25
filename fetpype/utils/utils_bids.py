@@ -70,7 +70,7 @@ def create_datasource(
     for sub in subjects:
         if sub not in existing_sub:
             print(f"Subject {sub} was not found.")
-
+        import pdb; pdb.set_trace()
         existing_ses = layout.get_sessions(subject=sub)
         if sessions is None:
             sessions = existing_ses
@@ -101,7 +101,6 @@ def create_datasource(
     bids_datasource.iterables = iterables
     return bids_datasource
 
-
 def create_bids_datasink(
     data_dir,
     pipeline_name,
@@ -121,7 +120,7 @@ def create_bids_datasink(
     
     This function creates a datasink node that organizes outputs according to the
     BIDS derivatives specification, following the structure:
-    derivatives/<recon>_<segmentation>/<step_name>/sub-XX/ses-YY/anat/...
+    derivatives/<pipeline_name>/<step_name>/sub-XX/ses-YY/anat/...
     
     Parameters
     ----------
@@ -155,7 +154,6 @@ def create_bids_datasink(
     datasink : nipype.pipeline.engine.Node
         Configured datasink node
     """
-    import os
     import os.path as op
     import nipype.interfaces.io as nio
     import nipype.pipeline.engine as pe
@@ -165,16 +163,16 @@ def create_bids_datasink(
         name = f"{step_name}_datasink"
     
     # Extract reconstruction and segmentation methods from pipeline_name if not provided
-    if '_' in pipeline_name:
+    if '_' in pipeline_name and (not recon_method or not seg_method):
         parts = pipeline_name.split('_')
-        if not recon_method:
+        if not recon_method and len(parts) > 0:
             recon_method = parts[0]
         if not seg_method and len(parts) > 1:
             seg_method = parts[1]
-    else:
-        if not recon_method:
-            recon_method = pipeline_name
-        
+    elif not recon_method:
+        recon_method = pipeline_name
+    
+    # Create container path
     container = op.join('derivatives', pipeline_name, step_name)
     
     # Create datasink node
@@ -184,56 +182,82 @@ def create_bids_datasink(
     # Prepare substitutions
     subs = []
     
-    # Create substitutions that will build the BIDS structure
-    if subjects and sessions:
+    # For subject and session-specific substitutions
+    if subjects:
         for sub in subjects:
-            for ses in sessions:
-                # The key part: create substitutions that map files to BIDS paths
-                # For stacks and masks (preprocessing)
-                subs.extend([
-                    (f"/stacks/_denoising", f"/sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                    (f"/masks/_cropping", f"/sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                ])
+            if sessions:
+                for ses in sessions:
+                    # Pattern for preprocessing intermediate directories
+                    if step_name == 'preprocessing':
+                        # These substitutions handle the preprocessing outputs specifically
+                        subs.extend([
+                            # Handle both direct stacks output and when connected to a field
+                            (f"stacks", f"sub-{sub}/ses-{ses}/{datatype}"),
+                            (f"masks", f"sub-{sub}/ses-{ses}/{datatype}"),
+                            # Also handle when directly connected through outputnode
+                            (f"outputnode.stacks", f"sub-{sub}/ses-{ses}/{datatype}"),
+                            (f"outputnode.masks", f"sub-{sub}/ses-{ses}/{datatype}")
+                        ])
+                    
+                    # For reconstruction outputs
+                    elif step_name == 'reconstruction':
+                        subs.extend([
+                            (f"outputnode.srr_volume", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
+                            (f"@reconstruction", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}")
+                        ])
+                    
+                    # For segmentation outputs
+                    elif step_name == 'segmentation':
+                        subs.extend([
+                            (f"outputnode.seg_volume", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
+                            (f"@segmentation", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}")
+                        ])
+            else:
+                # Handle case with subjects but no sessions
+                if step_name == 'preprocessing':
+                    subs.extend([
+                        (f"stacks", f"sub-{sub}/{datatype}"),
+                        (f"masks", f"sub-{sub}/{datatype}"),
+                        (f"outputnode.stacks", f"sub-{sub}/{datatype}"),
+                        (f"outputnode.masks", f"sub-{sub}/{datatype}")
+                    ])
                 
-                # For reconstruction
-                if step_name == 'reconstruction':
-                    subs.append((f"/reconstruction", f"/sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"))
+                # For reconstruction without sessions
+                elif step_name == 'reconstruction':
+                    subs.extend([
+                        (f"outputnode.srr_volume", f"sub-{sub}/{datatype}/sub-{sub}"),
+                        (f"@reconstruction", f"sub-{sub}/{datatype}/sub-{sub}")
+                    ])
                 
-                # For segmentation
-                if step_name == 'segmentation':
-                    subs.append((f"/segmentation", f"/sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"))
-    elif subjects and not sessions:
-        # Handle case with subjects but no sessions
-        for sub in subjects:
-            subs.extend([
-                (f"/stacks/_denoising", f"/sub-{sub}/{datatype}/sub-{sub}"),
-                (f"/masks/_cropping", f"/sub-{sub}/{datatype}/sub-{sub}"),
-            ])
-            
-            # For reconstruction
-            if step_name == 'reconstruction':
-                subs.append((f"/reconstruction", f"/sub-{sub}/{datatype}/sub-{sub}"))
-            
-            # For segmentation
-            if step_name == 'segmentation':
-                subs.append((f"/segmentation", f"/sub-{sub}/{datatype}/sub-{sub}"))
+                # For segmentation without sessions
+                elif step_name == 'segmentation':
+                    subs.extend([
+                        (f"outputnode.seg_volume", f"sub-{sub}/{datatype}/sub-{sub}"),
+                        (f"@segmentation", f"sub-{sub}/{datatype}/sub-{sub}")
+                    ])
     
     # Add filename substitutions based on step_name and methods
     if step_name == 'reconstruction':
         subs.extend([
             ("_recon.nii.gz", f"_rec-{recon_method}_T2w.nii.gz"),
             ("_recon_mask.nii.gz", f"_rec-{recon_method}_mask.nii.gz"),
+            ("recon.nii.gz", f"_rec-{recon_method}_T2w.nii.gz"),
+            ("srr_volume.nii.gz", f"_rec-{recon_method}_T2w.nii.gz")
         ])
     elif step_name == 'segmentation':
         if seg_method:
             subs.extend([
                 ("_seg.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_dseg.nii.gz"),
                 ("_all_labels.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_labels.nii.gz"),
+                ("seg.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_dseg.nii.gz"),
+                ("all_labels.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_labels.nii.gz")
             ])
         else:
             subs.extend([
                 ("_seg.nii.gz", f"_rec-{recon_method}_dseg.nii.gz"),
                 ("_all_labels.nii.gz", f"_rec-{recon_method}_labels.nii.gz"),
+                ("seg.nii.gz", f"_rec-{recon_method}_dseg.nii.gz"),
+                ("all_labels.nii.gz", f"_rec-{recon_method}_labels.nii.gz")
             ])
     
     # Add user-provided substitutions
@@ -245,26 +269,30 @@ def create_bids_datasink(
     
     # Define default regex substitutions
     regex_subs = [
-        # Remove any extraneous data from filenames
+        # Make sure to properly rename files with session information
+        (r"(sub-[^/_]+)/(ses-[^/_]+)/anat/([^_]+\.nii\.gz)", 
+         r"\1/\2/anat/\1_\2_\3"),
+        (r"(sub-[^/_]+)/anat/([^_]+\.nii\.gz)", 
+         r"\1/anat/\1_\2"),
+         
+        # Remove any leftover numeric suffix patterns 
+        (r"/_denoising(\d+)?", ""),
+        (r"/_cropping(\d+)?", ""),
+        
+        # Remove nipype's automatic subject/session/acquisition patterns
         (r'_subject_[^/]+', ''),
         (r'_session_[^/]+', ''),
         (r'_acquisition_[^/]+', ''),
         
-        # Crucial regex to handle the numeric suffixes from MapNodes
-        # This matches paths like _denoising0, _denoising1, etc.
-        (r"/_(?:denoising|cropping)\d+/", "/"),
+        # Clear out any potential pattern that would remove the session folder
+        (r"(sub-[^/]+)/(ses-[^/]+)/(anat)/.*?(sub-[^/]+)_(ses-[^/]+)(.*\.nii\.gz)",
+         r"\1/\2/\3/\4_\5\6"),
         
-        # For reconstruction outputs
-        (r"(sub-[^/_]+)_(ses-[^/_]+)_(recon\.nii\.gz)", 
-         r"\1_\2_rec-" + (recon_method if recon_method else "unknown") + r"_T2w.nii.gz"),
-        (r"(sub-[^/_]+)_(ses-[^/_]+)_(recon_mask\.nii\.gz)", 
-         r"\1_\2_rec-" + (recon_method if recon_method else "unknown") + r"_mask.nii.gz"),
-        
-        # Fix double anat folders if they occur
-        (r"/(sub-[^/]+)/(ses-[^/]+)/{datatype}/{datatype}/", r"/\1/\2/{datatype}/"),
-        (r"/(sub-[^/]+)/{datatype}/{datatype}/", r"/\1/{datatype}/"),
-        
-        # Clean up double underscores
+        # Ensure we don't duplicate subject/session in filenames
+        (r"(sub-[^/_]+)_(ses-[^/_]+)_(.*?)(\.nii\.gz)", 
+         r"\1_\2_\3\4"),
+         
+        # Fix double underscores
         (r"__+", "_"),
         
         # Fix file extensions if needed

@@ -5,8 +5,8 @@ docker:
     bash /home/auto-proc-svrtk/scripts/auto-brain-bounti-segmentation-fetal.sh 
     <input_dir> <output_dir>"
 singularity:
-  cmd: "singularity exec --bind /gpfs:/gpfs --nv
+  cmd: "singularity exec -u --bind /gpfs:/gpfs --bind /home/gmarti/tmp:/home/tmp_proc --nv
     /home/gmarti/SINGULARITY/bounti.sif
-    bash /home/auto-proc-svrtk/scripts/auto-brain-bounti-segmentation-fetal.sh 
+    bash /home/auto-proc-svrtk/auto-brain-bounti-segmentation-fetal.sh 
     <input_dir> <output_dir>"
 path_to_output: "<basename>-mask-brain_bounti-19.nii.gz"

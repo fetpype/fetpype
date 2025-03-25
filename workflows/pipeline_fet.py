@@ -214,10 +214,10 @@ def create_main_workflow(
         )
         # Connect the pipeline to the datasinks
         main_workflow.connect(
-            fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink, "@stacks"
+            fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink, "stacks"
         )
         main_workflow.connect(
-            fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "@masks"
+            fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "masks"
         )
 
     # Create final datasinks using BIDS-compliant organization

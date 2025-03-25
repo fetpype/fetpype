@@ -101,20 +101,18 @@ def create_main_workflow(
     subject_ids, session_ids, acq_ids = zip(*datasource.iterables[1])
     subject_ids, session_ids, acq_ids = list(subject_ids), list(session_ids), list(acq_ids)
 
-    # Reconstruction data sink:
-    pipeline_name = cfg.reconstruction.pipeline
-    datasink_path = os.path.join(out_dir, pipeline_name)
-    os.makedirs(datasink_path, exist_ok=True)
-    desc_file = create_description_file(
-        datasink_path, pipeline_name, cfg=cfg.reconstruction
-    )
     # Preprocessing data sink:
     if save_intermediates:
+        datasink_path_intermediate = os.path.join(out_dir, "preprocessing")
+        os.makedirs(datasink_path_intermediate, exist_ok=True)
+        create_description_file(
+            datasink_path_intermediate, "preprocessing", cfg=cfg.reconstruction
+        )
 
         # Create a datasink for the preprocessing pipeline
         preprocessing_datasink = create_bids_datasink(
-            data_dir=data_dir,
-            pipeline_name=pipeline_name,  # Use combined name
+            out_dir=out_dir,
+            pipeline_name="preprocessing",  # Use combined name
             step_name="preprocessing",
             subjects=subject_ids,
             sessions=session_ids,
@@ -130,9 +128,17 @@ def create_main_workflow(
         main_workflow.connect(
             fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "masks"
         )
+    
+    # Reconstruction data sink:
+    pipeline_name = cfg.reconstruction.pipeline
+    datasink_path = os.path.join(out_dir, pipeline_name)
+    os.makedirs(datasink_path, exist_ok=True)
+    desc_file = create_description_file(
+        datasink_path, pipeline_name, cfg=cfg.reconstruction
+    )
 
     recon_datasink = create_bids_datasink(
-        data_dir=data_dir,
+        out_dir=out_dir,
         pipeline_name=pipeline_name,  # Use combined name
         step_name="reconstruction",
         subjects=subject_ids,
@@ -144,19 +150,16 @@ def create_main_workflow(
     )
 
     # Segmentation data sink
-    pipeline_name2 = (
-        cfg.reconstruction.pipeline + "_" + cfg.segmentation.pipeline
-    )
 
-    datasink_path2 = os.path.join(out_dir, pipeline_name2)
+    datasink_path2 = os.path.join(out_dir, cfg.segmentation.pipeline)
     os.makedirs(datasink_path2, exist_ok=True)
     create_description_file(
-        datasink_path2, pipeline_name2, desc_file, cfg.segmentation
+        datasink_path2, cfg.segmentation.pipeline, desc_file, cfg.segmentation
     )
 
     # Create another datasink for the segmentation pipeline
     seg_datasink = create_bids_datasink(
-        data_dir=data_dir,
+        out_dir=out_dir,
         pipeline_name=pipeline_name,
         step_name="segmentation",
         subjects=subject_ids,
@@ -172,7 +175,7 @@ def create_main_workflow(
         fet_pipe, "outputnode.output_srr", recon_datasink, pipeline_name
     )
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", seg_datasink, pipeline_name2
+        fet_pipe, "outputnode.output_seg", seg_datasink, cfg.segmentation.pipeline
     )
 
     if cfg.save_graph:

@@ -105,7 +105,7 @@ def create_datasource(
 
 
 def create_bids_datasink(
-    data_dir,
+    out_dir,
     pipeline_name,
     step_name,
     subjects=None,
@@ -127,8 +127,8 @@ def create_bids_datasink(
     
     Parameters
     ----------
-    data_dir : str
-        Path to the BIDS data directory (where derivatives folder will be created)
+    out_dir : str
+        Path to where the data will be saved
     pipeline_name : str
         Name of the pipeline (e.g., 'nesvor' or 'nesvor_bounti')
     step_name : str
@@ -171,11 +171,8 @@ def create_bids_datasink(
     elif not recon_method:
         recon_method = pipeline_name
     
-    # Create container path
-    container = op.join('derivatives', pipeline_name, step_name)
-    
     # Create datasink node
-    datasink = pe.Node(nio.DataSink(base_directory=data_dir, container=container), 
+    datasink = pe.Node(nio.DataSink(base_directory=out_dir, container=pipeline_name), 
                       name=name)
     
     # Prepare substitutions
@@ -201,15 +198,19 @@ def create_bids_datasink(
                     # For reconstruction outputs
                     elif step_name == 'reconstruction':
                         subs.extend([
+                            # Handle both direct stacks output and when connected to a field
                             (f"outputnode.srr_volume", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                            (f"@reconstruction", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}")
+                            (f"@reconstruction", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
+                            (f"{pipeline_name}", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
                         ])
                     
                     # For segmentation outputs
                     elif step_name == 'segmentation':
                         subs.extend([
+                            # Handle both direct stacks output and when connected to a field
                             (f"outputnode.seg_volume", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                            (f"@segmentation", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}")
+                            (f"@segmentation", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
+                            (f"{pipeline_name}", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
                         ])
             else:
                 # Handle case with subjects but no sessions
@@ -225,14 +226,18 @@ def create_bids_datasink(
                 elif step_name == 'reconstruction':
                     subs.extend([
                         (f"outputnode.srr_volume", f"sub-{sub}/{datatype}/sub-{sub}"),
-                        (f"@reconstruction", f"sub-{sub}/{datatype}/sub-{sub}")
+                        (f"@reconstruction", f"sub-{sub}/{datatype}/sub-{sub}"),
+                        (f"{pipeline_name}", f"sub-{sub}/{datatype}/sub-{sub}"),
+                        
                     ])
                 
                 # For segmentation without sessions
                 elif step_name == 'segmentation':
                     subs.extend([
                         (f"outputnode.seg_volume", f"sub-{sub}/{datatype}/sub-{sub}"),
-                        (f"@segmentation", f"sub-{sub}/{datatype}/sub-{sub}")
+                        (f"@segmentation", f"sub-{sub}/{datatype}/sub-{sub}"),
+                        (f"{pipeline_name}", f"sub-{sub}/{datatype}/sub-{sub}"),
+                        
                     ])
     
     # Add filename substitutions based on step_name and methods
@@ -240,7 +245,6 @@ def create_bids_datasink(
         subs.extend([
             ("_recon.nii.gz", f"_rec-{recon_method}_T2w.nii.gz"),
             ("_recon_mask.nii.gz", f"_rec-{recon_method}_mask.nii.gz"),
-            ("recon.nii.gz", f"_rec-{recon_method}_T2w.nii.gz"),
             ("srr_volume.nii.gz", f"_rec-{recon_method}_T2w.nii.gz")
         ])
     elif step_name == 'segmentation':
@@ -284,12 +288,12 @@ def create_bids_datasink(
         (r'_acquisition_[^/]+', ''),
         
         # Clear out any potential pattern that would remove the session folder
-        (r"(sub-[^/]+)/(ses-[^/]+)/(anat)/.*?(sub-[^/]+)_(ses-[^/]+)(.*\.nii\.gz)",
-         r"\1/\2/\3/\4_\5\6"),
+        # (r"(sub-[^/]+)/(ses-[^/]+)/(anat)/.*?(sub-[^/]+)_(ses-[^/]+)(.*\.nii\.gz)",
+        # r"\1/\2/\3/\4_\5\6"),
         
         # Ensure we don't duplicate subject/session in filenames
-        (r"(sub-[^/_]+)_(ses-[^/_]+)_(.*?)(\.nii\.gz)", 
-         r"\1_\2_\3\4"),
+        # (r"(sub-[^/_]+)_(ses-[^/_]+)_(.*?)(\.nii\.gz)", 
+        # r"\1_\2_\3\4"),
          
         # Fix double underscores
         (r"__+", "_"),

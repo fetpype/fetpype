@@ -416,10 +416,12 @@ def test_create_bids_datasink_reconstruction(temp_dir):
     
     bids_dir = create_mock_bids_dataset(temp_dir, subjects, sessions)
     
+    out_dir = os.path.join(bids_dir, "derivatives", pipeline_name)
+
     # Create datasink for reconstruction
     pipeline_name = "nesvor"
     datasink = create_bids_datasink(
-        data_dir=bids_dir,
+        data_dir=out_dir,
         pipeline_name=pipeline_name,
         step_name="reconstruction",
         subjects=subjects,
@@ -457,12 +459,13 @@ def test_create_bids_datasink_segmentation(temp_dir):
     sessions = ["01"]
     
     bids_dir = create_mock_bids_dataset(temp_dir, subjects, sessions)
+    out_dir = os.path.join(bids_dir, "derivatives", recon_method)
     
     # Create datasink for segmentation
     recon_method = "nesvor"
     seg_method = "bounti"
     datasink = create_bids_datasink(
-        data_dir=bids_dir,
+        out_dir=out_dir,
         pipeline_name=recon_method,
         step_name="segmentation",
         subjects=subjects,
@@ -501,11 +504,13 @@ def test_create_bids_datasink_without_sessions(temp_dir):
     subjects = ["01", "02"]
     
     bids_dir = create_mock_bids_dataset(temp_dir, subjects)
+
+    out_dir = os.path.join(bids_dir, "derivatives", pipeline_name)
     
     # Create datasink for reconstruction
     pipeline_name = "nesvor"
     datasink = create_bids_datasink(
-        data_dir=bids_dir,
+        out_dir=out_dir,
         pipeline_name=pipeline_name,
         step_name="reconstruction",
         subjects=subjects,
@@ -538,10 +543,12 @@ def test_create_bids_datasink_preprocessing(temp_dir):
     
     bids_dir = create_mock_bids_dataset(temp_dir, subjects, sessions)
     
+    out_dir = os.path.join(bids_dir, "derivatives", pipeline_name)
+
     # Create datasink for preprocessing
     pipeline_name = "nesvor"
     datasink = create_bids_datasink(
-        data_dir=bids_dir,
+        out_dir=out_dir,
         pipeline_name=pipeline_name,
         step_name="preprocessing",
         subjects=subjects,
@@ -579,11 +586,13 @@ def test_bids_datasink_regexp_substitutions(temp_dir):
     sessions = ["01"]
     
     bids_dir = create_mock_bids_dataset(temp_dir, subjects, sessions)
+
+    out_dir = os.path.join(bids_dir, "derivatives", pipeline_name)
     
     # Create datasink
     pipeline_name = "nesvor"
     datasink = create_bids_datasink(
-        data_dir=bids_dir,
+        out_dir=out_dir,
         pipeline_name=pipeline_name,
         step_name="reconstruction",
         subjects=subjects,

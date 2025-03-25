@@ -1,25 +1,12 @@
 def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
-    from fetpype.nodes.utils import (
-        is_valid_cmd,
-        get_directory,
-        get_mount_docker,
-    )
     import os
     import numpy as np
     import nibabel as nib
     import traceback
+    from fetpype import VALID_RECON_TAGS as VALID_TAGS
 
-    VALID_TAGS = [
-        "mount",
-        "input_stacks",
-        "input_dir",
-        "input_masks",
-        "input_masks_dir",
-        "output_dir",
-        "output_volume",
-        "input_tp",
-        "output_res",
-    ]
+    from fetpype.nodes import is_valid_cmd, get_directory, get_mount_docker
+
     is_valid_cmd(cmd, VALID_TAGS)
     output_dir = os.path.join(os.getcwd(), "recon")
     output_volume = os.path.join(output_dir, "recon.nii.gz")

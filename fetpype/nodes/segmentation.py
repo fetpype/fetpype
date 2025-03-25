@@ -1,19 +1,19 @@
 def run_seg_cmd(input_srr, cmd, cfg):
-    from fetpype.nodes.utils import (
-        is_valid_cmd,
-        get_mount_docker,
-    )
     import os
+    from fetpype import VALID_SEG_TAGS as VALID_TAGS
+    from fetpype.nodes import is_valid_cmd, get_mount_docker
 
-    VALID_TAGS = [
-        "mount",
-        "input_vol",
-        "input_dir",
-        "output_dir",
-        "output_seg",
-    ]
     is_valid_cmd(cmd, VALID_TAGS)
 
+    # Check if input_srr is a directory or a file
+    if isinstance(input_srr, list):
+        if len(input_srr) == 1:
+            input_srr = input_srr[0]
+        else:
+            raise ValueError(
+                "input_srr is a list, and contains multiple elements. "
+                "It should be a single element."
+            )
     # Copy input_srr to input_directory
     # Avoid mounting problematic directories
     input_srr_dir = os.path.join(os.getcwd(), "seg/input")

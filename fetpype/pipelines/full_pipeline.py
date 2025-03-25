@@ -203,7 +203,7 @@ def get_seg(cfg):
     return seg_pipe
 
 
-def create_fet_subpipes(cfg, name="full_fet_pipe"):
+def create_full_pipeline(cfg, name="full_pipeline"):
     """
     Create the fetal processing pipeline (sub-workflow).
 
@@ -233,9 +233,6 @@ def create_fet_subpipes(cfg, name="full_fet_pipe"):
                 list of reconstructed files
 
     """
-    inputnode = pe.Node(
-        niu.IdentityInterface(fields=["stacks"]), name="inputnode"
-    )
     print("Full pipeline name: ", name)
     # Creating pipeline
     full_fet_pipe = pe.Workflow(name=name)
@@ -288,6 +285,140 @@ def create_fet_subpipes(cfg, name="full_fet_pipe"):
     )
 
     return full_fet_pipe
+
+
+def create_rec_pipeline(cfg, name="rec_pipeline"):
+    """
+    Create the fetal processing pipeline (sub-workflow).
+
+    Given an input of T2w stacks, this pipeline performs the following steps:
+        1. Brain extraction using MONAIfbs (dirty wrapper around NiftyMIC's
+           command niftymic_segment_fetal_brains)
+        2. Denoising using ANTS' DenoiseImage
+        3. Perform reconstruction using NiftyMIC's command
+            niftymic_run_reconstruction_pipeline
+
+    Params:
+        name:
+            pipeline name (default = "full_fet_pipe")
+        params:
+            dictionary of parameters (default = {}). This
+            dictionary contains the parameters given in a JSON
+            config file. It specifies which containers to use
+            for each step of the pipeline.
+
+    Inputs:
+        inputnode:
+            stacks:
+                list of T2w stacks
+    Outputs:
+        outputnode:
+            recon_files:
+                list of reconstructed files
+
+    """
+    print("Full pipeline name: ", name)
+    # Creating pipeline
+    rec_pipe = pe.Workflow(name=name)
+    rec_pipe.config["execution"] = {
+        "remove_unnecessary_outputs": True,
+        "stop_on_first_crash": True,
+        "stop_on_first_rerun": True,
+        "crashfile_format": "txt",
+        "write_provenance": False,
+    }
+    config.update_config(rec_pipe.config)
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["stacks"]), name="inputnode"
+    )
+
+    disable_cropping = (
+        True if cfg.reconstruction.pipeline == "svrtk" else False
+    )
+    prepro_pipe = get_prepro(cfg, disable_cropping=disable_cropping)
+    recon = get_recon(cfg)
+
+    rec_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
+
+    # RECONSTRUCTION
+
+    rec_pipe.connect(
+        prepro_pipe, "outputnode.stacks", recon, "inputnode.stacks"
+    )
+    rec_pipe.connect(prepro_pipe, "outputnode.masks", recon, "inputnode.masks")
+
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["output_srr", "output_seg"]),
+        name="outputnode",
+    )
+    rec_pipe.connect(recon, "outputnode.srr_volume", outputnode, "output_srr")
+
+    return rec_pipe
+
+
+def create_seg_pipeline(cfg, name="seg_pipeline"):
+    """
+    Create the fetal processing pipeline (sub-workflow).
+
+    Given an input of T2w stacks, this pipeline performs the following steps:
+        1. Brain extraction using MONAIfbs (dirty wrapper around NiftyMIC's
+           command niftymic_segment_fetal_brains)
+        2. Denoising using ANTS' DenoiseImage
+        3. Perform reconstruction using NiftyMIC's command
+            niftymic_run_reconstruction_pipeline
+
+    Params:
+        name:
+            pipeline name (default = "full_fet_pipe")
+        params:
+            dictionary of parameters (default = {}). This
+            dictionary contains the parameters given in a JSON
+            config file. It specifies which containers to use
+            for each step of the pipeline.
+
+    Inputs:
+        inputnode:
+            stacks:
+                list of T2w stacks
+    Outputs:
+        outputnode:
+            recon_files:
+                list of reconstructed files
+
+    """
+    print("Full pipeline name: ", name)
+    # Creating pipeline
+    seg_pipe = pe.Workflow(name=name)
+    seg_pipe.config["execution"] = {
+        "remove_unnecessary_outputs": True,
+        "stop_on_first_crash": True,
+        "stop_on_first_rerun": True,
+        "crashfile_format": "txt",
+        # "use_relative_paths": True,
+        "write_provenance": False,
+    }
+    config.update_config(seg_pipe.config)
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["srr_volume"]), name="inputnode"
+    )
+
+    segmentation = get_seg(cfg)
+
+    seg_pipe.connect(
+        inputnode, "srr_volume", segmentation, "inputnode.srr_volume"
+    )
+
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["output_seg"]),
+        name="outputnode",
+    )
+    seg_pipe.connect(
+        segmentation, "outputnode.seg_volume", outputnode, "output_seg"
+    )
+
+    return seg_pipe
 
 
 def create_dhcp_subpipe(name="dhcp_pipe", params={}):

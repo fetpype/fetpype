@@ -6,6 +6,7 @@ from bids.layout import BIDSLayout
 
 import nipype.interfaces.io as nio
 import nipype.pipeline.engine as pe
+from omegaconf import OmegaConf
 
 
 def create_datasource(
@@ -225,7 +226,7 @@ def get_gestational_age(bids_dir, T2):
     return gestational_age
 
 
-def create_description_file(recon_dir, algorithm):
+def create_description_file(out_dir, algo, prev_desc=None, cfg=None):
     """Create a dataset_description.json file in the derivatives folder.
 
     Parameters
@@ -237,26 +238,34 @@ def create_description_file(recon_dir, algorithm):
 
     TODO: should look for the extra parameters and also add them
     """
-    if not os.path.exists(os.path.join(recon_dir, "dataset_description.json")):
+    if not os.path.exists(os.path.join(out_dir, "dataset_description.json")):
         description = {
-            "Name": algorithm,
+            "Name": algo,
             "Version": "1.0",
             "BIDSVersion": "1.7.0",
             "PipelineDescription": {
-                "Name": algorithm,
+                "Name": algo,
             },
             "GeneratedBy": [
                 {
-                    "Name": algorithm,
+                    "Name": algo,
                 }
             ],
         }
+
+        if prev_desc is not None:
+            with open(prev_desc, "r") as f:
+                prev_desc = json.load(f)
+                description["GeneratedBy"].append({"Name": prev_desc["Name"]})
+        if cfg is not None:
+            description["Config"] = OmegaConf.to_container(cfg, resolve=True)
         with open(
             os.path.join(
-                recon_dir,
+                out_dir,
                 "dataset_description.json",
             ),
             "w",
             encoding="utf-8",
+            ident=4,
         ) as outfile:
             json.dump(description, outfile)

@@ -281,7 +281,7 @@ def main():
         dest="out",
         type=str,
         required=True,  # nargs='+',
-        help="Output directory, where all outputs will be saved.",
+        help="Output directory, where all nipype intermediate files, logs and cache will be saved.",
     )
     parser.add_argument(
         "--subjects",

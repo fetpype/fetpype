@@ -36,6 +36,10 @@ setup(
     long_description_content_type='text/markdown',
     license='BSD 3',
     entry_points = {
-        'console_scripts': ['fetpype_run = workflows.pipeline_fet:main']},
+        'console_scripts': [
+            'fetpype_run = workflows.pipeline_fet:main',
+            'fetpype_run_rec = workflows.pipeline_rec:main',
+            'fetpype_run_seg = workflows.pipeline_seg:main'
+            ]},
     install_requires= required_packages,
     include_package_data=True)

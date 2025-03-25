@@ -2,7 +2,7 @@ import sys
 import os
 import nipype.pipeline.engine as pe
 from fetpype.pipelines.full_pipeline import (
-    create_full_pipeline,
+    create_rec_pipeline,
 )
 from fetpype.utils.utils_bids import (
     create_datasource,
@@ -11,11 +11,12 @@ from fetpype.utils.utils_bids import (
 )
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+
 from utils import (  # noqa: E402
-    get_default_parser,
     init_and_load_cfg,
     check_and_update_paths,
     get_pipeline_name,
+    get_default_parser,
     check_valid_pipeline,
 )
 
@@ -24,7 +25,7 @@ from utils import (  # noqa: E402
 __file_dir__ = os.path.dirname(os.path.abspath(__file__))
 
 
-def create_main_workflow(
+def create_rec_workflow(
     data_dir,
     out_dir,
     nipype_dir,
@@ -63,17 +64,20 @@ def create_main_workflow(
     """
 
     cfg = init_and_load_cfg(cfg_path, __file_dir__)
+
+    import pdb
+
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
-
+    pdb.set_trace()
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
 
     # main_workflow
     main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
     main_workflow.base_dir = nipype_dir
-    fet_pipe = create_full_pipeline(cfg)
+    fet_pipe = create_rec_pipeline(cfg)
 
     output_query = {
         "stacks": {
@@ -100,9 +104,11 @@ def create_main_workflow(
     # Reconstruction data sink:
     pipeline_name = cfg.reconstruction.pipeline
     datasink_path = os.path.join(out_dir, pipeline_name)
+    # Create json file to make it BIDS compliant if doesnt exist
+    # Eventually, add all parameters to the json file
     os.makedirs(datasink_path, exist_ok=True)
-    desc_file = create_description_file(
-        datasink_path, pipeline_name, ccfg=cfg.reconstruction
+    create_description_file(
+        datasink_path, pipeline_name, cfg=cfg.reconstruction
     )
 
     params_regex_subs = cfg.regex_subs if "regex_subs" in cfg.keys() else {}
@@ -116,32 +122,10 @@ def create_main_workflow(
         params_regex_subs=params_regex_subs,
     )
     datasink.inputs.base_directory = datasink_path
-
-    # Segmentation data sink
-    pipeline_name2 = (
-        cfg.reconstruction.pipeline + "_" + cfg.segmentation.pipeline
-    )
-
-    datasink_path2 = os.path.join(out_dir, pipeline_name2)
-    os.makedirs(datasink_path2, exist_ok=True)
-    create_description_file(
-        datasink_path2, pipeline_name2, desc_file, cfg.segmentation
-    )
-    datasink2 = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name2}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
-    )
-    datasink2.inputs.base_directory = datasink_path2
-    # Add the base directory
-
+    pdb.set_trace()
     # Connect the pipeline to the datasink
     main_workflow.connect(
         fet_pipe, "outputnode.output_srr", datasink, pipeline_name
-    )
-    main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", datasink2, pipeline_name2
     )
 
     if cfg.save_graph:
@@ -158,15 +142,15 @@ def create_main_workflow(
 def main():
     # Command line parser
     parser = get_default_parser(
-        "Run the entire Fetpype pipeline -- "
-        "pre-processing, reconstruction and segmentation"
+        "Run the Fetpype reconstruction pipeline -- "
+        "pre-processing and reconstruction."
     )
 
     args = parser.parse_args()
 
     # main_workflow
     print("Initialising the pipeline...")
-    create_main_workflow(
+    create_rec_workflow(
         data_dir=args.data,
         out_dir=args.out,
         nipype_dir=args.nipype_dir,

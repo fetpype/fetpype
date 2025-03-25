@@ -1,46 +1,46 @@
 #!/usr/bin/env python3
 """
-    Human fetal anatomical segmentation pipeline
+Human fetal anatomical segmentation pipeline
 
-    Adapted in Nipype from an original pipeline of Alexandre Pron by David
-    Meunier.
+Adapted in Nipype from an original pipeline of Alexandre Pron by David
+Meunier.
 
-    parser, params are derived from macapype pipeline
+parser, params are derived from macapype pipeline
 
-    Description
-    --------------
-    Base pipeline for running the dhcp pipeline (segmentation and
-    surface extraction) from a
-    superresolution reconstructed T2w image (nesvor of niftymic)
+Description
+--------------
+Base pipeline for running the dhcp pipeline (segmentation and
+surface extraction) from a
+superresolution reconstructed T2w image (nesvor of niftymic)
 
-    Arguments
-    -----------
-    -data:
-        Path to the BIDS directory that contain subjects' MRI data.
+Arguments
+-----------
+-data:
+    Path to the BIDS directory that contain subjects' MRI data.
 
-    -out:
-        Nipype's processing directory.
-        It's where all the outputs will be saved.
+-out:
+    Nipype's processing directory.
+    It's where all the outputs will be saved.
 
-    -subjects:
-        IDs list of subjects to process.
+-subjects:
+    IDs list of subjects to process.
 
-    -ses
-        session (leave blank if None)
+-ses
+    session (leave blank if None)
 
-    -params
-        json parameter file; leave blank if None
+-params
+    json parameter file; leave blank if None
 
-    Example
-    ---------
-    python pipeline_fet.py -data [PATH_TO_BIDS] -out ../local_tests/ -subjects
-    Elouk
+Example
+---------
+python pipeline_fet.py -data [PATH_TO_BIDS] -out ../local_tests/ -subjects
+Elouk
 
-    Requirements
-    --------------
-    This workflow use:
-        - ANTS (denoise)
-        - nifyimic
+Requirements
+--------------
+This workflow use:
+    - ANTS (denoise)
+    - nifyimic
 """
 
 # Authors : David Meunier (david.meunier@univ-amu.fr)

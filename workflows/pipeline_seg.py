@@ -1,30 +1,34 @@
 import sys
 import os
+import json
 import nipype.pipeline.engine as pe
 from fetpype.pipelines.full_pipeline import (
-    create_full_pipeline,
+    create_seg_pipeline,
 )
 from fetpype.utils.utils_bids import (
     create_datasource,
     create_datasink,
     create_description_file,
 )
+from fetpype import VALID_RECONSTRUCTION
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+
 from utils import (  # noqa: E402
-    get_default_parser,
     init_and_load_cfg,
     check_and_update_paths,
     get_pipeline_name,
+    get_default_parser,
     check_valid_pipeline,
 )
+
 
 ###############################################################################
 
 __file_dir__ = os.path.dirname(os.path.abspath(__file__))
 
 
-def create_main_workflow(
+def create_seg_workflow(
     data_dir,
     out_dir,
     nipype_dir,
@@ -33,6 +37,7 @@ def create_main_workflow(
     acquisitions,
     cfg_path,
     nprocs,
+    ignore_checks=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
@@ -66,17 +71,38 @@ def create_main_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
+    import pdb
 
+    pdb.set_trace()
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
 
+    data_desc = os.path.join(data_dir, "dataset_description.json")
+    if not ignore_checks:
+        if os.path.exists(data_desc):
+            with open(data_desc, "r") as f:
+                data_desc = json.load(f)
+            name = data_desc.get("Name", None)
+            if name not in VALID_RECONSTRUCTION:
+                raise ValueError(
+                    f"Method name <{data_desc['Name']}> is not a valid "
+                    "reconstruction method. Are you sure that you are "
+                    "passing a reconstructed dataset?\n"
+                    "If you know what you are doing, you can ignore "
+                    "this error by adding --ignore_check to the command line."
+                )
+        else:
+            raise ValueError(
+                f"dataset_description.json file not found in {data_dir}. "
+                "Please provide a valid BIDS directory."
+            )
     # main_workflow
     main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
     main_workflow.base_dir = nipype_dir
-    fet_pipe = create_full_pipeline(cfg)
+    fet_pipe = create_seg_pipeline(cfg)
 
     output_query = {
-        "stacks": {
+        "srr_volume": {
             "datatype": "anat",
             "suffix": "T2w",
             "extension": ["nii", ".nii.gz"],
@@ -93,22 +119,35 @@ def create_main_workflow(
     )
 
     # in both cases we connect datsource outputs to main pipeline
-    main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
+    main_workflow.connect(
+        datasource, "srr_volume", fet_pipe, "inputnode.srr_volume"
+    )
 
     # DataSink
 
     # Reconstruction data sink:
-    pipeline_name = cfg.reconstruction.pipeline
+    pipeline_name = cfg.segmentation.pipeline
     datasink_path = os.path.join(out_dir, pipeline_name)
+    # Create json file to make it BIDS compliant if doesnt exist
+    # Eventually, add all parameters to the json file
     os.makedirs(datasink_path, exist_ok=True)
-    desc_file = create_description_file(
-        datasink_path, pipeline_name, ccfg=cfg.reconstruction
-    )
 
     params_regex_subs = cfg.regex_subs if "regex_subs" in cfg.keys() else {}
     params_subs = cfg.rsubs if "subs" in cfg.keys() else {}
 
     # Create datasink
+    pipeline_name = cfg.segmentation.pipeline
+
+    datasink_path = os.path.join(out_dir, pipeline_name)
+    os.makedirs(datasink_path, exist_ok=True)
+    prev_desc = os.path.join(data_dir, "dataset_description.json")
+    if not os.path.exists(prev_desc):
+        prev_desc = None
+
+    create_description_file(
+        datasink_path, pipeline_name, prev_desc, cfg.segmentation
+    )
+    pdb.set_trace()
     datasink = create_datasink(
         iterables=datasource.iterables,
         name=f"datasink_{pipeline_name}",
@@ -116,32 +155,11 @@ def create_main_workflow(
         params_regex_subs=params_regex_subs,
     )
     datasink.inputs.base_directory = datasink_path
-
-    # Segmentation data sink
-    pipeline_name2 = (
-        cfg.reconstruction.pipeline + "_" + cfg.segmentation.pipeline
-    )
-
-    datasink_path2 = os.path.join(out_dir, pipeline_name2)
-    os.makedirs(datasink_path2, exist_ok=True)
-    create_description_file(
-        datasink_path2, pipeline_name2, desc_file, cfg.segmentation
-    )
-    datasink2 = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name2}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
-    )
-    datasink2.inputs.base_directory = datasink_path2
     # Add the base directory
 
     # Connect the pipeline to the datasink
     main_workflow.connect(
-        fet_pipe, "outputnode.output_srr", datasink, pipeline_name
-    )
-    main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", datasink2, pipeline_name2
+        fet_pipe, "outputnode.output_seg", datasink, pipeline_name
     )
 
     if cfg.save_graph:
@@ -150,23 +168,27 @@ def create_main_workflow(
             format="png",
             simple_form=True,
         )
-
     main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
     main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
 
 
 def main():
     # Command line parser
-    parser = get_default_parser(
-        "Run the entire Fetpype pipeline -- "
-        "pre-processing, reconstruction and segmentation"
-    )
+    parser = get_default_parser("Run the Fetpype segmentation pipeline.")
 
+    parser.add_argument(
+        "--ignore_checks",
+        action="store_true",
+        help=(
+            "Ignore the check to only use data from the list of validated SRR "
+            f"{', '.join(VALID_RECONSTRUCTION)}."
+        ),
+    )
     args = parser.parse_args()
 
     # main_workflow
     print("Initialising the pipeline...")
-    create_main_workflow(
+    create_seg_workflow(
         data_dir=args.data,
         out_dir=args.out,
         nipype_dir=args.nipype_dir,
@@ -175,6 +197,7 @@ def main():
         acquisitions=args.acq,
         cfg_path=args.cfg_path,
         nprocs=args.nprocs,
+        ignore_checks=args.ignore_checks,
     )
 
 

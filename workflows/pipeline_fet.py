@@ -186,7 +186,12 @@ def create_main_workflow(
     # DataSink - Create BIDS-compliant outputs for final results
     # Create json file to make it BIDS compliant if doesn't exist
     # Setup final datasinks for reconstruction results
-    pipeline_name = cfg.reconstruction.pipeline
+    # using wf_name, could combine with recon + segmentation pip name, but believe it is better
+    # to give user full control of name
+    pipeline_name = f"{wf_name}" # _{cfg.reconstruction.pipeline}_{cfg.segmentation.pipeline}"
+
+    recon_method = cfg.reconstruction.pipeline
+    seg_method = cfg.segmentation.pipeline
     datasink_path = os.path.join(data_dir, "derivatives")
 
     # Create directory if not existing
@@ -200,58 +205,56 @@ def create_main_workflow(
     # Create a datasink for the preprocessing pipeline
     preprocessing_datasink = create_bids_datasink(
         data_dir=data_dir,
-        pipeline_name=pipeline_name,
+        pipeline_name=pipeline_name,  # Use combined name
         step_name="preprocessing",
         subjects=subject_ids,
         sessions=session_ids,
         acquisitions=acq_ids,
-        name="preprocessing_datasink"
+        name="preprocessing_datasink",
+        recon_method=recon_method,
+        seg_method=seg_method
     )
 
 
     # Create final datasinks using BIDS-compliant organization
     recon_datasink = create_bids_datasink(
         data_dir=data_dir,
-        pipeline_name=pipeline_name,
+        pipeline_name=pipeline_name,  # Use combined name
         step_name="reconstruction",
         subjects=subject_ids,
         sessions=session_ids,
         acquisitions=acq_ids,
-        name="final_recon_datasink"
+        name="final_recon_datasink",
+        recon_method=recon_method,
+        seg_method=seg_method
     )
 
-    # Setup final datasinks for segmentation results  
-    pipeline_name2 = f"{cfg.reconstruction.pipeline}_{cfg.segmentation.pipeline}"
-    os.makedirs(os.path.join(datasink_path, pipeline_name2), exist_ok=True)
-    
-    # Create description file for segmentation
-    create_description_file(
-        os.path.join(datasink_path, pipeline_name2), pipeline_name2
-    )
-
+    # Create another datasink for the segmentation pipeline
     seg_datasink = create_bids_datasink(
         data_dir=data_dir,
-        pipeline_name=pipeline_name2,
+        pipeline_name=pipeline_name,
         step_name="segmentation",
         subjects=subject_ids,
         sessions=session_ids,
         acquisitions=acq_ids,
-        name="final_seg_datasink"
+        name="final_seg_datasink",
+        recon_method=recon_method,
+        seg_method=seg_method
     )
 
     # Connect the pipeline to the datasinks
     main_workflow.connect(
-        fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink, "stacks"
+        fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink, "@stacks"
     )
     main_workflow.connect(
-        fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "masks"
+        fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "@masks"
     )
 
     main_workflow.connect(
-        fet_pipe, "outputnode.output_srr", recon_datasink, "reconstruction"
+        fet_pipe, "outputnode.output_srr", recon_datasink, "@reconstruction"
     )
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", seg_datasink, "segmentation"
+        fet_pipe, "outputnode.output_seg", seg_datasink, "@segmentation"
     )
 
     if cfg.save_graph:
@@ -321,6 +324,15 @@ def main():
             "each subject/session combination)."
         ),
     )
+    parser.add_argument(
+        "--pipeline_name",
+        "-name",
+        dest="name",
+        type=str,
+        default="fetpype",
+        help=("Name of the pipeline, the name of the folder that will be "
+              "created in the derivatives/ folder of the BIDS directory"),
+    )
 
     parser.add_argument(
         "--config",
@@ -360,7 +372,8 @@ def main():
         acquisitions=args.acq,
         cfg_path=args.cfg_path,
         nprocs=args.nprocs,
-        save_intermediates=args.save_intermediates
+        save_intermediates=args.save_intermediates,
+        wf_name=args.name
     )
 
 

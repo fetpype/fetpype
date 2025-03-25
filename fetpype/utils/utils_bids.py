@@ -100,7 +100,6 @@ def create_datasource(
     bids_datasource.iterables = iterables
     return bids_datasource
 
-
 def create_bids_datasink(
     data_dir,
     pipeline_name,
@@ -112,22 +111,24 @@ def create_bids_datasink(
     name=None,
     substitutions=None,
     regexp_substitutions=None,
+    recon_method=None,
+    seg_method=None
 ):
     """
     Create a BIDS-compatible datasink for fetpype outputs.
     
     This function creates a datasink node that organizes outputs according to the
-    BIDS derivatives specification, making it easy to use outputs from one
-    pipeline step as inputs for subsequent steps.
+    BIDS derivatives specification, following the structure:
+    derivatives/<recon>_<segmentation>/<step_name>/sub-XX/ses-YY/anat/...
     
     Parameters
     ----------
     data_dir : str
         Path to the BIDS data directory (where derivatives folder will be created)
     pipeline_name : str
-        Name of the pipeline (e.g., 'niftymic', 'nesvor', 'dhcp')
+        Name of the pipeline (e.g., 'nesvor' or 'nesvor_bounti')
     step_name : str
-        Name of the processing step (e.g., 'reconstruction', 'segmentation')
+        Name of the processing step (e.g., 'preprocessing', 'reconstruction', 'segmentation')
     subjects : list, optional
         List of subject IDs (without 'sub-' prefix)
     sessions : list, optional
@@ -142,6 +143,10 @@ def create_bids_datasink(
         Additional substitutions to apply as (pattern, replacement) tuples
     regexp_substitutions : list, optional
         Additional regexp substitutions to apply as (pattern, replacement) tuples
+    recon_method : str, optional
+        Name of reconstruction method for file naming (e.g., 'nesvor', 'svrtk')
+    seg_method : str, optional
+        Name of segmentation method for file naming (e.g., 'bounti')
     
     Returns
     -------
@@ -152,8 +157,27 @@ def create_bids_datasink(
     if name is None:
         name = f"{step_name}_datasink"
     
-    # Determine container path: derivatives/pipeline_name
-    container = op.join('derivatives', pipeline_name)
+    # Extract reconstruction and segmentation methods from pipeline_name if not provided
+    if '_' in pipeline_name:
+        parts = pipeline_name.split('_')
+        if not recon_method:
+            recon_method = parts[0]
+        if not seg_method and len(parts) > 1:
+            seg_method = parts[1]
+    else:
+        if not recon_method:
+            recon_method = pipeline_name
+    
+    # Determine container path: derivatives/<recon>_<segmentation>/<step_name>
+    # For consistent directory structure, always create a combined pipeline name
+    combined_pipeline = pipeline_name
+    if '_' not in combined_pipeline and seg_method:
+        combined_pipeline = f"{recon_method}_{seg_method}"
+    
+    container = op.join('derivatives', combined_pipeline, step_name)
+    
+    # Ensure container directory exists
+    os.makedirs(op.join(data_dir, container), exist_ok=True)
     
     # Create datasink node
     datasink = pe.Node(nio.DataSink(base_directory=data_dir, container=container), 
@@ -162,21 +186,32 @@ def create_bids_datasink(
     # Prepare substitutions
     subs = []
     
-    # Add BIDS-compatible filename substitutions based on step_name
+    # Add BIDS-compatible filename substitutions based on step_name and methods
     if step_name == 'reconstruction':
         subs.extend([
-            ("_recon.nii.gz", f"_rec-{pipeline_name}_T2w.nii.gz"),
-            ("_recon_mask.nii.gz", f"_rec-{pipeline_name}_mask.nii.gz"),
+            ("_recon.nii.gz", f"_rec-{recon_method}_T2w.nii.gz"),
+            ("_recon_mask.nii.gz", f"_rec-{recon_method}_mask.nii.gz"),
         ])
     elif step_name == 'segmentation':
-        subs.extend([
-            ("_seg.nii.gz", f"_rec-{pipeline_name}_dseg.nii.gz"),
-            ("_all_labels.nii.gz", f"_rec-{pipeline_name}_labels.nii.gz"),
-        ])
-    elif step_name == 'brain_extraction':
+        if seg_method:
+            subs.extend([
+                ("_seg.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_dseg.nii.gz"),
+                ("_all_labels.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_labels.nii.gz"),
+            ])
+        else:
+            subs.extend([
+                ("_seg.nii.gz", f"_rec-{recon_method}_dseg.nii.gz"),
+                ("_all_labels.nii.gz", f"_rec-{recon_method}_labels.nii.gz"),
+            ])
+    elif step_name == 'preprocessing':
         subs.extend([
             ("_T2w_mask.nii.gz", f"_T2w_mask.nii.gz"),
             ("_mask.nii.gz", f"_mask.nii.gz"),
+            # Remove intermediate folders from preprocessing outputs
+            ("/masks/_cropping", "/"),  
+            ("/stacks/_denoising", "/"),
+            ("/_cropping", ""),
+            ("/_denoising", ""),
         ])
     elif step_name == 'denoising':
         subs.extend([
@@ -186,7 +221,7 @@ def create_bids_datasink(
     # Critical substitutions for proper BIDS structure
     # This is how nipype formats datasink outputfiles when connecting to fields
     for output_field in ["reconstruction", "mask", "brain_extraction", "denoised", 
-                         "segmentation", "recon", "recon_mask", "dhcp_files"]:
+                         "segmentation", "recon", "recon_mask", "dhcp_files", "stacks", "masks"]:
         # Add substitutions for each field
         if subjects and sessions:
             for sub in subjects:
@@ -226,9 +261,9 @@ def create_bids_datasink(
         
         # Ensure correct filename format for reconstruction outputs
         (r"(sub-[^/_]+)_(ses-[^/_]+)_(recon\.nii\.gz)", 
-         r"\1_\2_rec-" + pipeline_name + r"_T2w.nii.gz"),
+         r"\1_\2_rec-" + (recon_method if recon_method else "unknown") + r"_T2w.nii.gz"),
         (r"(sub-[^/_]+)_(ses-[^/_]+)_(recon_mask\.nii\.gz)", 
-         r"\1_\2_rec-" + pipeline_name + r"_mask.nii.gz"),
+         r"\1_\2_rec-" + (recon_method if recon_method else "unknown") + r"_mask.nii.gz"),
         
         # Clean up trailing underscores
         (r"_+", "_"),
@@ -242,7 +277,6 @@ def create_bids_datasink(
     datasink.inputs.regexp_substitutions = regex_subs
     
     return datasink
-
 
 def create_datasink(
     iterables, name="output", params_subs={}, params_regex_subs={}

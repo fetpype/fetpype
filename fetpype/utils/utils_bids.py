@@ -9,6 +9,7 @@ import nipype.pipeline.engine as pe
 from omegaconf import OmegaConf
 
 
+
 def create_datasource(
     output_query,
     data_dir,
@@ -73,11 +74,12 @@ def create_datasource(
 
         existing_ses = layout.get_sessions(subject=sub)
         if sessions is None:
-            sessions = existing_ses
-
+            sessions_subj = existing_ses
+        else:
+            sessions_subj = sessions
         # If no sessions are found, it is possible that there is no session.
-        sessions = [None] if len(sessions) == 0 else sessions
-        for ses in sessions:
+        sessions_subj = [None] if len(sessions_subj) == 0 else sessions_subj
+        for ses in sessions_subj:
             if ses is not None and ses not in existing_ses:
                 print(
                     f"WARNING: Session {ses} was not found for subject {sub}."
@@ -100,6 +102,7 @@ def create_datasource(
 
     bids_datasource.iterables = iterables
     return bids_datasource
+
 
 def create_bids_datasink(
     data_dir,
@@ -154,10 +157,6 @@ def create_bids_datasink(
     datasink : nipype.pipeline.engine.Node
         Configured datasink node
     """
-    import os.path as op
-    import nipype.interfaces.io as nio
-    import nipype.pipeline.engine as pe
-    
     # Set default name if not provided
     if name is None:
         name = f"{step_name}_datasink"
@@ -473,6 +472,5 @@ def create_description_file(out_dir, algo, prev_desc=None, cfg=None):
             ),
             "w",
             encoding="utf-8",
-            ident=4,
         ) as outfile:
-            json.dump(description, outfile)
+            json.dump(description, outfile, indent=4)

@@ -97,16 +97,20 @@ def create_main_workflow(
     # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
-    # DataSink
+    # Get subject, session and acquisition IDs from the datasource 
+    subject_ids, session_ids, acq_ids = zip(*datasource.iterables[1])
+    subject_ids, session_ids, acq_ids = list(subject_ids), list(session_ids), list(acq_ids)
 
-    # Get subject, session and acquisition IDs from the datasource
-    # todo
-    subject_ids = datasource.inputs.subjects
-    session_ids = datasource.inputs.sessions
-    acq_ids = datasource.inputs.acquisitions
-
+    # Reconstruction data sink:
+    pipeline_name = cfg.reconstruction.pipeline
+    datasink_path = os.path.join(out_dir, pipeline_name)
+    os.makedirs(datasink_path, exist_ok=True)
+    desc_file = create_description_file(
+        datasink_path, pipeline_name, cfg=cfg.reconstruction
+    )
     # Preprocessing data sink:
     if save_intermediates:
+
         # Create a datasink for the preprocessing pipeline
         preprocessing_datasink = create_bids_datasink(
             data_dir=data_dir,
@@ -126,14 +130,6 @@ def create_main_workflow(
         main_workflow.connect(
             fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "masks"
         )
-
-    # Reconstruction data sink:
-    pipeline_name = cfg.reconstruction.pipeline
-    datasink_path = os.path.join(out_dir, pipeline_name)
-    os.makedirs(datasink_path, exist_ok=True)
-    desc_file = create_description_file(
-        datasink_path, pipeline_name, ccfg=cfg.reconstruction
-    )
 
     recon_datasink = create_bids_datasink(
         data_dir=data_dir,

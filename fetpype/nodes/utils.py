@@ -1,40 +1,190 @@
+import argparse
+import hydra
 import os
-import re
+from omegaconf import OmegaConf
 
 
-def is_docker(pre_command):
-    return "docker" in pre_command
+def get_default_parser(desc):
+
+    parser = argparse.ArgumentParser(description=desc)
+
+    parser.add_argument(
+        "--data",
+        type=str,
+        required=True,
+        help=(
+            "BIDS-formatted directory containing anatomical "
+            "fetal brain MRI scans"
+        ),
+    )
+    parser.add_argument(
+        "--out",
+        type=str,
+        help=(
+            "Output directory, where all outputs will be saved. "
+            "(default: <data>/derivatives/<out>/pipeline_name)"
+        ),
+    )
+
+    parser.add_argument(
+        "--nipype_dir",
+        type=str,
+        help=(
+            "Directory, where the nipype processing will be saved. "
+            "(default: <out>/derivatives/<output_dir>/nipype/)"
+        ),
+    )
+    parser.add_argument(
+        "--subjects",
+        "-sub",
+        dest="sub",
+        type=str,
+        nargs="+",
+        required=False,
+        help=(
+            "List of subjects to process (default: every subject in the"
+            "data directory)."
+        ),
+    )
+    parser.add_argument(
+        "--sessions",
+        "-ses",
+        dest="ses",
+        type=str,
+        nargs="+",
+        required=False,
+        help=(
+            "List of sessions to process (default: every session for each "
+            "subject)."
+        ),
+    )
+    parser.add_argument(
+        "--acquisitions",
+        "-acq",
+        dest="acq",
+        type=str,
+        nargs="+",
+        default=None,
+        help=(
+            "List of acquisitions to process (default: every acquisition for "
+            "each subject/session combination)."
+        ),
+    )
+
+    parser.add_argument(
+        "--config",
+        dest="cfg_path",
+        default="../config/default.yaml",
+        type=str,
+        help=(
+            "Parameters yaml file specifying the parameters, containers and "
+            "functions to be used in the pipeline."
+        ),
+    )
+    parser.add_argument(
+        "-nprocs",
+        dest="nprocs",
+        type=int,
+        default=4,
+        help="Number of processes to allocate.",
+        required=False,
+    )
+
+    return parser
 
 
-def get_directory(entry):
+def get_pipeline_name(cfg):
     """
-    Get the directory of an entry, to be mounted on docker
-    If entry is a list, it returns the common path.
-    If entry is a string, it returns the dirname.
+    Get the pipeline name from the configuration file.
+    Args:
+        cfg: Configuration object.
+    Returns:
+        str: Pipeline name.
     """
-    if isinstance(entry, list):
-        return os.path.commonpath(entry)
-    elif isinstance(entry, str):
-        return os.path.dirname(entry)
+    pipeline_name = []
+    if "reconstruction" in cfg:
+        pipeline_name += [cfg.reconstruction.pipeline]
+    if "segmentation" in cfg:
+        pipeline_name += [cfg.segmentation.pipeline]
+
+    return "_".join(pipeline_name)
+
+
+def init_and_load_cfg(cfg_path, current_dir):
+    """
+    Initialize and load the configuration file.
+    Args:
+        cfg_path (str): Path to the configuration file.
+    Returns:
+        cfg: Loaded configuration.
+    """
+
+    cfg_path = os.path.abspath(cfg_path)
+    cfg_path = os.path.relpath(cfg_path, current_dir)
+    cfg_dir = os.path.dirname(cfg_path)
+    cfg_file = os.path.basename(cfg_path)
+
+    # Transform the path into a relative
+    with hydra.initialize(config_path=cfg_dir):
+        cfg = hydra.compose(config_name=cfg_file)
+    print(OmegaConf.to_yaml(cfg))
+    return cfg
+
+
+def check_and_update_paths(data_dir, out_dir, nipype_dir, cfg):
+    """
+    Check and update the paths for data_dir, out_dir, and nipype_dir.
+    Args:
+        data_dir (str): Path to the BIDS directory.
+        out_dir (str): Path to the output directory.
+        nipype_dir (str): Path to the nipype directory.
+        cfg: Configuration object.
+    Returns:
+        tuple: Updated paths for data_dir, out_dir, and nipype_dir.
+    """
+    data_dir = os.path.abspath(data_dir)
+
+    if out_dir is None:
+        out_dir = os.path.join(data_dir, "derivatives", get_pipeline_name(cfg))
     else:
-        raise TypeError(f"Type {type(entry)} not supported")
+        out_dir = os.path.join(
+            os.path.abspath(out_dir), get_pipeline_name(cfg)
+        )
+
+    try:
+        os.makedirs(out_dir)
+    except OSError:
+        print("out_dir {} already exists".format(out_dir))
+    if nipype_dir is None:
+        nipype_dir = os.path.join(
+            data_dir, "derivatives", get_pipeline_name(cfg), "nipype"
+        )
+    else:
+        nipype_dir = os.path.abspath(nipype_dir)
+
+    os.makedirs(nipype_dir, exist_ok=True)
+
+    return data_dir, out_dir, nipype_dir
 
 
-def get_mount_docker(*args):
+def check_valid_pipeline(cfg):
     """
-    Build the string for the folders to be mounted on the
-    docker image. The folders to be mounted are defined
-    in _mount_keys.
+    Check if the pipeline is valid.
+    Args:
+        cfg: Configuration object.
     """
-    for arg in args:
-        os.makedirs(arg, exist_ok=True)
-    return " ".join([f"-v {arg}:{arg}" for arg in args])
+    from fetpype import VALID_RECONSTRUCTION, VALID_SEGMENTATION
 
-
-def is_valid_cmd(cmd, valid_tags):
-    for tag in re.findall(r"\<(.*?)\>", cmd):
-        if tag not in valid_tags:
-            raise ValueError(f"Invalid tag {tag} in command {cmd}")
-
-    if "docker" in cmd and "<mount>" not in cmd:
-        raise ValueError("Docker command must have a <mount> tag")
+    if "reconstruction" in cfg:
+        if cfg.reconstruction.pipeline not in VALID_RECONSTRUCTION:
+            raise ValueError(
+                f"Invalid reconstruction pipeline: "
+                f"{cfg.reconstruction.pipeline}"
+                f"Please choose one of {VALID_RECONSTRUCTION}"
+            )
+    if "segmentation" in cfg:
+        if cfg.segmentation.pipeline not in VALID_SEGMENTATION:
+            raise ValueError(
+                f"Invalid segmentation pipeline: {cfg.segmentation.pipeline}."
+                f"Please choose one of {VALID_SEGMENTATION}"
+            )

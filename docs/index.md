@@ -14,6 +14,8 @@ Fetpype aims at integrating a variety of existing tools, available as docker con
 
 ![BIDS, containers, Nipype and hydra](media/bids_container_nipype_hydra.png)
 
+This package is actively under deployment in a [public GitHub repository](https://github.com/fetpype/fetpype). If you have any question, trouble with the code or desire included a new feature feel free to open an issue there! If you find a typo, or want to include your new method in fetpype, you can submit a pull request (details on how to include your method in fetpype can be found [here](contributing.md)).
+
 ## Quick start guide
 ### Installation
 Clone the latest version of the fetpype repository
@@ -88,3 +90,19 @@ Feel free to explore how fetpype works and what it can do!
 - [Running parts of the pipeline](run_parts.md)
 - [How can I include my method in fetpype?](contributing.md)
 
+---
+## Contributors
+
+- Gerard Martí-Juan (@[GerardMJuan](https://github.com/GerardMJuan))
+- Thomas Sanchez (@[t-sanchez](https://github.com/t-sanchez))
+- Guillaume Auzias (@[gauzias](https://github.com/gauzias))
+- David Meunier (@[davidmeunier79](https://github.com/davidmeunier79))
+
+## Acknowledgements
+Fetpype was funded by [ERA-NET NEURON](https://www.neuron-eranet.eu/) in the context of the MULTIFACT project. It received funding under different national agencies:
+
+- Swiss National Science Foundation — grant 31NE30_203977;
+- Spain's Ministry of Science, Innovation and Universities — grant MCIN/AEI/10.13039/501100011033/
+- French National Research Agency — grant ANR-21-NEU2-0005;
+
+This project was also supported by the SulcalGRIDS project (ANR-19-CE45-0014) and the SNSF project no. 215641. 

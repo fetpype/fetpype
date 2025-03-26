@@ -1,12 +1,8 @@
-# tests/test_utils_bids.py
 import pytest
 import re
-from pathlib import Path
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
-import pprint # For debugging regex list
 
-# Adjust import path if necessary
 from fetpype.utils.utils_bids import create_bids_datasink
 
 
@@ -16,9 +12,6 @@ def sort_key(item):
     return tuple('' if x is None else str(x) for x in item) # Ensure all are strings or comparable
 
 # --- Tests for create_bids_datasink ---
-
-# test_create_datasink_node_creation and test_create_datasink_missing_strip_dir remain the same
-
 def test_create_datasink_node_creation(mock_output_dir, mock_nipype_wf_dir):
     """Test basic node creation and input propagation."""
     out_dir = mock_output_dir
@@ -62,15 +55,12 @@ def test_datasink_regex_simulation_preprocessing_denoised(mock_output_dir, mock_
     )
     regex_subs = ds.inputs.regexp_substitutions
 
-    # Input path reflecting Nipype structure (subject ID might appear twice)
     in_path = f"{mock_output_dir}/preprocessing_wf/_session_01_subject_01_sub-01/denoise_wf/_denoising/sub-01_ses-01_run-1_T2w_noise_corrected.nii.gz"
 
     expected_path = f"{mock_output_dir}/sub-01_sub-01/ses-01/anat/sub-01_ses-01_run-1_desc-denoised_T2w.nii.gz"
 
     result_path = apply_regex_subs(in_path, regex_subs)
     assert result_path == expected_path
-# The rest of the datasink tests (_cropped, _reconstruction, _segmentation, _cleanup)
-# seemed to pass or were correct based on the previous logic, so they remain unchanged for now.
 
 def test_datasink_regex_simulation_preprocessing_cropped(mock_output_dir, mock_nipype_wf_dir):
     """Simulate renaming for preprocessing cropped mask file."""

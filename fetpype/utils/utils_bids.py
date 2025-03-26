@@ -222,6 +222,8 @@ def create_bids_datasink(
 
     # Add more specific rules here if other file types need handling
     regex_subs.extend([
+        (r"sub-sub-", r"sub-"),       # Fix doubled sub prefix
+        (r"ses-ses-", r"ses-"),       # Fix doubled ses prefix (just in case)
         (r"_+", "_"),              # Replace multiple underscores with single
         (r"(/)_", r"\1"),          # Remove underscore after slash if present
         (r"(_)\.", r"\."),         # Remove underscore before dot if present

@@ -69,6 +69,26 @@ def mock_bids_root(tmp_path_factory):
 
     # --- Create a dummy derivative ---
     deriv_root = bids_root / "derivatives" / "fmriprep"
+    deriv_root.mkdir(parents=True, exist_ok=True) # Ensure deriv root exists
+
+    # *** ADD dataset_description.json for derivative ***
+    deriv_dataset_desc = {
+        "Name": "Mock Derivative Dataset",
+        "BIDSVersion": "1.6.0",
+        "GeneratedBy": [
+            {
+                "Name": "MockPipeline",
+                "Version": "1.0.0"
+            }
+        ],
+        "PipelineDescription": {
+            "Name": "MockPipeline"
+        }
+    }
+    with open(deriv_root / "dataset_description.json", "w") as f:
+        json.dump(deriv_dataset_desc, f, indent=2)
+    # ************************************************
+
     deriv_files = [
         "sub-01/ses-01/anat/sub-01_ses-01_desc-preproc_T2w.nii.gz",
         "sub-02/anat/sub-02_desc-preproc_T2w.nii.gz",

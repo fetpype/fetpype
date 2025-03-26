@@ -8,7 +8,10 @@ from nipype.interfaces.base import (
     BaseInterface,
     BaseInterfaceInputSpec,
 )
-
+import nibabel as nib
+import SimpleITK as sitk
+from typing import List, Optional, Any, Dict
+from fetpype.nodes.utils import get_run_id
 
 def nesvor_brain_extraction(raw_T2s, pre_command="", nesvor_image=""):
     """
@@ -187,15 +190,18 @@ class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
     CropStacksAndMasks interface.
     """
 
-    input_image = File(mandatory=True, desc="Input image filename")
-    input_mask = File(mandatory=True, desc="Input mask filename")
+    image = File(mandatory=True, desc="Input image filename")
+    mask = File(mandatory=True, desc="Input mask filename")
     boundary = traits.Int(
         15,
         desc="Padding (in mm) to be set around the cropped image and mask",
         usedefault=True,
     )
-    disabled = traits.Bool(
-        False, desc="Disable cropping", usedefault=True, mandatory=False
+    is_enabled = traits.Bool(
+        True,
+        desc="Whether cropping and masking are enabled.",
+        usedefault=True,
+        mandatory=False,
     )
 
 
@@ -214,8 +220,8 @@ class CropStacksAndMasks(BaseInterface):
     --------
     >>> from fetpype.nodes.preprocessing import CropStacksAndMasks
     >>> crop_input = CropStacksAndMasks()
-    >>> crop_input.inputs.input_image = 'sub-01_acq-haste_run-1_T2w.nii.gz'
-    >>> crop_input.inputs.input_mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
+    >>> crop_input.inputs.image = 'sub-01_acq-haste_run-1_T2w.nii.gz'
+    >>> crop_input.inputs.mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
     >>> crop_input.run() # doctest: +SKIP
     """
 
@@ -224,15 +230,10 @@ class CropStacksAndMasks(BaseInterface):
 
     def _gen_filename(self, name):
         if name == "output_image":
-            return os.path.abspath(os.path.basename(self.inputs.input_image))
+            return os.path.abspath(os.path.basename(self.inputs.image))
         elif name == "output_mask":
-            return os.path.abspath(os.path.basename(self.inputs.input_mask))
+            return os.path.abspath(os.path.basename(self.inputs.mask))
         return None
-
-    def _squeeze_dim(self, arr, dim):
-        if arr.shape[dim] == 1 and len(arr.shape) > 3:
-            return np.squeeze(arr, axis=dim)
-        return arr
 
     def _crop_stack_and_mask(
         self,
@@ -274,8 +275,6 @@ class CropStacksAndMasks(BaseInterface):
         print(f"Working on {image_path} and {mask_path}")
         image_ni = ni.load(image_path)
         mask_ni = ni.load(mask_path)
-        image = self._squeeze_dim(image_ni.get_fdata(), -1)
-        mask = self._squeeze_dim(mask_ni.get_fdata(), -1)
 
         assert all([i >= m] for i, m in zip(image.shape, mask.shape)), (
             "For a correct cropping, the image should be larger "
@@ -369,22 +368,22 @@ class CropStacksAndMasks(BaseInterface):
         return range_list
 
     def _run_interface(self, runtime):
-        if not self.inputs.disabled:
+        if self.inputs.is_enabled:
             boundary = self.inputs.boundary
             self._crop_stack_and_mask(
-                self.inputs.input_image,
-                self.inputs.input_mask,
+                self.inputs.image,
+                self.inputs.mask,
                 boundary_i=boundary,
                 boundary_j=boundary,
                 boundary_k=boundary,
             )
         else:
             os.system(
-                f"cp {self.inputs.input_image} "
+                f"cp {self.inputs.image} "
                 f"{self._gen_filename('output_image')}"
             )
             os.system(
-                f"cp {self.inputs.input_mask} "
+                f"cp {self.inputs.mask} "
                 f"{self._gen_filename('output_mask')}"
             )
 
@@ -416,3 +415,443 @@ def copy_header(in_file, ref_file):
 
     ni.save(new_img, in_file_new)
     return in_file_new
+
+
+class RobustBiasFieldCorrectionInputSpec(BaseInterfaceInputSpec):
+    """Class used to represent the inputs of the
+    RobustBiasFieldCorrection interface.
+    """
+
+    stacks = traits.List(
+        traits.File(exists=True),
+        desc="List of input stacks",
+        mandatory=True,
+    )
+    masks = traits.List(
+        traits.File(exists=True),
+        desc="List of input masks",
+        mandatory=True,
+    )
+    is_enabled = traits.Bool(
+        True,
+        desc="Is bias field correction enabled?",
+        usedefault=True,
+        mandatory=False,
+    )
+
+    # Add n4 parameters
+    n_proc_n4 = traits.Int(
+        1,
+        desc="Number of processes for N4 bias field correction",
+        usedefault=True,
+    )
+    shrink_factor = traits.Int(
+        2, desc="Shrink factor for N4 bias field correction", usedefault=True
+    )
+    fwhm = traits.Float(
+        0.15, desc="FWHM for N4 bias field correction", usedefault=True
+    )
+    tol = traits.Float(
+        0.001, desc="Tolerance for N4 bias field correction", usedefault=True
+    )
+    spline_order = traits.Int(
+        3, desc="Spline order for N4 bias field correction", usedefault=True
+    )
+    noise = traits.Float(
+        0.01, desc="Noise for N4 bias field correction", usedefault=True
+    )
+    n_iter = traits.Int(
+        50,
+        desc="Number of iterations for N4 bias field correction",
+        usedefault=True,
+    )
+    n_levels = traits.Int(
+        4,
+        desc="Number of levels for N4 bias field correction",
+        usedefault=True,
+    )
+    n_control_points = traits.Int(
+        4,
+        desc="Number of control points for N4 bias field correction",
+        usedefault=True,
+    )
+    n_bins = traits.Int(
+        200,
+        desc="Number of bins for N4 bias field correction",
+        usedefault=True,
+    )
+
+
+class RobustBiasFieldCorrectionOutputSpec(TraitedSpec):
+    """Class used to represent the outputs of the
+    RobustBiasFieldCorrection interface."""
+
+    output_stacks = traits.List(
+        traits.File(exists=True),
+        desc="List of bias corrected stacks",
+    )
+    output_masks = traits.List(
+        traits.File(exists=True),
+        desc="List of masks for bias corrected stacks",
+    )
+
+
+class RobustBiasFieldCorrection(BaseInterface):
+    """Interface to perform bias field correction on a list of stacks.
+
+    If any error occurs during the bias field correction, the stack (and
+    the corresponding mask) are removed from further processing.
+    """
+
+    input_spec = RobustBiasFieldCorrectionInputSpec
+    output_spec = RobustBiasFieldCorrectionOutputSpec
+    _results = {}
+
+    def n4_bias_field_correction_single(
+        self,
+        image: sitk.Image,
+        mask: Optional[sitk.Image],
+    ) -> np.ndarray:
+        """
+        Perform N4 bias field correction on a single image.
+        """
+        shrinkFactor = self.inputs.shrink_factor
+        if shrinkFactor > 1:
+            sitk_img = sitk.Shrink(
+                image, [shrinkFactor] * image.GetDimension()
+            )
+            sitk_mask = sitk.Shrink(
+                mask, [shrinkFactor] * image.GetDimension()
+            )
+        else:
+            sitk_img = image
+            sitk_mask = mask
+        # Put image and mask in the same physical space (origin)
+        sitk_mask.SetOrigin(sitk_img.GetOrigin())
+        bias_field_corrector = sitk.N4BiasFieldCorrectionImageFilter()
+        bias_field_corrector.SetBiasFieldFullWidthAtHalfMaximum(
+            self.inputs.fwhm
+        )
+        bias_field_corrector.SetConvergenceThreshold(self.inputs.tol)
+        bias_field_corrector.SetSplineOrder(self.inputs.spline_order)
+        bias_field_corrector.SetWienerFilterNoise(self.inputs.noise)
+        bias_field_corrector.SetMaximumNumberOfIterations(
+            [self.inputs.n_iter] * self.inputs.n_levels
+        )
+        bias_field_corrector.SetNumberOfControlPoints(
+            self.inputs.n_control_points
+        )
+        bias_field_corrector.SetNumberOfHistogramBins(self.inputs.n_bins)
+
+        if mask is not None:
+            corrected_sitk_img = bias_field_corrector.Execute(
+                sitk_img, sitk_mask
+            )
+        else:
+            corrected_sitk_img = bias_field_corrector.Execute(sitk_img)
+
+        if shrinkFactor > 1:
+            log_bias_field_full = bias_field_corrector.GetLogBiasFieldAsImage(
+                image
+            )
+            corrected_sitk_img_full = image / sitk.Exp(log_bias_field_full)
+        else:
+            corrected_sitk_img_full = corrected_sitk_img
+ 
+        corrected_image = sitk.GetArrayFromImage(corrected_sitk_img_full)
+
+        return corrected_image
+
+    def _run_interface(self, runtime):
+        if self.inputs.is_enabled:
+            stacks_out = []
+            masks_out = []
+            for im, mask in zip(self.inputs.stacks, self.inputs.masks):
+                error = False
+                try:
+                    stack_out = os.path.join(
+                        self._gen_filename("output_dir"), os.path.basename(im)
+                    )
+                    mask_out = os.path.join(
+                        self._gen_filename("output_dir"),
+                        os.path.basename(mask),
+                    )
+                    sitk_im = sitk.ReadImage(im)
+                    sitk_mask = sitk.ReadImage(mask)
+                    im_corr = self.n4_bias_field_correction_single(
+                        sitk.Cast(sitk_im, sitk.sitkFloat32),
+                        sitk.Cast(sitk_mask, sitk.sitkUInt8),
+                    )
+
+                    corrected_sitk_im = sitk.GetImageFromArray(im_corr)
+                    corrected_sitk_im.CopyInformation(sitk_im)
+                    sitk.WriteImage(corrected_sitk_im, stack_out)
+                    sitk.WriteImage(sitk_mask, mask_out)
+                except Exception as e:
+                    print(
+                        f"Error in bias correction -- Skipping the stack {os.path.basename(im)}: {e}"
+                    )
+                    error = True
+                if not error:
+                    stacks_out.append(stack_out)
+                    masks_out.append(mask_out)
+            self._results["output_stacks"] = stacks_out
+            self._results["output_masks"] = masks_out
+            if len(stacks_out) == 0:
+                raise ValueError(
+                    "All stacks and masks were discarded during bias field correction."
+                )
+        else:
+            stacks_out = self._gen_filename("output_stacks")
+            masks_out = self._gen_filename("output_masks")
+            for i in range(len(self.inputs.input_stacks)):
+                os.system(f"cp {self.inputs.stacks[i]} " f"{stacks_out[i]}")
+                os.system(f"cp {self.inputs.masks[i]} " f"{masks_out[i]}")
+
+        return runtime
+
+    def _gen_filename(self, name):
+
+        if name == "output_stacks":
+            return [
+                os.path.abspath(os.path.join("stacks",os.path.basename(im)))
+                for im in self.inputs.stacks
+            ]
+        elif name == "output_masks":
+            return [
+                os.path.abspath(os.path.join("masks",os.path.basename(m))) 
+                for m in self.inputs.masks
+            ]
+        elif name == "output_dir":
+            return os.path.abspath("")
+        return None
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs["output_stacks"] = self._results.get(
+            "output_stacks", self._gen_filename("output_stacks")
+        )
+        outputs["output_masks"] = self._results.get(
+            "output_masks", self._gen_filename("output_masks")
+        )
+        return outputs
+
+
+class CheckAffineResStacksAndMasksInputSpec(BaseInterfaceInputSpec):
+    """Class used to represent the inputs of the
+    CheckAffineResStacksAndMasks interface.
+    """
+
+    stacks = traits.List(
+        traits.File(exists=True),
+        desc="List of input stacks",
+        mandatory=True,
+    )
+    masks = traits.List(
+        traits.File(exists=True),
+        desc="List of input masks",
+        mandatory=True,
+    )
+    is_enabled = traits.Bool(
+        True,
+        desc="Is bias field correction enabled?",
+        usedefault=True,
+        mandatory=False,
+    )
+
+
+class CheckAffineResStacksAndMasksOutputSpec(TraitedSpec):
+    """Class used to represent the outputs of the
+    CheckAffineResStacksAndMasks interface."""
+
+    output_stacks = traits.List(
+        desc="List of bias corrected stacks",
+    )
+    output_masks = traits.List(
+        desc="List of masks for bias corrected stacks",
+    )
+
+
+class CheckAffineResStacksAndMasks(BaseInterface):
+    """Interface to check that the shape of stacks and masks are consistent.
+    (e.g. no trailing dimensions of size 1).
+    If enabled, also checks that the resolution, affine, and shape of the
+    stacks and masks are consistent. Discards the stack and mask if they are
+    not.
+    """
+
+    input_spec = CheckAffineResStacksAndMasksInputSpec
+    output_spec = CheckAffineResStacksAndMasksOutputSpec
+    _results = {}
+
+    def _squeeze_dim(self, arr, dim):
+        if arr.shape[dim] == 1 and len(arr.shape) > 3:
+            return np.squeeze(arr, axis=dim)
+        return arr
+
+    def compare_resolution_affine(self, r1, a1, r2, a2, s1, s2) -> bool:
+        r1 = np.array(r1)
+        a1 = np.array(a1)
+        r2 = np.array(r2)
+        a2 = np.array(a2)
+        if s1 != s2:
+            return False
+        if r1.shape != r2.shape:
+            return False
+        if np.amax(np.abs(r1 - r2)) > 1e-3:
+            return False
+        if a1.shape != a2.shape:
+            return False
+        if np.amax(np.abs(a1 - a2)) > 1e-3:
+            return False
+        return True
+
+    def _run_interface(self, runtime):
+        stacks_out = []
+        masks_out = []
+        for i, (imp, maskp) in enumerate(
+            zip(self.inputs.stacks, self.inputs.masks)
+        ):
+            skip_stack = False
+            out_stack = os.path.join(
+                self._gen_filename("output_dir"), os.path.basename(imp)
+            )
+            out_mask = os.path.join(
+                self._gen_filename("output_dir"),
+                os.path.basename(maskp),
+            )
+            image_ni = ni.load(self.inputs.stacks[i])
+            mask_ni = ni.load(self.inputs.masks[i])
+            image = self._squeeze_dim(image_ni.get_fdata(), -1)
+            mask = self._squeeze_dim(mask_ni.get_fdata(), -1)
+            image_ni = ni.Nifti1Image(image, image_ni.affine, image_ni.header)
+            mask_ni = ni.Nifti1Image(mask, mask_ni.affine, mask_ni.header)
+
+            if self.inputs.is_enabled:
+                im_res = image_ni.header["pixdim"][1:4]
+                mask_res = mask_ni.header["pixdim"][1:4]
+                im_aff = image_ni.affine
+                mask_aff = mask_ni.affine
+                im_shape = image_ni.shape
+                mask_shape = mask_ni.shape
+                if not self.compare_resolution_affine(
+                    im_res, im_aff, mask_res, mask_aff, im_shape, mask_shape
+                ):
+                    skip_stack = True
+                    print(
+                        f"Resolution/shape/affine mismatch -- Skipping the stack {os.path.basename(imp)} and mask {os.path.basename(maskp)}"
+                    )
+            if not skip_stack:
+                ni.save(image_ni, out_stack)
+                ni.save(mask_ni, out_mask)
+                stacks_out.append(str(out_stack))
+                masks_out.append(str(out_mask))
+        self._results["output_stacks"] = stacks_out
+        self._results["output_masks"] = masks_out
+        if len(stacks_out) == 0:
+            raise ValueError(
+                "All stacks and masks were discarded during the metadata check."
+            )
+        return runtime
+
+    def _gen_filename(self, name):
+
+        if name == "output_dir":
+            return os.path.abspath("")
+        return None
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs["output_stacks"] = self._results.get(
+            "output_stacks", self._gen_filename("output_stacks")
+        )
+        outputs["output_masks"] = self._results.get(
+            "output_masks", self._gen_filename("output_masks")
+        )
+        return outputs
+
+
+
+class CheckAndSortStacksAndMasksInputSpec(BaseInterfaceInputSpec):
+    """Class used to represent the inputs of the
+    SortStacksAndMasks interface.
+    """
+
+    stacks = traits.List(
+        traits.File(exists=True),
+        desc="List of input stacks",
+        mandatory=True,
+    )
+    masks = traits.List(
+        traits.File(exists=True),
+        desc="List of input masks",
+        mandatory=True,
+    )
+
+class CheckAndSortStacksAndMasksOutputSpec(TraitedSpec):
+    """Class used to represent the outputs of the
+    SortStacksAndMasks interface."""
+
+    output_stacks = traits.List(
+        desc="List of bias corrected stacks",
+    )
+    output_masks = traits.List(
+        desc="List of masks for bias corrected stacks",
+    )
+
+
+
+class CheckAndSortStacksAndMasks(BaseInterface):
+    """Interface to check the input stacks and masks and make sure that 
+    all stacks have a corresponding mask.
+    """
+
+    input_spec = CheckAndSortStacksAndMasksInputSpec
+    output_spec = CheckAndSortStacksAndMasksOutputSpec
+    _results = {}
+
+
+    def _run_interface(self, runtime):
+
+        # Check that stacks and masks run_ids match
+        stacks_run = get_run_id(self.inputs.stacks)
+        masks_run = get_run_id(self.inputs.masks)
+
+        out_stacks = []
+        out_masks = []
+        for i, s in enumerate(stacks_run):
+            in_stack = self.inputs.stacks[i]
+            
+            if s in masks_run:
+                out_stack = os.path.join(self._gen_filename("output_dir_stacks"), os.path.basename(in_stack))
+                in_mask = self.inputs.masks[masks_run.index(s)]
+                out_mask = os.path.join(self._gen_filename("output_dir_masks"), os.path.basename(in_mask))
+                out_stacks.append(out_stack)
+                out_masks.append(out_mask)
+            else:
+                raise RuntimeError(f"Stack {os.path.basename(self.inputs.stacks[i])} has "
+                f"no corresponding mask (existing IDs: {masks_run})."
+                )
+
+            os.system(f"cp {in_stack} " f"{out_stack}")
+            os.system(f"cp {in_mask} " f"{out_mask}")
+        self._results["output_stacks"] = out_stacks
+        self._results["output_masks"] = out_masks
+        return runtime
+
+    def _gen_filename(self, name):
+        if name == "output_dir_stacks":
+            path = os.path.abspath("stacks")
+            os.makedirs(path, exist_ok=True)
+            return path
+        elif name == "output_dir_masks":
+            path = os.path.abspath("masks")
+            os.makedirs(path, exist_ok=True)
+            return path
+        return None
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs["output_stacks"] = self._results["output_stacks"]
+        outputs["output_masks"] = self._results["output_masks"]
+        return outputs

@@ -4,3 +4,11 @@ brain_extraction:
     pre_command: "docker run --gpus=all "
   singularity:
     image: null
+check_stacks_and_masks:
+  enabled: true
+denoising:
+  enabled: null
+cropping:
+  enabled: true
+bias_correction:
+  enabled: true

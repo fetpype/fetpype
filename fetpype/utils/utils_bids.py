@@ -15,8 +15,9 @@ def create_datasource(
     subjects=None,
     sessions=None,
     acquisitions=None,
-    index_derivative=False,
     derivative=None,
+    name = "bids_datasource",
+    extra_derivatives=None
 ):
     """Create a datasource node that have iterables following BIDS format.
     By default, from a BIDSLayout, lists all the subjects (<sub>),
@@ -42,21 +43,19 @@ def create_datasource(
 
     bids_datasource = pe.Node(
         interface=nio.BIDSDataGrabber(),
-        name="bids_datasource",
+        name=name,
         synchronize=True,
     )
 
     bids_datasource.inputs.base_dir = data_dir
-    bids_datasource.inputs.index_derivatives = index_derivative
+    if extra_derivatives is not None:
+        bids_datasource.inputs.index_derivatives = True
+        if isinstance(extra_derivatives, str):
+            extra_derivatives = [extra_derivatives]
+        bids_datasource.inputs.extra_derivatives = extra_derivatives
     bids_datasource.inputs.output_query = output_query
 
-    # If a derivative is specified, we need to go to the derivatives
-    # if not, problems with acquisition
-    # if derivative is not None:
-    #     data_dir = op.join(data_dir, "derivatives", derivative)
-
-    layout = BIDSLayout(data_dir, derivatives=index_derivative)
-
+    layout = BIDSLayout(data_dir, validate=False)
     # Verbose
     print("BIDS layout:", layout)
     print("\t", layout.get_subjects())

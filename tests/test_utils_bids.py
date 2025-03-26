@@ -7,12 +7,7 @@ import nipype.interfaces.io as nio
 import pprint # For debugging regex list
 
 # Adjust import path if necessary
-try:
-    from fetpype.utils.utils_bids import create_datasource, create_bids_datasink
-except ImportError:
-    import sys
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    from fetpype.utils.utils_bids import create_datasource, create_bids_datasink
+from fetpype.utils.utils_bids import create_bids_datasink
 
 
 # Helper for sorting lists containing None

@@ -9,6 +9,7 @@ from fetpype.utils.utils_bids import (
     create_bids_datasink,
     create_description_file,
 )
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import (  # noqa: E402
@@ -26,6 +27,7 @@ __file_dir__ = os.path.dirname(os.path.abspath(__file__))
 
 def create_main_workflow(
     data_dir,
+    masks_dir,
     out_dir,
     nipype_dir,
     subjects,
@@ -67,10 +69,15 @@ def create_main_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
-    # Print the three paths
-    print(f"Data directory: {data_dir}")
-    print(f"Output directory: {out_dir}")
-    print(f"Nipype directory: {nipype_dir}")
+    load_masks = False
+    if masks_dir is not None:
+        # Check it exists
+        if not os.path.exists(masks_dir):
+            raise ValueError(
+                f"Path to masks directory {masks_dir} does not exist."
+            )
+        masks_dir = os.path.abspath(masks_dir)
+        load_masks = True
 
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
@@ -78,15 +85,21 @@ def create_main_workflow(
     # main_workflow
     main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
     main_workflow.base_dir = nipype_dir
-    fet_pipe = create_full_pipeline(cfg)
+    fet_pipe = create_full_pipeline(cfg, load_masks)
 
     output_query = {
         "stacks": {
             "datatype": "anat",
             "suffix": "T2w",
             "extension": ["nii", ".nii.gz"],
-        }
+        },
     }
+    if load_masks:
+        output_query["masks"] = {
+            "datatype": "anat",
+            "suffix": "mask",
+            "extension": ["nii", ".nii.gz"],
+        }
 
     # datasource
     datasource = create_datasource(
@@ -95,16 +108,20 @@ def create_main_workflow(
         subjects,
         sessions,
         acquisitions,
+        extra_derivatives=masks_dir,
     )
-
-    # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
+    if load_masks:
+        main_workflow.connect(datasource, "masks", fet_pipe, "inputnode.masks")
+
+    # DataSink
 
     # Reconstruction data sink:
     pipeline_name = get_pipeline_name(cfg)
-    desc_file = create_description_file(
-        out_dir, pipeline_name, cfg=cfg
-    )
+    desc_file = create_description_file(out_dir, pipeline_name, cfg=cfg)
+
+    params_regex_subs = cfg.regex_subs if "regex_subs" in cfg.keys() else {}
+    params_subs = cfg.rsubs if "subs" in cfg.keys() else {}
 
     # Preprocessing data sink:
     if save_intermediates:
@@ -132,12 +149,18 @@ def create_main_workflow(
 
         # Connect the pipeline to the datasinks
         main_workflow.connect(
-            fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink_denoised, "@stacks"
+            fet_pipe,
+            "Preprocessing.outputnode.stacks",
+            preprocessing_datasink_denoised,
+            "@stacks",
         )
         main_workflow.connect(
-            fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink_masked, "@masks"
+            fet_pipe,
+            "Preprocessing.outputnode.masks",
+            preprocessing_datasink_masked,
+            "@masks",
         )
-    
+
     recon_datasink = create_bids_datasink(
         out_dir=out_dir,
         pipeline_name=pipeline_name,
@@ -161,7 +184,10 @@ def create_main_workflow(
         fet_pipe, "outputnode.output_srr", recon_datasink, f"@{pipeline_name}"
     )
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", seg_datasink, f"@{cfg.segmentation.pipeline}"
+        fet_pipe,
+        "outputnode.output_seg",
+        seg_datasink,
+        f"@{cfg.segmentation.pipeline}",
     )
 
     if cfg.save_graph:
@@ -195,12 +221,19 @@ def main():
         "pre-processing, reconstruction and segmentation"
     )
 
+    parser.add_argument(
+        "--masks",
+        type=str,
+        default=None,
+        help="Path to the directory containing the masks.",
+    )
     args = parser.parse_args()
 
     # main_workflow
     print("Initialising the pipeline...")
     create_main_workflow(
         data_dir=args.data,
+        masks_dir=args.masks,
         out_dir=args.out,
         nipype_dir=args.nipype_dir,
         subjects=args.sub,

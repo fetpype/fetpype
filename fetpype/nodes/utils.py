@@ -38,3 +38,18 @@ def is_valid_cmd(cmd, valid_tags):
 
     if "docker" in cmd and "<mount>" not in cmd:
         raise ValueError("Docker command must have a <mount> tag")
+
+
+def get_run_id(file_list):
+    """
+    Get the run ID from the file name.
+    """
+    runs = []
+    for file in file_list:
+        try:
+            runs.append(re.search(r"run-([^\W_]+)_", file).group(1))
+        except Exception as e:
+            raise ValueError(
+                f"run ID not found in file name: {file}. Error: {e}"
+            )
+    return runs

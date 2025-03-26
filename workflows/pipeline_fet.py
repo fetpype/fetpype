@@ -68,6 +68,10 @@ def create_main_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
+    # Print the three paths
+    print(f"Data directory: {data_dir}")
+    print(f"Output directory: {out_dir}")
+    print(f"Nipype directory: {nipype_dir}")
 
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
@@ -98,8 +102,14 @@ def create_main_workflow(
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
     # Get subject, session and acquisition IDs from the datasource 
-    subject_ids, session_ids, acq_ids = zip(*datasource.iterables[1])
-    subject_ids, session_ids, acq_ids = list(subject_ids), list(session_ids), list(acq_ids)
+    # subject_ids, session_ids, acq_ids = zip(*datasource.iterables[1])
+    # subject_ids, session_ids, acq_ids = list(subject_ids), list(session_ids), list(acq_ids)
+
+    # Reconstruction data sink:
+    pipeline_name = get_pipeline_name(cfg)
+    desc_file = create_description_file(
+        out_dir, pipeline_name, cfg=cfg
+    )
 
     # Preprocessing data sink:
     if save_intermediates:
@@ -110,72 +120,53 @@ def create_main_workflow(
         )
 
         # Create a datasink for the preprocessing pipeline
-        preprocessing_datasink = create_bids_datasink(
-            out_dir=out_dir,
+        preprocessing_datasink_denoised = create_bids_datasink(
+            out_dir=datasink_path_intermediate,
             pipeline_name="preprocessing",  # Use combined name
-            step_name="preprocessing",
-            subjects=subject_ids,
-            sessions=session_ids,
-            acquisitions=acq_ids,
-            name="preprocessing_datasink",
-            recon_method=cfg.reconstruction.pipeline,
-            seg_method=cfg.segmentation.pipeline
+            strip_dir=main_workflow.base_dir,
+            name="preprocessing_datasink_denoised",
+            desc_label="denoised",
         )
+        preprocessing_datasink_masked = create_bids_datasink(
+            out_dir=datasink_path_intermediate,
+            pipeline_name="preprocessing",  # Use combined name
+            strip_dir=main_workflow.base_dir,
+            name="preprocessing_datasink_cropped",
+            desc_label="cropped",
+        )
+
         # Connect the pipeline to the datasinks
         main_workflow.connect(
-            fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink, "stacks"
+            fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink_denoised, "@stacks"
         )
         main_workflow.connect(
-            fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink, "masks"
+            fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink_masked, "@masks"
         )
     
-    # Reconstruction data sink:
-    pipeline_name = cfg.reconstruction.pipeline
-    datasink_path = os.path.join(out_dir, pipeline_name)
-    os.makedirs(datasink_path, exist_ok=True)
-    desc_file = create_description_file(
-        datasink_path, pipeline_name, cfg=cfg.reconstruction
-    )
-
     recon_datasink = create_bids_datasink(
         out_dir=out_dir,
-        pipeline_name=pipeline_name,  # Use combined name
-        step_name="reconstruction",
-        subjects=subject_ids,
-        sessions=session_ids,
-        acquisitions=acq_ids,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
         name="final_recon_datasink",
-        recon_method=cfg.reconstruction.pipeline,
-        seg_method=cfg.segmentation.pipeline,
-    )
-
-    # Segmentation data sink
-
-    datasink_path2 = os.path.join(out_dir, cfg.segmentation.pipeline)
-    os.makedirs(datasink_path2, exist_ok=True)
-    create_description_file(
-        datasink_path2, cfg.segmentation.pipeline, desc_file, cfg.segmentation
+        rec_label=cfg.reconstruction.pipeline,
     )
 
     # Create another datasink for the segmentation pipeline
     seg_datasink = create_bids_datasink(
         out_dir=out_dir,
         pipeline_name=pipeline_name,
-        step_name="segmentation",
-        subjects=subject_ids,
-        sessions=session_ids,
-        acquisitions=acq_ids,
+        strip_dir=main_workflow.base_dir,
         name="final_seg_datasink",
-        recon_method=cfg.reconstruction.pipeline,
-        seg_method=cfg.segmentation.pipeline,
+        rec_label=cfg.reconstruction.pipeline,
+        seg_label=cfg.segmentation.pipeline,
     )
 
     # Connect the pipeline to the datasink
     main_workflow.connect(
-        fet_pipe, "outputnode.output_srr", recon_datasink, pipeline_name
+        fet_pipe, "outputnode.output_srr", recon_datasink, f"@{pipeline_name}"
     )
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", seg_datasink, cfg.segmentation.pipeline
+        fet_pipe, "outputnode.output_seg", seg_datasink, f"@{cfg.segmentation.pipeline}"
     )
 
     if cfg.save_graph:
@@ -190,6 +181,19 @@ def create_main_workflow(
 
 
 def main():
+    # import logging
+
+    # # Get the specific logger for Nipype interfaces
+    # if_logger = logging.getLogger('nipype.interface')
+    # if_logger.setLevel(logging.DEBUG)
+
+    # # Optional: Also set the workflow logger level if needed
+    # wf_logger = logging.getLogger('nipype.workflow')
+    # wf_logger.setLevel(logging.DEBUG)
+
+    # # Optional: Configure basic logging to print to console
+    # # This might already be happening, but ensures messages are shown
+    # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     # Command line parser
     parser = get_default_parser(
         "Run the entire Fetpype pipeline -- "

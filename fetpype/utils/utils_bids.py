@@ -7,7 +7,7 @@ from bids.layout import BIDSLayout
 import nipype.interfaces.io as nio
 import nipype.pipeline.engine as pe
 from omegaconf import OmegaConf
-
+import re
 
 
 def create_datasource(
@@ -103,214 +103,149 @@ def create_datasource(
     bids_datasource.iterables = iterables
     return bids_datasource
 
-
 def create_bids_datasink(
     out_dir,
     pipeline_name,
-    step_name,
-    subjects=None,
-    sessions=None,
-    acquisitions=None,
+    strip_dir,
     datatype="anat",
     name=None,
-    substitutions=None,
-    regexp_substitutions=None,
-    recon_method=None,
-    seg_method=None
+    rec_label=None,
+    seg_label=None,
+    desc_label=None,
+    custom_subs=None,
+    custom_regex_subs=None
 ):
     """
-    Create a BIDS-compatible datasink for fetpype outputs.
-    
-    This function creates a datasink node that organizes outputs according to the
-    BIDS derivatives specification, following the structure:
-    derivatives/<pipeline_name>/<step_name>/sub-XX/ses-YY/anat/...
-    
+    Creates a BIDS-compatible datasink using parameterization and regex substitutions.
+    Organizes outputs into:
+    <out_dir>/derivatives/<pipeline_name>/sub-<ID>/[ses-<ID>/]<datatype>/<BIDS_filename>
+
     Parameters
     ----------
     out_dir : str
-        Path to where the data will be saved
+        Base output directory (e.g., /path/to/project/derivatives)
     pipeline_name : str
-        Name of the pipeline (e.g., 'nesvor' or 'nesvor_bounti')
-    step_name : str
-        Name of the processing step (e.g., 'preprocessing', 'reconstruction', 'segmentation')
-    subjects : list, optional
-        List of subject IDs (without 'sub-' prefix)
-    sessions : list, optional
-        List of session IDs (without 'ses-' prefix)
-    acquisitions : list, optional
-        List of acquisition IDs (without 'acq-' prefix)
+        Name of the pipeline (e.g., 'nesvor_bounti', 'preprocessing')
+    strip_dir : str
+        Absolute path to the Nipype working directory base to strip
     datatype : str, optional
-        Data type (e.g., 'anat', 'func'), defaults to 'anat'
+        BIDS datatype ('anat', 'func', 'dwi', etc.), by default "anat"
     name : str, optional
-        Name for the datasink node, defaults to step_name + "_datasink"
-    substitutions : list, optional
-        Additional substitutions to apply as (pattern, replacement) tuples
-    regexp_substitutions : list, optional
-        Additional regexp substitutions to apply as (pattern, replacement) tuples
-    recon_method : str, optional
-        Name of reconstruction method for file naming (e.g., 'nesvor', 'svrtk')
-    seg_method : str, optional
-        Name of segmentation method for file naming (e.g., 'bounti')
-    
+        Name for the datasink node, by default None
+    rec_label : str, optional
+        Reconstruction label (e.g., 'nesvor') for rec-... entity, by default None
+    seg_label : str, optional
+        Segmentation label (e.g., 'bounti') for seg-... entity, by default None
+    desc_label : str, optional
+        Description label for desc-... entity (e.g., 'denoised'), by default None
+    custom_subs : list, optional
+        List of custom simple substitutions, by default None
+    custom_regex_subs : list, optional
+        List of custom regex substitutions, by default None
+
     Returns
     -------
-    datasink : nipype.pipeline.engine.Node
-        Configured datasink node
-    """
-    # Set default name if not provided
-    if name is None:
-        name = f"{step_name}_datasink"
-    
-    # Extract reconstruction and segmentation methods from pipeline_name if not provided
-    if '_' in pipeline_name and (not recon_method or not seg_method):
-        parts = pipeline_name.split('_')
-        if not recon_method and len(parts) > 0:
-            recon_method = parts[0]
-        if not seg_method and len(parts) > 1:
-            seg_method = parts[1]
-    elif not recon_method:
-        recon_method = pipeline_name
-    
-    # Create datasink node
-    datasink = pe.Node(nio.DataSink(base_directory=out_dir, container=pipeline_name), 
-                      name=name)
-    
-    # Prepare substitutions
-    subs = []
-    
-    # For subject and session-specific substitutions
-    if subjects:
-        for sub in subjects:
-            if sessions:
-                for ses in sessions:
-                    # Pattern for preprocessing intermediate directories
-                    if step_name == 'preprocessing':
-                        # These substitutions handle the preprocessing outputs specifically
-                        subs.extend([
-                            # Handle both direct stacks output and when connected to a field
-                            (f"stacks", f"sub-{sub}/ses-{ses}/{datatype}"),
-                            (f"masks", f"sub-{sub}/ses-{ses}/{datatype}"),
-                            # Also handle when directly connected through outputnode
-                            (f"outputnode.stacks", f"sub-{sub}/ses-{ses}/{datatype}"),
-                            (f"outputnode.masks", f"sub-{sub}/ses-{ses}/{datatype}")
-                        ])
-                    
-                    # For reconstruction outputs
-                    elif step_name == 'reconstruction':
-                        subs.extend([
-                            # Handle both direct stacks output and when connected to a field
-                            (f"outputnode.srr_volume", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                            (f"@reconstruction", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                            (f"{pipeline_name}", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                        ])
-                    
-                    # For segmentation outputs
-                    elif step_name == 'segmentation':
-                        subs.extend([
-                            # Handle both direct stacks output and when connected to a field
-                            (f"outputnode.seg_volume", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                            (f"@segmentation", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                            (f"{pipeline_name}", f"sub-{sub}/ses-{ses}/{datatype}/sub-{sub}_ses-{ses}"),
-                        ])
-            else:
-                # Handle case with subjects but no sessions
-                if step_name == 'preprocessing':
-                    subs.extend([
-                        (f"stacks", f"sub-{sub}/{datatype}"),
-                        (f"masks", f"sub-{sub}/{datatype}"),
-                        (f"outputnode.stacks", f"sub-{sub}/{datatype}"),
-                        (f"outputnode.masks", f"sub-{sub}/{datatype}")
-                    ])
-                
-                # For reconstruction without sessions
-                elif step_name == 'reconstruction':
-                    subs.extend([
-                        (f"outputnode.srr_volume", f"sub-{sub}/{datatype}/sub-{sub}"),
-                        (f"@reconstruction", f"sub-{sub}/{datatype}/sub-{sub}"),
-                        (f"{pipeline_name}", f"sub-{sub}/{datatype}/sub-{sub}"),
-                        
-                    ])
-                
-                # For segmentation without sessions
-                elif step_name == 'segmentation':
-                    subs.extend([
-                        (f"outputnode.seg_volume", f"sub-{sub}/{datatype}/sub-{sub}"),
-                        (f"@segmentation", f"sub-{sub}/{datatype}/sub-{sub}"),
-                        (f"{pipeline_name}", f"sub-{sub}/{datatype}/sub-{sub}"),
-                        
-                    ])
-    
-    # Add filename substitutions based on step_name and methods
-    if step_name == 'reconstruction':
-        subs.extend([
-            ("_recon.nii.gz", f"_rec-{recon_method}_T2w.nii.gz"),
-            ("_recon_mask.nii.gz", f"_rec-{recon_method}_mask.nii.gz"),
-            ("srr_volume.nii.gz", f"_rec-{recon_method}_T2w.nii.gz")
-        ])
-    elif step_name == 'segmentation':
-        if seg_method:
-            subs.extend([
-                ("_seg.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_dseg.nii.gz"),
-                ("_all_labels.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_labels.nii.gz"),
-                ("seg.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_dseg.nii.gz"),
-                ("all_labels.nii.gz", f"_rec-{recon_method}_seg-{seg_method}_labels.nii.gz")
-            ])
-        else:
-            subs.extend([
-                ("_seg.nii.gz", f"_rec-{recon_method}_dseg.nii.gz"),
-                ("_all_labels.nii.gz", f"_rec-{recon_method}_labels.nii.gz"),
-                ("seg.nii.gz", f"_rec-{recon_method}_dseg.nii.gz"),
-                ("all_labels.nii.gz", f"_rec-{recon_method}_labels.nii.gz")
-            ])
-    
-    # Add user-provided substitutions
-    if substitutions:
-        subs.extend(substitutions)
-    
-    # Set substitutions
-    datasink.inputs.substitutions = subs
-    
-    # Define default regex substitutions
-    regex_subs = [
-        # Make sure to properly rename files with session information
-        (r"(sub-[^/_]+)/(ses-[^/_]+)/anat/([^_]+\.nii\.gz)", 
-         r"\1/\2/anat/\1_\2_\3"),
-        (r"(sub-[^/_]+)/anat/([^_]+\.nii\.gz)", 
-         r"\1/anat/\1_\2"),
-         
-        # Remove any leftover numeric suffix patterns 
-        (r"/_denoising(\d+)?", ""),
-        (r"/_cropping(\d+)?", ""),
-        
-        # Remove nipype's automatic subject/session/acquisition patterns
-        (r'_subject_[^/]+', ''),
-        (r'_session_[^/]+', ''),
-        (r'_acquisition_[^/]+', ''),
-        
-        # Clear out any potential pattern that would remove the session folder
-        # (r"(sub-[^/]+)/(ses-[^/]+)/(anat)/.*?(sub-[^/]+)_(ses-[^/]+)(.*\.nii\.gz)",
-        # r"\1/\2/\3/\4_\5\6"),
-        
-        # Ensure we don't duplicate subject/session in filenames
-        # (r"(sub-[^/_]+)_(ses-[^/_]+)_(.*?)(\.nii\.gz)", 
-        # r"\1_\2_\3\4"),
-         
-        # Fix double underscores
-        (r"__+", "_"),
-        
-        # Fix file extensions if needed
-        (r"(\.nii\.gz)\.nii\.gz", r"\1"),
-    ]
-    
-    # Add user-provided regex substitutions
-    if regexp_substitutions:
-        regex_subs.extend(regexp_substitutions)
-    
-    # Set regex substitutions
-    datasink.inputs.regexp_substitutions = regex_subs
-    
-    return datasink
+    datasink : nipype.Node
+        A Nipype DataSink node configured for BIDS-compatible output.
 
+    Raises
+    ------
+    ValueError
+        If `strip_dir` (Nipype work dir base path) is not provided.
+
+    """
+    if not strip_dir:
+        raise ValueError("`strip_dir` (Nipype work dir base path) is required.")
+    if name is None:
+        name = f"{pipeline_name}_datasink"
+
+    datasink = pe.Node(
+        nio.DataSink(
+            base_directory=out_dir,
+            parameterization=True,
+            strip_dir=strip_dir
+        ),
+        name=name
+    )
+
+    regex_subs = []
+
+    bids_derivatives_root = out_dir # we already pass the bids derivatives
+    escaped_bids_derivatives_root = re.escape(out_dir)
+
+    if pipeline_name == "preprocessing":
+        # ** Rule 1: Preprocessing Stacks (Denoised) **
+        if desc_label == "denoised":
+            regex_subs.append(
+                (
+                    # Match: ^<bids_root>/.*?_session_ SESS _subject_ SUBJ ... /denoising... / filename_base _noise_corrected .ext$
+                    rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*?/?_denoising.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+))?_T2w_noise_corrected(\.nii\.gz|\.nii)$",
+                    # Groups: \1=SESS, \2=SUBJ, \3=filename_base, \4=ext
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-denoised_T2w\4"
+                )
+            )
+        # ** Rule 2: Preprocessing Masks (Cropped) **
+        if desc_label == "cropped":
+         regex_subs.append(
+            (
+                # Match: ^<bids_root> / (any intermediate nipype dirs) .*? _session_ SESS _subject_ SUBJ ... /cropping... / filename_base _mask .ext$
+                rf"^{escaped_bids_derivatives_root}/.*?_session_([^/]+)_subject_([^/]+).*/?_cropping.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_mask(\.nii\.gz|\.nii)$",
+                # Groups: \1=SESS, \2=SUBJ, \3=filename_base, \4=ext
+                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-cropped_mask\4"
+            )
+         )
+
+
+    # ** Rule 3: Reconstruction Output **
+    if rec_label and pipeline_name != "preprocessing":
+         regex_subs.append(
+            (
+                # Match: ^<bids_root>/.*?_session_ SESS _subject_ SUBJ ... /recon .ext$
+                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/recon(\.nii\.gz|\.nii)$",
+                # Replace ABSOLUTE path: <bids_root>/PIPELINE_NAME /sub-SUBJ /ses-SESS /anat/ sub-SUBJ_ses-SESS_rec-LABEL_T2w .ext
+                # Groups: \1=SESS, \2=SUBJ, \3=ext
+                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3"
+            )
+         )
+
+    # ** Rule 4: Segmentation Output **
+    if seg_label and rec_label and pipeline_name != "preprocessing":
+         regex_subs.append(
+            (
+                 # Match: ^<bids_root>/.*?_session_ SESS _subject_ SUBJ ... /input_srr...bounti-19 .ext$
+                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/input_srr-mask-brain_bounti-19(\.nii\.gz|\.nii)$",
+                # Replace ABSOLUTE path: <bids_root>/PIPELINE_NAME /sub-SUBJ /ses-SESS /anat/ sub-SUBJ_ses-SESS_rec-LABEL_seg-LABEL_dseg .ext
+                # Groups: \1=SESS, \2=SUBJ, \3=ext
+                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
+             )
+         )
+
+    # Add more specific rules here if other file types need handling
+    regex_subs.extend([
+        (r"_+", "_"),              # Replace multiple underscores with single
+        (r"(/)_", r"\1"),          # Remove underscore after slash if present
+        (r"(_)\.", r"\."),         # Remove underscore before dot if present
+        (r"-+", "-"),              # Replace multiple hyphens with single
+        (r"//+", "/"),             # Fix double slashes
+        (r"[\\/]$", ""),           # Remove trailing slash
+        (r"_ses-None", ""),        # Remove ses-None if session was optional/missing
+        (r"(\.nii\.gz)\1+$", r"\1"), # Fix repeated extensions like .nii.gz.nii.gz
+        (r"(\.nii)\1+$", r"\1"),     # Fix repeated extensions like .nii.nii
+    ])
+
+    # Add custom regex substitutions
+    if custom_regex_subs:
+        regex_subs.extend(custom_regex_subs)
+
+    datasink.inputs.regexp_substitutions = regex_subs
+
+    # Add custom simple substitutions
+    final_subs = []
+    if custom_subs:
+        final_subs.extend(custom_subs)
+    datasink.inputs.substitutions = final_subs
+
+    return datasink
 
 def create_datasink(
     iterables, name="output", params_subs={}, params_regex_subs={}

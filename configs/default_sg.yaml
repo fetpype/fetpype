@@ -1,0 +1,12 @@
+defaults:
+  # - dataset/testing
+  - preprocessing/default
+  - reconstruction/niftymic
+  - segmentation/bounti
+  - _self_
+container: "singularity"
+#preprocessing:
+#  disable_cropping: null
+reconstruction:
+  output_resolution: 0.8
+save_graph: False

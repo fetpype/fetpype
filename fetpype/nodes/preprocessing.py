@@ -9,7 +9,6 @@ from nipype.interfaces.base import (
     BaseInterfaceInputSpec,
 )
 
-
 def nesvor_brain_extraction(raw_T2s, pre_command="", nesvor_image=""):
     """
     Function wrapping nesvor segment-stack for use with nipype
@@ -89,10 +88,14 @@ def nesvor_brain_extraction(raw_T2s, pre_command="", nesvor_image=""):
         mask = ni.load(bmasktmp)
         # For some reason, we need to swap the first axis of NeSVoR's BE mask
         # to have something consistent with our data.
-        ni.save(
-            ni.Nifti1Image(mask.get_fdata()[::-1, :, :], mask.affine), bmask
-        )
-        assert os.path.exists(bmasktmp), f"Error, {bmasktmp} does not exist"
+        # This no longer happens?
+        # ni.save(
+        #     ni.Nifti1Image(mask.get_fdata()[::-1, :, :], mask.affine), bmask
+        # )
+        # copy mask to bmask using os.system
+        os.system(f"cp {bmasktmp} {bmask}")
+
+        assert os.path.exists(bmask), f"Error, {bmask} does not exist"
         bmasks.append(bmask)
     return bmasks
 

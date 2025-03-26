@@ -6,7 +6,7 @@ from fetpype.pipelines.full_pipeline import (
 )
 from fetpype.utils.utils_bids import (
     create_datasource,
-    create_datasink,
+    create_bids_datasink,
     create_description_file,
 )
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -33,6 +33,7 @@ def create_main_workflow(
     acquisitions,
     cfg_path,
     nprocs,
+    save_intermediates=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
@@ -66,6 +67,10 @@ def create_main_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
+    # Print the three paths
+    print(f"Data directory: {data_dir}")
+    print(f"Output directory: {out_dir}")
+    print(f"Nipype directory: {nipype_dir}")
 
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
@@ -95,53 +100,68 @@ def create_main_workflow(
     # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
 
-    # DataSink
-
     # Reconstruction data sink:
-    pipeline_name = cfg.reconstruction.pipeline
-    datasink_path = os.path.join(out_dir, pipeline_name)
-    os.makedirs(datasink_path, exist_ok=True)
+    pipeline_name = get_pipeline_name(cfg)
     desc_file = create_description_file(
-        datasink_path, pipeline_name, ccfg=cfg.reconstruction
+        out_dir, pipeline_name, cfg=cfg
     )
 
-    params_regex_subs = cfg.regex_subs if "regex_subs" in cfg.keys() else {}
-    params_subs = cfg.rsubs if "subs" in cfg.keys() else {}
+    # Preprocessing data sink:
+    if save_intermediates:
+        datasink_path_intermediate = os.path.join(out_dir, "preprocessing")
+        os.makedirs(datasink_path_intermediate, exist_ok=True)
+        create_description_file(
+            datasink_path_intermediate, "preprocessing", cfg=cfg.reconstruction
+        )
 
-    # Create datasink
-    datasink = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
-    )
-    datasink.inputs.base_directory = datasink_path
+        # Create a datasink for the preprocessing pipeline
+        preprocessing_datasink_denoised = create_bids_datasink(
+            out_dir=datasink_path_intermediate,
+            pipeline_name="preprocessing",  # Use combined name
+            strip_dir=main_workflow.base_dir,
+            name="preprocessing_datasink_denoised",
+            desc_label="denoised",
+        )
+        preprocessing_datasink_masked = create_bids_datasink(
+            out_dir=datasink_path_intermediate,
+            pipeline_name="preprocessing",  # Use combined name
+            strip_dir=main_workflow.base_dir,
+            name="preprocessing_datasink_cropped",
+            desc_label="cropped",
+        )
 
-    # Segmentation data sink
-    pipeline_name2 = (
-        cfg.reconstruction.pipeline + "_" + cfg.segmentation.pipeline
+        # Connect the pipeline to the datasinks
+        main_workflow.connect(
+            fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink_denoised, "@stacks"
+        )
+        main_workflow.connect(
+            fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink_masked, "@masks"
+        )
+    
+    recon_datasink = create_bids_datasink(
+        out_dir=out_dir,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
+        name="final_recon_datasink",
+        rec_label=cfg.reconstruction.pipeline,
     )
 
-    datasink_path2 = os.path.join(out_dir, pipeline_name2)
-    os.makedirs(datasink_path2, exist_ok=True)
-    create_description_file(
-        datasink_path2, pipeline_name2, desc_file, cfg.segmentation
+    # Create another datasink for the segmentation pipeline
+    seg_datasink = create_bids_datasink(
+        out_dir=out_dir,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
+        name="final_seg_datasink",
+        rec_label=cfg.reconstruction.pipeline,
+        seg_label=cfg.segmentation.pipeline,
     )
-    datasink2 = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name2}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
-    )
-    datasink2.inputs.base_directory = datasink_path2
-    # Add the base directory
 
     # Connect the pipeline to the datasink
     main_workflow.connect(
-        fet_pipe, "outputnode.output_srr", datasink, pipeline_name
+        fet_pipe, "outputnode.output_srr", recon_datasink, f"@{pipeline_name}"
     )
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", datasink2, pipeline_name2
+        fet_pipe, "outputnode.output_seg", seg_datasink, f"@{cfg.segmentation.pipeline}"
     )
 
     if cfg.save_graph:
@@ -156,6 +176,19 @@ def create_main_workflow(
 
 
 def main():
+    # import logging
+
+    # # Get the specific logger for Nipype interfaces
+    # if_logger = logging.getLogger('nipype.interface')
+    # if_logger.setLevel(logging.DEBUG)
+
+    # # Optional: Also set the workflow logger level if needed
+    # wf_logger = logging.getLogger('nipype.workflow')
+    # wf_logger.setLevel(logging.DEBUG)
+
+    # # Optional: Configure basic logging to print to console
+    # # This might already be happening, but ensures messages are shown
+    # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     # Command line parser
     parser = get_default_parser(
         "Run the entire Fetpype pipeline -- "
@@ -175,6 +208,7 @@ def main():
         acquisitions=args.acq,
         cfg_path=args.cfg_path,
         nprocs=args.nprocs,
+        save_intermediates=args.save_intermediates,
     )
 
 

@@ -8,6 +8,7 @@ docker:
 singularity:
   cmd: "singularity exec --bind /gpfs:/gpfs --nv  
     /home/gmarti/SINGULARITY/niftymic_upf_latest.sif
+    niftymic_run_reconstruction_pipeline
     --filenames <input_stacks>
     --filenames-masks <input_masks>
     --dir-output <output_dir>"

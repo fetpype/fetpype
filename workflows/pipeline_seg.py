@@ -7,7 +7,7 @@ from fetpype.pipelines.full_pipeline import (
 )
 from fetpype.utils.utils_bids import (
     create_datasource,
-    create_datasink,
+    create_bids_datasink,
     create_description_file,
 )
 from fetpype import VALID_RECONSTRUCTION
@@ -71,9 +71,6 @@ def create_seg_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
-    import pdb
-
-    pdb.set_trace()
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
 
@@ -125,7 +122,7 @@ def create_seg_workflow(
 
     # DataSink
 
-    # Reconstruction data sink:
+    # Segmentation data sink:
     pipeline_name = cfg.segmentation.pipeline
     datasink_path = os.path.join(out_dir, pipeline_name)
     # Create json file to make it BIDS compliant if doesnt exist
@@ -137,29 +134,28 @@ def create_seg_workflow(
 
     # Create datasink
     pipeline_name = cfg.segmentation.pipeline
-
-    datasink_path = os.path.join(out_dir, pipeline_name)
     os.makedirs(datasink_path, exist_ok=True)
     prev_desc = os.path.join(data_dir, "dataset_description.json")
     if not os.path.exists(prev_desc):
         prev_desc = None
 
     create_description_file(
-        datasink_path, pipeline_name, prev_desc, cfg.segmentation
+        out_dir, pipeline_name, prev_desc, cfg.segmentation
     )
-    pdb.set_trace()
-    datasink = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
+    # Create another datasink for the segmentation pipeline
+    seg_datasink = create_bids_datasink(
+        out_dir=out_dir,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
+        name="final_seg_datasink",
+        rec_label=cfg.reconstruction.pipeline,
+        seg_label=cfg.segmentation.pipeline,
     )
-    datasink.inputs.base_directory = datasink_path
     # Add the base directory
 
     # Connect the pipeline to the datasink
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", datasink, pipeline_name
+        fet_pipe, "outputnode.output_seg", seg_datasink, pipeline_name
     )
 
     if cfg.save_graph:

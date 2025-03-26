@@ -6,7 +6,6 @@ from fetpype.pipelines.full_pipeline import (
 )
 from fetpype.utils.utils_bids import (
     create_datasource,
-    create_datasink,
     create_bids_datasink,
     create_description_file,
 )
@@ -100,10 +99,6 @@ def create_main_workflow(
 
     # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
-
-    # Get subject, session and acquisition IDs from the datasource 
-    # subject_ids, session_ids, acq_ids = zip(*datasource.iterables[1])
-    # subject_ids, session_ids, acq_ids = list(subject_ids), list(session_ids), list(acq_ids)
 
     # Reconstruction data sink:
     pipeline_name = get_pipeline_name(cfg)

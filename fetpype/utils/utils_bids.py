@@ -178,9 +178,7 @@ def create_bids_datasink(
         if desc_label == "denoised":
             regex_subs.append(
                 (
-                    # Match: ^<bids_root>/.*?_session_ SESS _subject_ SUBJ ... /denoising... / filename_base _noise_corrected .ext$
                     rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*?/?_denoising.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+))?_T2w_noise_corrected(\.nii\.gz|\.nii)$",
-                    # Groups: \1=SESS, \2=SUBJ, \3=filename_base, \4=ext
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-denoised_T2w\4"
                 )
             )
@@ -188,21 +186,17 @@ def create_bids_datasink(
         if desc_label == "cropped":
          regex_subs.append(
             (
-                # Match: ^<bids_root> / (any intermediate nipype dirs) .*? _session_ SESS _subject_ SUBJ ... /cropping... / filename_base _mask .ext$
                 rf"^{escaped_bids_derivatives_root}/.*?_session_([^/]+)_subject_([^/]+).*/?_cropping.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_mask(\.nii\.gz|\.nii)$",
-                # Groups: \1=SESS, \2=SUBJ, \3=filename_base, \4=ext
                 rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-cropped_mask\4"
             )
          )
 
 
     # ** Rule 3: Reconstruction Output **
-    if rec_label and pipeline_name != "preprocessing":
+    if rec_label and not seg_label and pipeline_name != "preprocessing":
          regex_subs.append(
             (
-                # Match: ^<bids_root>/.*?_session_ SESS _subject_ SUBJ ... /recon .ext$
-                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/recon(\.nii\.gz|\.nii)$",
-                # Replace ABSOLUTE path: <bids_root>/PIPELINE_NAME /sub-SUBJ /ses-SESS /anat/ sub-SUBJ_ses-SESS_rec-LABEL_T2w .ext
+                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/(?:[^/]+)(\.nii\.gz|\.nii)$",
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
                 rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3"
             )
@@ -212,9 +206,7 @@ def create_bids_datasink(
     if seg_label and rec_label and pipeline_name != "preprocessing":
          regex_subs.append(
             (
-                 # Match: ^<bids_root>/.*?_session_ SESS _subject_ SUBJ ... /input_srr...bounti-19 .ext$
                 rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/input_srr-mask-brain_bounti-19(\.nii\.gz|\.nii)$",
-                # Replace ABSOLUTE path: <bids_root>/PIPELINE_NAME /sub-SUBJ /ses-SESS /anat/ sub-SUBJ_ses-SESS_rec-LABEL_seg-LABEL_dseg .ext
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
                 rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
              )

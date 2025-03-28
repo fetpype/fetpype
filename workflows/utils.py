@@ -90,6 +90,13 @@ def get_default_parser(desc):
         required=False,
     )
 
+    parser.add_argument(
+        "--save_intermediates",
+        dest="save_intermediates",
+        action="store_true",
+        help="Save intermediate files.",
+    )
+
     return parser
 
 

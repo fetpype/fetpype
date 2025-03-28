@@ -3,7 +3,8 @@ brain_extraction:
     image: "junshenxu/nesvor:latest "
     pre_command: "docker run --gpus=all "
   singularity:
-    image: null
+    image: "/home/gmarti/SINGULARITY/nesvor_latest.sif "
+    pre_command: "singularity exec --bind /gpfs:/gpfs --nv "
 check_stacks_and_masks:
   enabled: true
 denoising:

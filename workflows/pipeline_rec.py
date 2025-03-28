@@ -6,7 +6,7 @@ from fetpype.pipelines.full_pipeline import (
 )
 from fetpype.utils.utils_bids import (
     create_datasource,
-    create_datasink,
+    create_bids_datasink,
     create_description_file,
 )
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -121,28 +121,22 @@ def create_rec_workflow(
 
     # Reconstruction data sink:
     pipeline_name = cfg.reconstruction.pipeline
-    datasink_path = os.path.join(out_dir, pipeline_name)
-    # Create json file to make it BIDS compliant if doesnt exist
-    # Eventually, add all parameters to the json file
-    os.makedirs(datasink_path, exist_ok=True)
     create_description_file(
-        datasink_path, pipeline_name, cfg=cfg.reconstruction
+        out_dir, pipeline_name, cfg=cfg.reconstruction
     )
 
-    params_regex_subs = cfg.regex_subs if "regex_subs" in cfg.keys() else {}
-    params_subs = cfg.rsubs if "subs" in cfg.keys() else {}
-
-    # Create datasink
-    datasink = create_datasink(
-        iterables=datasource.iterables,
-        name=f"datasink_{pipeline_name}",
-        params_subs=params_subs,
-        params_regex_subs=params_regex_subs,
+    datasink = create_bids_datasink(
+        out_dir=out_dir,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
+        name="final_recon_datasink",
+        rec_label=cfg.reconstruction.pipeline,
     )
-    datasink.inputs.base_directory = datasink_path
+    #datasink.inputs.base_directory = datasink_path
+    
     # Connect the pipeline to the datasink
     main_workflow.connect(
-        fet_pipe, "outputnode.output_srr", datasink, pipeline_name
+        fet_pipe, "outputnode.output_srr", datasink, f"@{pipeline_name}"
     )
 
     if cfg.save_graph:

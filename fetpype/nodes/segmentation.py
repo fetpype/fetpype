@@ -42,7 +42,11 @@ def run_seg_cmd(input_srr, cmd, cfg):
 
         seg = os.path.join(output_dir, cfg.path_to_output)
         if "<basename>" in seg:
-            seg = seg.replace("<basename>", os.path.basename(input_srr))
+            # Remove all extensions from the basename (handles .nii.gz correctly)
+            basename = os.path.basename(input_srr)
+            # Remove all extensions (handles both .nii.gz and .nii cases)
+            basename_no_ext = basename.split('.')[0]
+            seg = seg.replace("<basename>", basename_no_ext)
     if "<mount>" in cmd:
         mount_cmd = get_mount_docker(input_srr_dir, output_dir)
         cmd = cmd.replace("<mount>", mount_cmd)

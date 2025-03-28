@@ -6,5 +6,10 @@ docker:
     --filenames-masks <input_masks>
     --dir-output <output_dir>"
 singularity:
-  cmd: null
+  cmd: "singularity exec --bind /gpfs:/gpfs --nv  
+    /home/gmarti/SINGULARITY/niftymic_upf_latest.sif
+    niftymic_run_reconstruction_pipeline
+    --filenames <input_stacks>
+    --filenames-masks <input_masks>
+    --dir-output <output_dir>"
 path_to_output: "recon_template_space/srr_template.nii.gz"

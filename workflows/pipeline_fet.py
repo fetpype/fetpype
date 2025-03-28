@@ -9,6 +9,7 @@ from fetpype.utils.utils_bids import (
     create_bids_datasink,
     create_description_file,
 )
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import (  # noqa: E402
@@ -26,7 +27,7 @@ __file_dir__ = os.path.dirname(os.path.abspath(__file__))
 
 def create_main_workflow(
     data_dir,
-        masks_dir,
+    masks_dir,
     out_dir,
     nipype_dir,
     subjects,
@@ -73,7 +74,7 @@ def create_main_workflow(
     print(f"Data directory: {data_dir}")
     print(f"Output directory: {out_dir}")
     print(f"Nipype directory: {nipype_dir}")
-    
+
     load_masks = False
     if masks_dir is not None:
         # Check it exists
@@ -84,10 +85,7 @@ def create_main_workflow(
         masks_dir = os.path.abspath(masks_dir)
         load_masks = True
 
-    
-
     check_valid_pipeline(cfg)
-    # if general, pipeline is not in params ,create it and set it to niftymic
 
     # main_workflow
     main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
@@ -115,17 +113,18 @@ def create_main_workflow(
         subjects,
         sessions,
         acquisitions,
-        extra_derivatives=masks_dir
+        extra_derivatives=masks_dir,
     )
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
     if load_masks:
         main_workflow.connect(datasource, "masks", fet_pipe, "inputnode.masks")
 
-
     # Reconstruction data sink:
     pipeline_name = get_pipeline_name(cfg)
     desc_file = create_description_file(
-        out_dir, pipeline_name, cfg=cfg
+        out_dir,
+        pipeline_name,
+        cfg=cfg,
         # cfg=cfg.reconstruction
     )
 
@@ -155,12 +154,18 @@ def create_main_workflow(
 
         # Connect the pipeline to the datasinks
         main_workflow.connect(
-            fet_pipe, "Preprocessing.outputnode.stacks", preprocessing_datasink_denoised, "@stacks"
+            fet_pipe,
+            "Preprocessing.outputnode.stacks",
+            preprocessing_datasink_denoised,
+            "@stacks",
         )
         main_workflow.connect(
-            fet_pipe, "Preprocessing.outputnode.masks", preprocessing_datasink_masked, "@masks"
+            fet_pipe,
+            "Preprocessing.outputnode.masks",
+            preprocessing_datasink_masked,
+            "@masks",
         )
-    
+
     recon_datasink = create_bids_datasink(
         out_dir=out_dir,
         pipeline_name=pipeline_name,
@@ -184,7 +189,10 @@ def create_main_workflow(
         fet_pipe, "outputnode.output_srr", recon_datasink, f"@{pipeline_name}"
     )
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", seg_datasink, f"@{cfg.segmentation.pipeline}"
+        fet_pipe,
+        "outputnode.output_seg",
+        seg_datasink,
+        f"@{cfg.segmentation.pipeline}",
     )
 
     if cfg.save_graph:
@@ -199,20 +207,6 @@ def create_main_workflow(
 
 
 def main():
-    # import logging
-
-    # # Get the specific logger for Nipype interfaces
-    # if_logger = logging.getLogger('nipype.interface')
-    # if_logger.setLevel(logging.DEBUG)
-
-    # # Optional: Also set the workflow logger level if needed
-    # wf_logger = logging.getLogger('nipype.workflow')
-    # wf_logger.setLevel(logging.DEBUG)
-
-    # # Optional: Configure basic logging to print to console
-    # # This might already be happening, but ensures messages are shown
-    # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    # Command line parser
     parser = get_default_parser(
         "Run the entire Fetpype pipeline -- "
         "pre-processing, reconstruction and segmentation"

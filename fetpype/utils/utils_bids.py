@@ -273,10 +273,10 @@ def create_datasink(
     # Generate subject folders with session and subject information
     subjFolders = [
         (
-            "_acquisition_haste_session_%s_subject_%s" % (ses, sub),
+            "_acquisition_%s_session_%s_subject_%s" % (acq, ses, sub),
             "sub-%s/ses-%s/anat" % (sub, ses),
         )
-        for (sub, ses, _) in iterables[1]  # doublecheck
+        for (sub, ses, acq) in iterables[1]  # doublecheck
     ]
 
     print("subjFolders: ", subjFolders)

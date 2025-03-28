@@ -326,7 +326,7 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     enabled_cropping = (
         False if cfg.reconstruction.pipeline == "svrtk" else True
     )
-    prepro_pipe = get_prepro(cfg, enabled_cropping)
+    prepro_pipe = get_prepro(cfg, load_masks, enabled_cropping)
     recon = get_recon(cfg)
     segmentation = get_seg(cfg)
 

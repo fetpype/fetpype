@@ -10,6 +10,7 @@ from fetpype.utils.utils_bids import (
     create_description_file,
 )
 
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import (  # noqa: E402
@@ -27,6 +28,7 @@ __file_dir__ = os.path.dirname(os.path.abspath(__file__))
 
 def create_main_workflow(
     data_dir,
+    masks_dir,
     masks_dir,
     out_dir,
     nipype_dir,
@@ -69,6 +71,12 @@ def create_main_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
+
+    # Print the three paths
+    print(f"Data directory: {data_dir}")
+    print(f"Output directory: {out_dir}")
+    print(f"Nipype directory: {nipype_dir}")
+
     load_masks = False
     if masks_dir is not None:
         # Check it exists
@@ -80,7 +88,6 @@ def create_main_workflow(
         load_masks = True
 
     check_valid_pipeline(cfg)
-    # if general, pipeline is not in params ,create it and set it to niftymic
 
     # main_workflow
     main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
@@ -109,16 +116,19 @@ def create_main_workflow(
         sessions,
         acquisitions,
         extra_derivatives=masks_dir,
+        extra_derivatives=masks_dir,
     )
     main_workflow.connect(datasource, "stacks", fet_pipe, "inputnode.stacks")
     if load_masks:
         main_workflow.connect(datasource, "masks", fet_pipe, "inputnode.masks")
 
-    # DataSink
-
     # Reconstruction data sink:
     pipeline_name = get_pipeline_name(cfg)
-    desc_file = create_description_file(out_dir, pipeline_name, cfg=cfg)
+    desc_file = create_description_file(
+        out_dir,
+        pipeline_name,
+        cfg=cfg,
+    )
 
     params_regex_subs = cfg.regex_subs if "regex_subs" in cfg.keys() else {}
     params_subs = cfg.rsubs if "subs" in cfg.keys() else {}
@@ -202,20 +212,6 @@ def create_main_workflow(
 
 
 def main():
-    # import logging
-
-    # # Get the specific logger for Nipype interfaces
-    # if_logger = logging.getLogger('nipype.interface')
-    # if_logger.setLevel(logging.DEBUG)
-
-    # # Optional: Also set the workflow logger level if needed
-    # wf_logger = logging.getLogger('nipype.workflow')
-    # wf_logger.setLevel(logging.DEBUG)
-
-    # # Optional: Configure basic logging to print to console
-    # # This might already be happening, but ensures messages are shown
-    # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    # Command line parser
     parser = get_default_parser(
         "Run the entire Fetpype pipeline -- "
         "pre-processing, reconstruction and segmentation"

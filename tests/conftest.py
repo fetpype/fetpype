@@ -1,4 +1,5 @@
 # tests/conftest.py
+# -*- coding: utf-8 -*-
 import pytest
 import os
 import shutil

@@ -117,7 +117,7 @@ def get_pipeline_name(cfg):
     return "_".join(pipeline_name)
 
 
-def init_and_load_cfg(cfg_path, current_dir):
+def init_and_load_cfg(cfg_path):
     """
     Initialize and load the configuration file.
     Args:
@@ -125,7 +125,8 @@ def init_and_load_cfg(cfg_path, current_dir):
     Returns:
         cfg: Loaded configuration.
     """
-
+    ## Get the path to this file
+    current_dir = os.path.dirname(os.path.abspath(__file__))
     cfg_path = os.path.abspath(cfg_path)
     cfg_path = os.path.relpath(cfg_path, current_dir)
     cfg_dir = os.path.dirname(cfg_path)

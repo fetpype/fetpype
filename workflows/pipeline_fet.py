@@ -22,7 +22,6 @@ from utils import (  # noqa: E402
 
 ###############################################################################
 
-__file_dir__ = os.path.dirname(os.path.abspath(__file__))
 
 
 def create_main_workflow(
@@ -65,7 +64,7 @@ def create_main_workflow(
 
     """
 
-    cfg = init_and_load_cfg(cfg_path, __file_dir__)
+    cfg = init_and_load_cfg(cfg_path)
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )

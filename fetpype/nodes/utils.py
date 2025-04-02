@@ -14,8 +14,6 @@ def get_directory(entry):
     """
     if isinstance(entry, list):
         if len(entry) == 1:
-            print("WARNING: Only one entry in the list. Are you sure that this is intended?"
-            )
             return os.path.dirname(entry[0])
         return os.path.commonpath(entry)
 

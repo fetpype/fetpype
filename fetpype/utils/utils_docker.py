@@ -67,25 +67,25 @@ def retrieve_container(container_type, container_name):
             f"Container type {container_type} not supported. "
             "Please use 'docker' or 'singularity'."
         )
+
+
 def check_container_commands(container_type, cfg):
     """
-    Check if the docker model is available.
+    Check if the required docker or singularity images are available
+    on the system.
     """
-    # The config is like a nested namespace, iterate it and find all the keys matching container_type
     # Check if the container_type is valid
     if container_type not in ["docker", "singularity"]:
         raise ValueError(
             f"Container type {container_type} not supported. "
             "Please use 'docker' or 'singularity'."
         )
+    
     # Iterate the nested config dictionary
     cfg_dict = dict(flatten_cfg(cfg))
-    for k,v in cfg_dict.items():
-        print(k, v)
     container_names = {}
     for k, v in cfg_dict.items():
         # Return the word that is after the <mount> tag in the string v
-        print(k, v)
         if container_type == "docker" and "docker" in k:
             docker_name = v.split("<mount>")[-1].split()[0]
             container_names[k] = docker_name
@@ -96,25 +96,24 @@ def check_container_commands(container_type, cfg):
             print("CHECKING PATH IN", k, v)
             singularity_name = [s for s in v.split(" ") if s.endswith(".sif")][0]
             container_names[k] = singularity_name
-    # Switch the keys and values and store it as v: [keys] as values are not unique
 
     container_names_list = defaultdict(list)
     for k, v in container_names.items():
         container_names_list[v].append(k)
     
-    # Check if the container is available
 
+    # Check which containers are missing
     missing_containers = []
     for k, v in container_names_list.items():
-        # Check if the container is available
         print(f"Checking {container_type} {k} -- Used by {', '.join(v)}")
         if not is_available_container(container_type, k):
             print(f"\tSTATUS: NOT FOUND")
             missing_containers.append(k)
         else:
             print(f"\tSTATUS: AVAILABLE")
+
+    # Retrieve the missing containers
     if len(missing_containers) > 0  and container_type == "docker":
-        # Would you like me to retrieve them?
         var = input(f"Would you like me to retrieve the missing containers {', '.join(missing_containers)}? (y/n) ")
         if var == "y":
             for k in missing_containers:

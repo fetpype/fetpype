@@ -6,8 +6,6 @@ docker:
     --stack-masks <input_masks> 
     --output-volume <output_volume> 
     --batch-size 4096 
-    --n-proc-n4 4
-    --bias-field-correction 
     --n-levels-bias 1"
 singularity:
   cmd: "singularity exec --bind /gpfs:/gpfs --nv /home/gmarti/SINGULARITY/nesvor_latest.sif 
@@ -16,8 +14,6 @@ singularity:
     --stack-masks <input_masks> 
     --output-volume <output_volume> 
     --batch-size 4096 
-    --n-proc-n4 4
-    --bias-field-correction 
     --n-levels-bias 1"
 args:
     path_to_output: "nesvor.nii.gz"

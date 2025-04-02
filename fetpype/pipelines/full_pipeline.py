@@ -329,14 +329,7 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     print("Full pipeline name: ", name)
     # Creating pipeline
     full_fet_pipe = pe.Workflow(name=name)
-    full_fet_pipe.config["execution"] = {
-        "remove_unnecessary_outputs": True,
-        "stop_on_first_crash": True,
-        "stop_on_first_rerun": True,
-        "crashfile_format": "txt",
-        # "use_relative_paths": True,
-        "write_provenance": False,
-    }
+
 
     config.update_config(full_fet_pipe.config)
     # Creating input node

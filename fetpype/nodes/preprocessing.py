@@ -279,6 +279,9 @@ class CropStacksAndMasks(BaseInterface):
         image_ni = ni.load(image_path)
         mask_ni = ni.load(mask_path)
 
+        image = image_ni.get_fdata()
+        mask = mask_ni.get_fdata()
+
         assert all([i >= m] for i, m in zip(image.shape, mask.shape)), (
             "For a correct cropping, the image should be larger "
             "or equal to the mask."
@@ -858,3 +861,94 @@ class CheckAndSortStacksAndMasks(BaseInterface):
         outputs["output_stacks"] = self._results["output_stacks"]
         outputs["output_masks"] = self._results["output_masks"]
         return outputs
+
+
+def run_prepro_cmd(input_stacks, cmd, is_enabled=True, input_masks=None,):
+    import os
+    import numpy as np
+    import nibabel as nib
+    import traceback
+    VALID_PREPRO_TAGS = [
+        "mount",
+        "input_stacks",
+        "input_masks",
+        "output_stacks",
+        "output_masks",
+    ]
+    # Important for mapnodes
+    unlist_stacks = False
+    unlist_masks = False
+
+    if isinstance(input_stacks, str):
+        input_stacks = [input_stacks]
+        unlist_stacks = True
+    if isinstance(input_masks, str):
+        input_masks = [input_masks]
+        unlist_masks = True
+
+    from fetpype.nodes import is_valid_cmd, get_directory, get_mount_docker
+    print(input_stacks, cmd, is_enabled, input_masks)
+    is_valid_cmd(cmd, VALID_PREPRO_TAGS)
+    if "<output_stacks>" not in cmd and "<output_masks>" not in cmd:
+        raise RuntimeError(
+            "No output stacks or masks specified in the command. "
+            "Please specify <output_stacks> and/or <output_masks>."
+        )
+
+    if is_enabled:
+        output_dir = os.path.join(os.getcwd(), "output")
+        in_stacks_dir = get_directory(input_stacks)
+        in_stacks = " ".join(input_stacks)
+
+        in_masks = ""
+        in_masks_dir = None
+        if input_masks is not None:
+            in_masks_dir = get_directory(input_masks)
+            in_masks = " ".join(input_masks)
+
+        output_stacks = None
+        output_masks = None
+        
+        # In cmd, there will be things contained in <>.
+        # Check that everything that is in <> is in valid_tags
+        # If not, raise an error
+
+        # Replace the tags in the command
+        cmd = cmd.replace("<input_stacks>", in_stacks)
+        cmd = cmd.replace("<input_masks>", in_masks)
+        if "<output_stacks>" in cmd:
+            output_stacks = [os.path.join(output_dir, os.path.basename(stack)) for stack in input_stacks]
+            cmd = cmd.replace("<output_stacks>", " ".join(output_stacks))
+        if "<output_masks>" in cmd:
+            if input_masks:
+                output_masks = [os.path.join(output_dir, os.path.basename(mask)) for mask in input_masks]
+            else:
+                output_masks = [os.path.join(output_dir, os.path.basename(stack)).replace("_T2w","_mask") for stack in input_stacks]
+            cmd = cmd.replace("<output_masks>", " ".join(output_masks))
+        
+        if "<mount>" in cmd:
+            mount_cmd = get_mount_docker(in_stacks_dir, in_masks_dir, output_dir)
+            cmd = cmd.replace("<mount>", mount_cmd)
+        print(f"Running command:\n {cmd}")
+        os.system(cmd)
+    else:
+        output_stacks = input_stacks if "<output_stacks>" in cmd else None
+        output_masks = input_masks if "<output_masks>" in cmd else None
+
+    if output_stacks is not None and unlist_stacks:
+            assert len(output_stacks) == 1, (
+                "More than one stack was returned, but unlist_stacks is True."
+            )
+            output_stacks = output_stacks[0]
+    if  output_masks is not None and unlist_masks:
+        assert len(output_masks) == 1, (
+            "More than one mask was returned, but unlist_masks is True."
+        )
+        output_masks = output_masks[0]
+    if output_stacks is not None and output_masks is not None:
+        
+        return output_stacks, output_masks
+    elif output_stacks is not None:
+        return output_stacks
+    elif output_masks is not None:
+        return output_masks

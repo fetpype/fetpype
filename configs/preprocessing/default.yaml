@@ -1,15 +1,33 @@
 brain_extraction:
   docker:
-    image: "junshenxu/nesvor:latest "
-    pre_command: "docker run --gpus=all "
+    cmd: "docker run --gpus all <mount> fetpype/utils:latest run_brain_extraction 
+    --input_stacks <input_stacks> 
+    --output_masks <output_masks> 
+    --method fet_bet"
   singularity:
-    image: "/home/gmarti/SINGULARITY/nesvor_latest.sif "
-    pre_command: "singularity exec --bind /gpfs:/gpfs --nv "
+    cmd: null
+
 check_stacks_and_masks:
   enabled: true
+
 denoising:
-  enabled: null
+  enabled: true
+  docker:
+    cmd: "docker run <mount> fetpype/utils:latest run_denoising 
+      --input_stacks <input_stacks> 
+      --output_stacks <output_stacks>"
+  singularity:
+    cmd: null
+
 cropping:
   enabled: true
+  
 bias_correction:
   enabled: true
+  docker:
+    cmd: "docker run <mount> fetpype/utils:latest run_bias_field_correction 
+      --input_stacks <input_stacks> 
+      --input_masks <input_masks> 
+      --output_stacks <output_stacks>"
+  singularity:
+    cmd: null

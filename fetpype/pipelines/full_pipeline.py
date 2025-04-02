@@ -11,7 +11,8 @@ from ..nodes.preprocessing import (
     CropStacksAndMasks,
     CheckAffineResStacksAndMasks,
     RobustBiasFieldCorrection,
-    CheckAndSortStacksAndMasks
+    CheckAndSortStacksAndMasks,
+    run_prepro_cmd,
 )
 from ..nodes.dhcp import dhcp_pipeline
 from nipype import config
@@ -62,19 +63,34 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
 
     else:
         container = cfg.container
-        be_config = cfg_prepro.brain_extraction[container]
+        be_config = cfg_prepro.brain_extraction
+        be_cfg_cont = be_config[container]
         
         brain_extraction = pe.Node(
             interface=niu.Function(
-                input_names=["raw_T2s", "pre_command", "nesvor_image"],
-                output_names=["masks"],
-                function=nesvor_brain_extraction,
+            input_names=[
+                "input_stacks",
+                "name",
+                "cmd",
+            ],
+            output_names=["output_masks"],
+            function=run_prepro_cmd,
             ),
-            name="brain_extraction",
+            name="BrainExtraction",
         )
+        brain_extraction.inputs.cmd = be_cfg_cont.cmd
 
-        brain_extraction.inputs.pre_command = be_config.pre_command
-        brain_extraction.inputs.nesvor_image = be_config.image
+        # brain_extraction = pe.Node(
+        #     interface=niu.Function(
+        #         input_names=["raw_T2s", "pre_command", "nesvor_image"],
+        #         output_names=["masks"],
+        #         function=nesvor_brain_extraction,
+        #     ),
+        #     name="brain_extraction",
+        # )
+
+        #brain_extraction.inputs.pre_command = be_config.pre_command
+        #brain_extraction.inputs.nesvor_image = be_config.image
     # 2. Check stacks and masks
     check_name = "CheckAffineAndRes"
     check_name += "_disabled" if not enabled_check else ""
@@ -95,11 +111,29 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     denoising_name = "Denoising"
     denoising_name += "_disabled" if not enabled_denoising else ""
 
+    # denoising = pe.MapNode(
+    #     interface=DenoiseImage(),
+    #     iterfield=["input_image"],
+    #     name=denoising_name,
+    # )
+
     denoising = pe.MapNode(
-        interface=DenoiseImage(),
-        iterfield=["input_image"],
-        name=denoising_name,
-    )
+            interface=niu.Function(
+            input_names=[
+                "input_stacks",
+                "is_enabled",
+                "cmd",
+            ],
+            output_names=["output_stacks"],
+            function=run_prepro_cmd,
+            ),
+            iterfield=["input_stacks"],
+            name=denoising_name,
+        )
+    denoising_cfg = cfg_prepro.denoising
+    denoising.inputs.is_enabled = enabled_denoising
+    denoising.inputs.cmd = denoising_cfg[container].cmd
+    
 
     merge_denoise = pe.Node(
         interface=niu.Merge(1, ravel_inputs=True), name="MergeDenoise"
@@ -108,8 +142,27 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     bias_name = "BiasCorrection"
     bias_name += "_disabled" if not enabled_bias_corr else ""
 
-    bias_corr = pe.Node(interface=RobustBiasFieldCorrection(), name=bias_name)
+    #bias_corr = pe.Node(interface=RobustBiasFieldCorrection(), name=bias_name)
+    #bias_corr.inputs.is_enabled = enabled_bias_corr
+    
+
+    bias_corr = pe.MapNode(
+            interface=niu.Function(
+            input_names=[
+                "input_stacks",
+                "input_masks",
+                "is_enabled",
+                "cmd",
+            ],
+            output_names=["output_stacks"],
+            function=run_prepro_cmd,
+            ),
+            iterfield=["input_stacks", "input_masks"],
+            name=bias_name,
+        )
+    bias_cfg = cfg_prepro.bias_correction
     bias_corr.inputs.is_enabled = enabled_bias_corr
+    bias_corr.inputs.cmd = bias_cfg[container].cmd
 
     # 6. Verify output
     check_output = pe.Node(
@@ -129,23 +182,23 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         prepro_pipe.connect(check_input, "output_masks", check_affine, "masks")
         
     else:
-        prepro_pipe.connect(input, "stacks", brain_extraction, "raw_T2s")
+        prepro_pipe.connect(input, "stacks", brain_extraction, "input_stacks")
 
         prepro_pipe.connect(input, "stacks", check_affine, "stacks")
-        prepro_pipe.connect(brain_extraction, "masks", check_affine, "masks")
+        prepro_pipe.connect(brain_extraction, "output_masks", check_affine, "masks")
 
       
     prepro_pipe.connect(check_affine, "output_stacks", cropping, "image")
     prepro_pipe.connect(check_affine, "output_masks", cropping, "mask")
 
-    prepro_pipe.connect(cropping, "output_image", denoising, "input_image")
-    prepro_pipe.connect(denoising, "output_image", merge_denoise, "in1")
+    prepro_pipe.connect(cropping, "output_image", denoising, "input_stacks")
+    prepro_pipe.connect(denoising, "output_stacks", merge_denoise, "in1")
 
-    prepro_pipe.connect(merge_denoise, "out", bias_corr, "stacks")
-    prepro_pipe.connect(cropping, "output_mask", bias_corr, "masks")
+    prepro_pipe.connect(merge_denoise, "out", bias_corr, "input_stacks")
+    prepro_pipe.connect(cropping, "output_mask", bias_corr, "input_masks")
 
     prepro_pipe.connect(bias_corr, "output_stacks", check_output, "stacks")
-    prepro_pipe.connect(bias_corr, "output_masks", check_output, "masks")
+    prepro_pipe.connect(cropping, "output_mask", check_output, "masks")
 
     prepro_pipe.connect(check_output, "output_stacks", output, "stacks")
     prepro_pipe.connect(check_output, "output_masks", output, "masks")

@@ -31,9 +31,12 @@ def get_mount_docker(*args):
     docker image. The folders to be mounted are defined
     in _mount_keys.
     """
+    mount_args = []
     for arg in args:
-        os.makedirs(arg, exist_ok=True)
-    return " ".join([f"-v {arg}:{arg}" for arg in args])
+        if arg is not None:
+            os.makedirs(arg, exist_ok=True)
+            mount_args.append(arg)
+    return " ".join([f"-v {arg}:{arg}" for arg in mount_args])
 
 
 def is_valid_cmd(cmd, valid_tags):

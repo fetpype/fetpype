@@ -478,14 +478,8 @@ def run_prepro_cmd(
     input_masks=None,
 ):
     import os
+    from fetpype import VALID_PREPRO_TAGS
 
-    VALID_PREPRO_TAGS = [
-        "mount",
-        "input_stacks",
-        "input_masks",
-        "output_stacks",
-        "output_masks",
-    ]
     # Important for mapnodes
     unlist_stacks = False
     unlist_masks = False

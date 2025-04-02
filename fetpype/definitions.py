@@ -9,6 +9,14 @@ VALID_SEGMENTATION = [
     "bounti",
 ]
 
+VALID_PREPRO_TAGS = [
+    "mount",
+    "input_stacks",
+    "input_masks",
+    "output_stacks",
+    "output_masks",
+]
+
 VALID_RECON_TAGS = [
     "mount",
     "input_stacks",

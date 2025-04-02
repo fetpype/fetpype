@@ -97,3 +97,4 @@ def mock_output_dir(tmp_path_factory):
     print(f"Creating mock output dir at: {out_base}")
     yield str(out_base)
     print(f"Mock output dir {out_base} will be cleaned up by pytest.")
+

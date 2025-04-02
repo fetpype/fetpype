@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fetpype"
+version = "0.1.1"
+description = "Utilities for preprocessing fetal brain MRI scans"
+authors = [{name = "Thomas Sanchez", email = "thomas.sanchez@unil.ch"},
+           {name = "Gerard Martí-Juan", email = "gerard.marti@upf.edu"},
+           {name = "David Meunier", email = "david.meunier@univ-amu.fr"},
+           {name = "Guillaume Auzias", email = "guillaume.auzias@univ-amu.fr"}]
+dependencies = [
+    "nipype==1.8.5",
+    "hydra-core>=1.3.2",
+    "networkx==2.8.7",
+    "pybids>=0.15.0"
+]
+[tool.setuptools]
+packages = ["fetpype"]
+
+
+[project.scripts]
+fetpype_run = "fetpype.workflows.pipeline_fet:main"
+fetpype_run_rec = "fetpype.workflows.pipeline_rec:main"
+fetpype_run_seg = "fetpype.workflows.pipeline_seg:main"

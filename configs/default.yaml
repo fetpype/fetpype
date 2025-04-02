@@ -1,7 +1,7 @@
 defaults:
   # - dataset/testing
   - preprocessing/default
-  - reconstruction/svrtk
+  - reconstruction/nesvor
   - segmentation/bounti
   - _self_
 container: "docker"

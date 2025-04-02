@@ -68,17 +68,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         )
         brain_extraction.inputs.cmd = be_cfg_cont.cmd
 
-        # brain_extraction = pe.Node(
-        #     interface=niu.Function(
-        #         input_names=["raw_T2s", "pre_command", "nesvor_image"],
-        #         output_names=["masks"],
-        #         function=nesvor_brain_extraction,
-        #     ),
-        #     name="brain_extraction",
-        # )
-
-        # brain_extraction.inputs.pre_command = be_config.pre_command
-        # brain_extraction.inputs.nesvor_image = be_config.image
+       
     # 2. Check stacks and masks
     check_name = "CheckAffineAndRes"
     check_name += "_disabled" if not enabled_check else ""
@@ -100,12 +90,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     # 4. Denoising
     denoising_name = "Denoising"
     denoising_name += "_disabled" if not enabled_denoising else ""
-
-    # denoising = pe.MapNode(
-    #     interface=DenoiseImage(),
-    #     iterfield=["input_image"],
-    #     name=denoising_name,
-    # )
 
     denoising = pe.MapNode(
         interface=niu.Function(
@@ -131,8 +115,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     bias_name = "BiasCorrection"
     bias_name += "_disabled" if not enabled_bias_corr else ""
 
-    # bias_corr = pe.Node(interface=RobustBiasFieldCorrection(), name=bias_name)
-    # bias_corr.inputs.is_enabled = enabled_bias_corr
+
 
     bias_corr = pe.MapNode(
         interface=niu.Function(

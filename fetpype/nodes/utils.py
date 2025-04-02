@@ -46,9 +46,9 @@ def is_valid_cmd(cmd, valid_tags):
         raise ValueError("Docker command must have a <mount> tag")
 
 
-def  get_run_id(file_list):
+def get_run_id(file_list):
     """
-        Get the run ID from the file name.
+    Get the run ID from the file name.
     """
     runs = []
     for file in file_list:

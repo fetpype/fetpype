@@ -8,9 +8,8 @@ from nipype.interfaces.base import (
     BaseInterface,
     BaseInterfaceInputSpec,
 )
-import SimpleITK as sitk
-from typing import List, Optional, Any, Dict
 from fetpype.nodes.utils import get_run_id
+
 
 class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
     """Class used to represent the inputs of the
@@ -247,7 +246,6 @@ def copy_header(in_file, ref_file):
     return in_file_new
 
 
-
 class CheckAffineResStacksAndMasksInputSpec(BaseInterfaceInputSpec):
     """Class used to represent the inputs of the
     CheckAffineResStacksAndMasks interface.
@@ -382,7 +380,6 @@ class CheckAffineResStacksAndMasks(BaseInterface):
         return outputs
 
 
-
 class CheckAndSortStacksAndMasksInputSpec(BaseInterfaceInputSpec):
     """Class used to represent the inputs of the
     SortStacksAndMasks interface.
@@ -399,6 +396,7 @@ class CheckAndSortStacksAndMasksInputSpec(BaseInterfaceInputSpec):
         mandatory=True,
     )
 
+
 class CheckAndSortStacksAndMasksOutputSpec(TraitedSpec):
     """Class used to represent the outputs of the
     SortStacksAndMasks interface."""
@@ -411,16 +409,14 @@ class CheckAndSortStacksAndMasksOutputSpec(TraitedSpec):
     )
 
 
-
 class CheckAndSortStacksAndMasks(BaseInterface):
-    """Interface to check the input stacks and masks and make sure that 
+    """Interface to check the input stacks and masks and make sure that
     all stacks have a corresponding mask.
     """
 
     input_spec = CheckAndSortStacksAndMasksInputSpec
     output_spec = CheckAndSortStacksAndMasksOutputSpec
     _results = {}
-
 
     def _run_interface(self, runtime):
 
@@ -432,16 +428,23 @@ class CheckAndSortStacksAndMasks(BaseInterface):
         out_masks = []
         for i, s in enumerate(stacks_run):
             in_stack = self.inputs.stacks[i]
-            
+
             if s in masks_run:
-                out_stack = os.path.join(self._gen_filename("output_dir_stacks"), os.path.basename(in_stack))
+                out_stack = os.path.join(
+                    self._gen_filename("output_dir_stacks"),
+                    os.path.basename(in_stack),
+                )
                 in_mask = self.inputs.masks[masks_run.index(s)]
-                out_mask = os.path.join(self._gen_filename("output_dir_masks"), os.path.basename(in_mask))
+                out_mask = os.path.join(
+                    self._gen_filename("output_dir_masks"),
+                    os.path.basename(in_mask),
+                )
                 out_stacks.append(out_stack)
                 out_masks.append(out_mask)
             else:
-                raise RuntimeError(f"Stack {os.path.basename(self.inputs.stacks[i])} has "
-                f"no corresponding mask (existing IDs: {masks_run})."
+                raise RuntimeError(
+                    f"Stack {os.path.basename(self.inputs.stacks[i])} has "
+                    f"no corresponding mask (existing IDs: {masks_run})."
                 )
 
             os.system(f"cp {in_stack} " f"{out_stack}")
@@ -468,11 +471,14 @@ class CheckAndSortStacksAndMasks(BaseInterface):
         return outputs
 
 
-def run_prepro_cmd(input_stacks, cmd, is_enabled=True, input_masks=None,):
+def run_prepro_cmd(
+    input_stacks,
+    cmd,
+    is_enabled=True,
+    input_masks=None,
+):
     import os
-    import numpy as np
-    import nibabel as nib
-    import traceback
+
     VALID_PREPRO_TAGS = [
         "mount",
         "input_stacks",
@@ -492,6 +498,7 @@ def run_prepro_cmd(input_stacks, cmd, is_enabled=True, input_masks=None,):
         unlist_masks = True
 
     from fetpype.nodes import is_valid_cmd, get_directory, get_mount_docker
+
     print(input_stacks, cmd, is_enabled, input_masks)
     is_valid_cmd(cmd, VALID_PREPRO_TAGS)
     if "<output_stacks>" not in cmd and "<output_masks>" not in cmd:
@@ -513,7 +520,7 @@ def run_prepro_cmd(input_stacks, cmd, is_enabled=True, input_masks=None,):
 
         output_stacks = None
         output_masks = None
-        
+
         # In cmd, there will be things contained in <>.
         # Check that everything that is in <> is in valid_tags
         # If not, raise an error
@@ -522,17 +529,30 @@ def run_prepro_cmd(input_stacks, cmd, is_enabled=True, input_masks=None,):
         cmd = cmd.replace("<input_stacks>", in_stacks)
         cmd = cmd.replace("<input_masks>", in_masks)
         if "<output_stacks>" in cmd:
-            output_stacks = [os.path.join(output_dir, os.path.basename(stack)) for stack in input_stacks]
+            output_stacks = [
+                os.path.join(output_dir, os.path.basename(stack))
+                for stack in input_stacks
+            ]
             cmd = cmd.replace("<output_stacks>", " ".join(output_stacks))
         if "<output_masks>" in cmd:
             if input_masks:
-                output_masks = [os.path.join(output_dir, os.path.basename(mask)) for mask in input_masks]
+                output_masks = [
+                    os.path.join(output_dir, os.path.basename(mask))
+                    for mask in input_masks
+                ]
             else:
-                output_masks = [os.path.join(output_dir, os.path.basename(stack)).replace("_T2w","_mask") for stack in input_stacks]
+                output_masks = [
+                    os.path.join(output_dir, os.path.basename(stack)).replace(
+                        "_T2w", "_mask"
+                    )
+                    for stack in input_stacks
+                ]
             cmd = cmd.replace("<output_masks>", " ".join(output_masks))
-        
+
         if "<mount>" in cmd:
-            mount_cmd = get_mount_docker(in_stacks_dir, in_masks_dir, output_dir)
+            mount_cmd = get_mount_docker(
+                in_stacks_dir, in_masks_dir, output_dir
+            )
             cmd = cmd.replace("<mount>", mount_cmd)
         print(f"Running command:\n {cmd}")
         os.system(cmd)
@@ -541,17 +561,17 @@ def run_prepro_cmd(input_stacks, cmd, is_enabled=True, input_masks=None,):
         output_masks = input_masks if "<output_masks>" in cmd else None
 
     if output_stacks is not None and unlist_stacks:
-            assert len(output_stacks) == 1, (
-                "More than one stack was returned, but unlist_stacks is True."
-            )
-            output_stacks = output_stacks[0]
-    if  output_masks is not None and unlist_masks:
-        assert len(output_masks) == 1, (
-            "More than one mask was returned, but unlist_masks is True."
-        )
+        assert (
+            len(output_stacks) == 1
+        ), "More than one stack was returned, but unlist_stacks is True."
+        output_stacks = output_stacks[0]
+    if output_masks is not None and unlist_masks:
+        assert (
+            len(output_masks) == 1
+        ), "More than one mask was returned, but unlist_masks is True."
         output_masks = output_masks[0]
     if output_stacks is not None and output_masks is not None:
-        
+
         return output_stacks, output_masks
     elif output_stacks is not None:
         return output_stacks

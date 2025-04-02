@@ -17,8 +17,8 @@ def create_datasource(
     sessions=None,
     acquisitions=None,
     derivative=None,
-    name = "bids_datasource",
-    extra_derivatives=None
+    name="bids_datasource",
+    extra_derivatives=None,
 ):
     """Create a datasource node that have iterables following BIDS format.
     By default, from a BIDSLayout, lists all the subjects (<sub>),
@@ -102,6 +102,7 @@ def create_datasource(
     bids_datasource.iterables = iterables
     return bids_datasource
 
+
 def create_bids_datasink(
     out_dir,
     pipeline_name,
@@ -112,7 +113,7 @@ def create_bids_datasink(
     seg_label=None,
     desc_label=None,
     custom_subs=None,
-    custom_regex_subs=None
+    custom_regex_subs=None,
 ):
     """
     Creates a BIDS-compatible datasink using parameterization and regex substitutions.
@@ -154,22 +155,22 @@ def create_bids_datasink(
 
     """
     if not strip_dir:
-        raise ValueError("`strip_dir` (Nipype work dir base path) is required.")
+        raise ValueError(
+            "`strip_dir` (Nipype work dir base path) is required."
+        )
     if name is None:
         name = f"{pipeline_name}_datasink"
 
     datasink = pe.Node(
         nio.DataSink(
-            base_directory=out_dir,
-            parameterization=True,
-            strip_dir=strip_dir
+            base_directory=out_dir, parameterization=True, strip_dir=strip_dir
         ),
-        name=name
+        name=name,
     )
 
     regex_subs = []
 
-    bids_derivatives_root = out_dir # we already pass the bids derivatives
+    bids_derivatives_root = out_dir  # we already pass the bids derivatives
     escaped_bids_derivatives_root = re.escape(out_dir)
 
     if pipeline_name == "preprocessing":
@@ -178,53 +179,60 @@ def create_bids_datasink(
             regex_subs.append(
                 (
                     rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*?/?_denoising.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+))?_T2w_noise_corrected(\.nii\.gz|\.nii)$",
-                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-denoised_T2w\4"
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-denoised_T2w\4",
                 )
             )
         # ** Rule 2: Preprocessing Masks (Cropped) **
         if desc_label == "cropped":
-         regex_subs.append(
-            (
-                rf"^{escaped_bids_derivatives_root}/.*?_session_([^/]+)_subject_([^/]+).*/?_cropping.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_mask(\.nii\.gz|\.nii)$",
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-cropped_mask\4"
+            regex_subs.append(
+                (
+                    rf"^{escaped_bids_derivatives_root}/.*?_session_([^/]+)_subject_([^/]+).*/?_cropping.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_mask(\.nii\.gz|\.nii)$",
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-cropped_mask\4",
+                )
             )
-         )
-
 
     # ** Rule 3: Reconstruction Output **
     if rec_label and not seg_label and pipeline_name != "preprocessing":
-         regex_subs.append(
+        regex_subs.append(
             (
                 rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/(?:[^/]+)(\.nii\.gz|\.nii)$",
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3"
+                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3",
             )
-         )
+        )
 
     # ** Rule 4: Segmentation Output **
     if seg_label and rec_label and pipeline_name != "preprocessing":
-         regex_subs.append(
+        regex_subs.append(
             (
                 rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/input_srr-mask-brain_bounti-19(\.nii\.gz|\.nii)$",
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
-             )
-         )
+                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3",
+            )
+        )
 
     # Add more specific rules here if other file types need handling
-    regex_subs.extend([
-        (r"sub-sub-", r"sub-"),       # Fix doubled sub prefix
-        (r"ses-ses-", r"ses-"),       # Fix doubled ses prefix (just in case)
-        (r"_+", "_"),              # Replace multiple underscores with single
-        (r"(/)_", r"\1"),          # Remove underscore after slash if present
-        (r"(_)\.", r"\."),         # Remove underscore before dot if present
-        (r"-+", "-"),              # Replace multiple hyphens with single
-        (r"//+", "/"),             # Fix double slashes
-        (r"[\\/]$", ""),           # Remove trailing slash
-        (r"_ses-None", ""),        # Remove ses-None if session was optional/missing
-        (r"(\.nii\.gz)\1+$", r"\1"), # Fix repeated extensions like .nii.gz.nii.gz
-        (r"(\.nii)\1+$", r"\1"),     # Fix repeated extensions like .nii.nii
-    ])
+    regex_subs.extend(
+        [
+            (r"sub-sub-", r"sub-"),  # Fix doubled sub prefix
+            (r"ses-ses-", r"ses-"),  # Fix doubled ses prefix (just in case)
+            (r"_+", "_"),  # Replace multiple underscores with single
+            (r"(/)_", r"\1"),  # Remove underscore after slash if present
+            (r"(_)\.", r"\."),  # Remove underscore before dot if present
+            (r"-+", "-"),  # Replace multiple hyphens with single
+            (r"//+", "/"),  # Fix double slashes
+            (r"[\\/]$", ""),  # Remove trailing slash
+            (
+                r"_ses-None",
+                "",
+            ),  # Remove ses-None if session was optional/missing
+            (
+                r"(\.nii\.gz)\1+$",
+                r"\1",
+            ),  # Fix repeated extensions like .nii.gz.nii.gz
+            (r"(\.nii)\1+$", r"\1"),  # Fix repeated extensions like .nii.nii
+        ]
+    )
 
     # Add custom regex substitutions
     if custom_regex_subs:
@@ -239,6 +247,7 @@ def create_bids_datasink(
     datasink.inputs.substitutions = final_subs
 
     return datasink
+
 
 def create_datasink(
     iterables, name="output", params_subs={}, params_regex_subs={}

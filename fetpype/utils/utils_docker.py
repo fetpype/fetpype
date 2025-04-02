@@ -3,17 +3,18 @@ from collections import defaultdict
 import subprocess
 import sys
 
+
 def flatten_cfg(cfg, base=""):
     for k, v in cfg.items():
         if isinstance(v, dict):
             yield from flatten_cfg(v, "/".join([base, k]))
         else:
-            yield ("/".join([base, k]),v)
+            yield ("/".join([base, k]), v)
 
 
 def is_available_container(container_type, container_name):
-    
-    if container_type =="docker":
+
+    if container_type == "docker":
         try:
             subprocess.run(
                 [container_type, "inspect", container_name],
@@ -21,7 +22,7 @@ def is_available_container(container_type, container_name):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             return False
         else:
             return True
@@ -36,12 +37,13 @@ def is_available_container(container_type, container_name):
             "Please use 'docker' or 'singularity'."
         )
 
+
 def retrieve_container(container_type, container_name):
     """
     Retrieve the container from the registry.
     """
     if container_type == "docker":
-        
+
         cmd = [container_type, "pull", container_name]
         print(f"Running {' '.join(cmd)}")
         process = subprocess.Popen(
@@ -58,7 +60,10 @@ def retrieve_container(container_type, container_name):
             for line in process.stderr:
                 print(line, end="")
             raise subprocess.CalledProcessError(
-                process.returncode, cmd, output=process.stdout.read(), stderr=process.stderr.read()
+                process.returncode,
+                cmd,
+                output=process.stdout.read(),
+                stderr=process.stderr.read(),
             )
     elif container_type == "singularity":
         raise NotImplementedError
@@ -80,7 +85,7 @@ def check_container_commands(container_type, cfg):
             f"Container type {container_type} not supported. "
             "Please use 'docker' or 'singularity'."
         )
-    
+
     # Iterate the nested config dictionary
     cfg_dict = dict(flatten_cfg(cfg))
     container_names = {}
@@ -94,44 +99,50 @@ def check_container_commands(container_type, cfg):
             if v is None:
                 continue
             print("CHECKING PATH IN", k, v)
-            singularity_name = [s for s in v.split(" ") if s.endswith(".sif")][0]
+            singularity_name = [s for s in v.split(" ") if s.endswith(".sif")][
+                0
+            ]
             container_names[k] = singularity_name
 
     container_names_list = defaultdict(list)
     for k, v in container_names.items():
         container_names_list[v].append(k)
-    
 
     # Check which containers are missing
     missing_containers = []
     for k, v in container_names_list.items():
         print(f"Checking {container_type} {k} -- Used by {', '.join(v)}")
         if not is_available_container(container_type, k):
-            print(f"\tSTATUS: NOT FOUND")
+            print("\tSTATUS: NOT FOUND")
             missing_containers.append(k)
         else:
-            print(f"\tSTATUS: AVAILABLE")
+            print("\tSTATUS: AVAILABLE")
 
     # Retrieve the missing containers
-    if len(missing_containers) > 0  and container_type == "docker":
-        var = input(f"Would you like me to retrieve the missing containers {', '.join(missing_containers)}? (y/n) ")
+    if len(missing_containers) > 0 and container_type == "docker":
+        var = input(
+            f"Would you like me to retrieve the missing containers "
+            f"{', '.join(missing_containers)}? (y/n) "
+        )
         if var == "y":
             for k in missing_containers:
                 retrieve_container(container_type, k)
-    
+
         else:
             print("Exiting...")
             sys.exit(1)
     elif len(missing_containers) > 0 and container_type == "singularity":
-        raise NotImplementedError("Automated container retrieval for singularity is not implemented yet.")
+        raise NotImplementedError(
+            "Automated container retrieval for singularity is "
+            "not implemented yet."
+        )
         sys.exit(1)
-    
- 
 
 
 if __name__ == "__main__":
     import argparse
     import os
+
     parser = argparse.ArgumentParser(
         description=(
             "Given a cfg path, check if the docker model is available."
@@ -146,9 +157,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Load hydra config and convert it as a dict
     from omegaconf import OmegaConf
-    from omegaconf import DictConfig
-    import hydra
     from workflows.utils import init_and_load_cfg
+
     # hydra load nested config file
     print(os.getcwd())
     cfg = init_and_load_cfg(args.cfg)

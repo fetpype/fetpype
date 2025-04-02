@@ -8,9 +8,6 @@ from nipype.interfaces.base import (
     BaseInterface,
     BaseInterfaceInputSpec,
 )
-import nibabel as nib
-import SimpleITK as sitk
-from typing import List, Optional, Any, Dict
 from fetpype.nodes.utils import get_run_id
 
 
@@ -400,6 +397,7 @@ class CheckAndSortStacksAndMasksInputSpec(BaseInterfaceInputSpec):
     )
 
 
+
 class CheckAndSortStacksAndMasksOutputSpec(TraitedSpec):
     """Class used to represent the outputs of the
     SortStacksAndMasks interface."""
@@ -413,6 +411,7 @@ class CheckAndSortStacksAndMasksOutputSpec(TraitedSpec):
 
 
 class CheckAndSortStacksAndMasks(BaseInterface):
+    """Interface to check the input stacks and masks and make sure that
     """Interface to check the input stacks and masks and make sure that
     all stacks have a corresponding mask.
     """
@@ -437,7 +436,15 @@ class CheckAndSortStacksAndMasks(BaseInterface):
                     self._gen_filename("output_dir_stacks"),
                     os.path.basename(in_stack),
                 )
+                out_stack = os.path.join(
+                    self._gen_filename("output_dir_stacks"),
+                    os.path.basename(in_stack),
+                )
                 in_mask = self.inputs.masks[masks_run.index(s)]
+                out_mask = os.path.join(
+                    self._gen_filename("output_dir_masks"),
+                    os.path.basename(in_mask),
+                )
                 out_mask = os.path.join(
                     self._gen_filename("output_dir_masks"),
                     os.path.basename(in_mask),
@@ -445,6 +452,9 @@ class CheckAndSortStacksAndMasks(BaseInterface):
                 out_stacks.append(out_stack)
                 out_masks.append(out_mask)
             else:
+                raise RuntimeError(
+                    f"Stack {os.path.basename(self.inputs.stacks[i])} has "
+                    f"no corresponding mask (existing IDs: {masks_run})."
                 raise RuntimeError(
                     f"Stack {os.path.basename(self.inputs.stacks[i])} has "
                     f"no corresponding mask (existing IDs: {masks_run})."
@@ -480,10 +490,13 @@ def run_prepro_cmd(
     is_enabled=True,
     input_masks=None,
 ):
+def run_prepro_cmd(
+    input_stacks,
+    cmd,
+    is_enabled=True,
+    input_masks=None,
+):
     import os
-    import numpy as np
-    import nibabel as nib
-    import traceback
 
     VALID_PREPRO_TAGS = [
         "mount",

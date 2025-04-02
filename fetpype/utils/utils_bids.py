@@ -85,12 +85,13 @@ def create_datasource(
                 )
             existing_acq = layout.get_acquisition(subject=sub, session=ses)
             if acquisitions is None:
-                acquisitions = existing_acq
-
+                acquisitions_subj = existing_acq
+            else:
+                acquisitions_subj = acquisitions
             # If there is no acquisition found, maybe the acquisition
             # tag was not specified.
-            acquisitions = [None] if len(acquisitions) == 0 else acquisitions
-            for acq in acquisitions:
+            acquisitions_subj = [None] if len(acquisitions_subj) == 0 else acquisitions_subj
+            for acq in acquisitions_subj:
                 if acq is not None and acq not in existing_acq:
                     print(
                         f"WARNING: Acquisition {acq} was not found for "

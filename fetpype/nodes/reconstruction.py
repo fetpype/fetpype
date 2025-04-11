@@ -37,7 +37,7 @@ def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
     if "<input_tp>" in cmd:
         try:
             input_tp = np.round(
-                np.mean([nib.load(stack).shape[2] for stack in input_stacks]),
+                np.mean([nib.load(stack).header.get_zooms()[2] for stack in input_stacks]),
                 1,
             )
             cmd = cmd.replace("<input_tp>", str(input_tp))

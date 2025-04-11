@@ -1,22 +1,15 @@
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
-
-from nipype.interfaces.ants.segmentation import DenoiseImage
-
-# from nipype.interfaces.ants import N4BiasFieldCorrection
-
-
 from ..nodes.preprocessing import (
-    nesvor_brain_extraction,
     CropStacksAndMasks,
+    CheckAffineResStacksAndMasks,
+    CheckAndSortStacksAndMasks,
+    run_prepro_cmd,
 )
 from ..nodes.dhcp import dhcp_pipeline
 from nipype import config
 from fetpype.nodes.reconstruction import run_recon_cmd
 from fetpype.nodes.segmentation import run_seg_cmd
-
-# from nipype import config
-# config.enable_debug_mode()
 
 
 def print_files(files):
@@ -25,63 +18,163 @@ def print_files(files):
     return files
 
 
-def get_prepro(cfg, disable_cropping=False):
-    container = cfg.container
+def get_prepro(cfg, load_masks=False, enabled_cropping=False):
+
     cfg_prepro = cfg.preprocessing
-    be_config = cfg_prepro.brain_extraction[container]
 
     prepro_pipe = pe.Workflow(name="Preprocessing")
     # Creating input node
-    input = pe.Node(niu.IdentityInterface(fields=["stacks"]), name="inputnode")
+
+    enabled_check = cfg_prepro.check_stacks_and_masks.enabled
+    enabled_cropping = cfg_prepro.cropping.enabled and enabled_cropping
+    if cfg_prepro.cropping.enabled != enabled_cropping:
+        print("Overriding cropping enabled status for the selected pipeline.")
+    enabled_denoising = True
+    enabled_bias_corr = cfg_prepro.bias_correction.enabled
+
+    # PREPROCESSING
+    # 0. Define input and outputs
+    in_fields = ["stacks"]
+    if load_masks:
+        in_fields += ["masks"]
+
+    input = pe.Node(niu.IdentityInterface(fields=in_fields), name="inputnode")
+
     output = pe.Node(
         niu.IdentityInterface(fields=["stacks", "masks"]), name="outputnode"
     )
+    # 1. Load masks or brain extraction
+    if load_masks:
+        check_input = pe.Node(
+            interface=CheckAndSortStacksAndMasks(), name="CheckInput"
+        )
 
-    # PREPROCESSING
-    # 1. Brain extraction
-    brain_extraction = pe.Node(
-        interface=niu.Function(
-            input_names=["raw_T2s", "pre_command", "nesvor_image"],
-            output_names=["masks"],
-            function=nesvor_brain_extraction,
-        ),
-        name="brain_extraction",
+    else:
+        container = cfg.container
+        be_config = cfg_prepro.brain_extraction
+        be_cfg_cont = be_config[container]
+
+        brain_extraction = pe.Node(
+            interface=niu.Function(
+                input_names=[
+                    "input_stacks",
+                    "name",
+                    "cmd",
+                ],
+                output_names=["output_masks"],
+                function=run_prepro_cmd,
+            ),
+            name="BrainExtraction",
+        )
+        brain_extraction.inputs.cmd = be_cfg_cont.cmd
+
+       
+    # 2. Check stacks and masks
+    check_name = "CheckAffineAndRes"
+    check_name += "_disabled" if not enabled_check else ""
+
+    check_affine = pe.Node(
+        interface=CheckAffineResStacksAndMasks(), name=check_name
     )
-
-    brain_extraction.inputs.pre_command = be_config.pre_command
-    brain_extraction.inputs.nesvor_image = be_config.image
-
-    prepro_pipe.connect(input, "stacks", brain_extraction, "raw_T2s")
-
-    # 2. Cropping
+    check_affine.inputs.is_enabled = enabled_check
+    # 3. Cropping
+    cropping_name = "Cropping"
+    cropping_name += "_disabled" if not enabled_cropping else ""
     cropping = pe.MapNode(
         interface=CropStacksAndMasks(),
-        iterfield=["input_image", "input_mask"],
-        name="cropping",
+        iterfield=["image", "mask"],
+        name=cropping_name,
     )
-    cropping.inputs.disabled = disable_cropping
-    prepro_pipe.connect(input, "stacks", cropping, "input_image")
-    prepro_pipe.connect(brain_extraction, "masks", cropping, "input_mask")
 
-    # 3. Denoising
+    cropping.inputs.is_enabled = enabled_cropping
+    # 4. Denoising
+    denoising_name = "Denoising"
+    denoising_name += "_disabled" if not enabled_denoising else ""
+
     denoising = pe.MapNode(
-        interface=DenoiseImage(), iterfield=["input_image"], name="denoising"
+        interface=niu.Function(
+            input_names=[
+                "input_stacks",
+                "is_enabled",
+                "cmd",
+            ],
+            output_names=["output_stacks"],
+            function=run_prepro_cmd,
+        ),
+        iterfield=["input_stacks"],
+        name=denoising_name,
     )
+    denoising_cfg = cfg_prepro.denoising
+    denoising.inputs.is_enabled = enabled_denoising
+    denoising.inputs.cmd = denoising_cfg[container].cmd
 
-    prepro_pipe.connect(cropping, "output_image", denoising, "input_image")
-
-    # merge_denoise
     merge_denoise = pe.Node(
-        interface=niu.Merge(1, ravel_inputs=True), name="merge_denoise"
+        interface=niu.Merge(1, ravel_inputs=True), name="MergeDenoise"
+    )
+    # 5. Bias field correction
+    bias_name = "BiasCorrection"
+    bias_name += "_disabled" if not enabled_bias_corr else ""
+
+
+
+    bias_corr = pe.MapNode(
+        interface=niu.Function(
+            input_names=[
+                "input_stacks",
+                "input_masks",
+                "is_enabled",
+                "cmd",
+            ],
+            output_names=["output_stacks"],
+            function=run_prepro_cmd,
+        ),
+        iterfield=["input_stacks", "input_masks"],
+        name=bias_name,
+    )
+    bias_cfg = cfg_prepro.bias_correction
+    bias_corr.inputs.is_enabled = enabled_bias_corr
+    bias_corr.inputs.cmd = bias_cfg[container].cmd
+
+    # 6. Verify output
+    check_output = pe.Node(
+        interface=CheckAndSortStacksAndMasks(),
+        name="CheckOutput",
     )
 
-    prepro_pipe.connect(denoising, "output_image", merge_denoise, "in1")
-    prepro_pipe.connect(
-        [
-            (merge_denoise, output, [("out", "stacks")]),
-            (cropping, output, [("output_mask", "masks")]),
-        ]
-    )
+    # Connect nodes
+
+    if load_masks:
+        prepro_pipe.connect(input, "stacks", check_input, "stacks")
+        prepro_pipe.connect(input, "masks", check_input, "masks")
+
+        prepro_pipe.connect(
+            check_input, "output_stacks", check_affine, "stacks"
+        )
+        prepro_pipe.connect(check_input, "output_masks", check_affine, "masks")
+
+    else:
+        prepro_pipe.connect(input, "stacks", brain_extraction, "input_stacks")
+
+        prepro_pipe.connect(input, "stacks", check_affine, "stacks")
+        prepro_pipe.connect(
+            brain_extraction, "output_masks", check_affine, "masks"
+        )
+
+    prepro_pipe.connect(check_affine, "output_stacks", cropping, "image")
+    prepro_pipe.connect(check_affine, "output_masks", cropping, "mask")
+
+    prepro_pipe.connect(cropping, "output_image", denoising, "input_stacks")
+    prepro_pipe.connect(denoising, "output_stacks", merge_denoise, "in1")
+
+    prepro_pipe.connect(merge_denoise, "out", bias_corr, "input_stacks")
+    prepro_pipe.connect(cropping, "output_mask", bias_corr, "input_masks")
+
+    prepro_pipe.connect(bias_corr, "output_stacks", check_output, "stacks")
+    prepro_pipe.connect(cropping, "output_mask", check_output, "masks")
+
+    prepro_pipe.connect(check_output, "output_stacks", output, "stacks")
+    prepro_pipe.connect(check_output, "output_masks", output, "masks")
+
     return prepro_pipe
 
 
@@ -203,7 +296,7 @@ def get_seg(cfg):
     return seg_pipe
 
 
-def create_full_pipeline(cfg, name="full_pipeline"):
+def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     """
     Create the fetal processing pipeline (sub-workflow).
 
@@ -236,24 +329,22 @@ def create_full_pipeline(cfg, name="full_pipeline"):
     print("Full pipeline name: ", name)
     # Creating pipeline
     full_fet_pipe = pe.Workflow(name=name)
-    full_fet_pipe.config["execution"] = {
-        "remove_unnecessary_outputs": True,
-        "stop_on_first_crash": True,
-        "stop_on_first_rerun": True,
-        "crashfile_format": "txt",
-        # "use_relative_paths": True,
-        "write_provenance": False,
-    }
+
+
     config.update_config(full_fet_pipe.config)
     # Creating input node
+
+    in_fields = ["stacks"]
+    if load_masks:
+        in_fields += ["masks"]
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=["stacks"]), name="inputnode"
+        niu.IdentityInterface(fields=in_fields), name="inputnode"
     )
 
-    disable_cropping = (
-        True if cfg.reconstruction.pipeline == "svrtk" else False
+    enabled_cropping = (
+        False if cfg.reconstruction.pipeline == "svrtk" else True
     )
-    prepro_pipe = get_prepro(cfg, disable_cropping=disable_cropping)
+    prepro_pipe = get_prepro(cfg, load_masks, enabled_cropping)
     recon = get_recon(cfg)
     segmentation = get_seg(cfg)
 
@@ -287,7 +378,7 @@ def create_full_pipeline(cfg, name="full_pipeline"):
     return full_fet_pipe
 
 
-def create_rec_pipeline(cfg, name="rec_pipeline"):
+def create_rec_pipeline(cfg, load_masks=False, name="rec_pipeline"):
     """
     Create the fetal processing pipeline (sub-workflow).
 
@@ -329,18 +420,22 @@ def create_rec_pipeline(cfg, name="rec_pipeline"):
     }
     config.update_config(rec_pipe.config)
     # Creating input node
+    in_fields = ["stacks"]
+    if load_masks:
+        in_fields += ["masks"]
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=["stacks"]), name="inputnode"
+        niu.IdentityInterface(fields=in_fields), name="inputnode"
     )
 
-    disable_cropping = (
-        True if cfg.reconstruction.pipeline == "svrtk" else False
+    enabled_cropping = (
+        False if cfg.reconstruction.pipeline == "svrtk" else True
     )
-    prepro_pipe = get_prepro(cfg, disable_cropping=disable_cropping)
+    prepro_pipe = get_prepro(cfg, load_masks, enabled_cropping)
     recon = get_recon(cfg)
 
     rec_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
-
+    if load_masks:
+        rec_pipe.connect(inputnode, "masks", prepro_pipe, "inputnode.masks")
     # RECONSTRUCTION
 
     rec_pipe.connect(

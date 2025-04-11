@@ -13,7 +13,10 @@ def get_directory(entry):
     If entry is a string, it returns the dirname.
     """
     if isinstance(entry, list):
+        if len(entry) == 1:
+            return os.path.dirname(entry[0])
         return os.path.commonpath(entry)
+
     elif isinstance(entry, str):
         return os.path.dirname(entry)
     else:
@@ -26,9 +29,12 @@ def get_mount_docker(*args):
     docker image. The folders to be mounted are defined
     in _mount_keys.
     """
+    mount_args = []
     for arg in args:
-        os.makedirs(arg, exist_ok=True)
-    return " ".join([f"-v {arg}:{arg}" for arg in args])
+        if arg is not None:
+            os.makedirs(arg, exist_ok=True)
+            mount_args.append(arg)
+    return " ".join([f"-v {arg}:{arg}" for arg in mount_args])
 
 
 def is_valid_cmd(cmd, valid_tags):
@@ -38,3 +44,18 @@ def is_valid_cmd(cmd, valid_tags):
 
     if "docker" in cmd and "<mount>" not in cmd:
         raise ValueError("Docker command must have a <mount> tag")
+
+
+def get_run_id(file_list):
+    """
+    Get the run ID from the file name.
+    """
+    runs = []
+    for file in file_list:
+        try:
+            runs.append(re.search(r"run-([^\W_]+)_", file).group(1))
+        except Exception as e:
+            raise ValueError(
+                f"run ID not found in file name: {file}. Error: {e}"
+            )
+    return runs

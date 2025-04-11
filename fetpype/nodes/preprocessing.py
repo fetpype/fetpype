@@ -9,7 +9,6 @@ from nipype.interfaces.base import (
     BaseInterfaceInputSpec,
 )
 from fetpype.nodes.utils import get_run_id
-from fetpype.nodes.utils import get_run_id
 
 
 class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
@@ -24,11 +23,7 @@ class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
         desc="Padding (in mm) to be set around the cropped image and mask",
         usedefault=True,
     )
-    is_enabled = traits.Bool(
-        True,
-        desc="Whether cropping and masking are enabled.",
-        usedefault=True,
-        mandatory=False,
+
     is_enabled = traits.Bool(
         True,
         desc="Whether cropping and masking are enabled.",
@@ -54,8 +49,6 @@ class CropStacksAndMasks(BaseInterface):
     >>> crop_input = CropStacksAndMasks()
     >>> crop_input.inputs.image = 'sub-01_acq-haste_run-1_T2w.nii.gz'
     >>> crop_input.inputs.mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
-    >>> crop_input.inputs.image = 'sub-01_acq-haste_run-1_T2w.nii.gz'
-    >>> crop_input.inputs.mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
     >>> crop_input.run() # doctest: +SKIP
     """
 
@@ -65,9 +58,7 @@ class CropStacksAndMasks(BaseInterface):
     def _gen_filename(self, name):
         if name == "output_image":
             return os.path.abspath(os.path.basename(self.inputs.image))
-            return os.path.abspath(os.path.basename(self.inputs.image))
         elif name == "output_mask":
-            return os.path.abspath(os.path.basename(self.inputs.mask))
             return os.path.abspath(os.path.basename(self.inputs.mask))
         return None
 

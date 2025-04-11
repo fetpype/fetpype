@@ -9,6 +9,7 @@ from nipype.interfaces.base import (
     BaseInterfaceInputSpec,
 )
 from fetpype.nodes.utils import get_run_id
+from fetpype.nodes.utils import get_run_id
 
 
 class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
@@ -23,6 +24,11 @@ class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
         desc="Padding (in mm) to be set around the cropped image and mask",
         usedefault=True,
     )
+    is_enabled = traits.Bool(
+        True,
+        desc="Whether cropping and masking are enabled.",
+        usedefault=True,
+        mandatory=False,
     is_enabled = traits.Bool(
         True,
         desc="Whether cropping and masking are enabled.",
@@ -48,6 +54,8 @@ class CropStacksAndMasks(BaseInterface):
     >>> crop_input = CropStacksAndMasks()
     >>> crop_input.inputs.image = 'sub-01_acq-haste_run-1_T2w.nii.gz'
     >>> crop_input.inputs.mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
+    >>> crop_input.inputs.image = 'sub-01_acq-haste_run-1_T2w.nii.gz'
+    >>> crop_input.inputs.mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
     >>> crop_input.run() # doctest: +SKIP
     """
 
@@ -57,7 +65,9 @@ class CropStacksAndMasks(BaseInterface):
     def _gen_filename(self, name):
         if name == "output_image":
             return os.path.abspath(os.path.basename(self.inputs.image))
+            return os.path.abspath(os.path.basename(self.inputs.image))
         elif name == "output_mask":
+            return os.path.abspath(os.path.basename(self.inputs.mask))
             return os.path.abspath(os.path.basename(self.inputs.mask))
         return None
 
@@ -397,7 +407,6 @@ class CheckAndSortStacksAndMasksInputSpec(BaseInterfaceInputSpec):
     )
 
 
-
 class CheckAndSortStacksAndMasksOutputSpec(TraitedSpec):
     """Class used to represent the outputs of the
     SortStacksAndMasks interface."""
@@ -411,7 +420,6 @@ class CheckAndSortStacksAndMasksOutputSpec(TraitedSpec):
 
 
 class CheckAndSortStacksAndMasks(BaseInterface):
-    """Interface to check the input stacks and masks and make sure that
     """Interface to check the input stacks and masks and make sure that
     all stacks have a corresponding mask.
     """
@@ -436,15 +444,7 @@ class CheckAndSortStacksAndMasks(BaseInterface):
                     self._gen_filename("output_dir_stacks"),
                     os.path.basename(in_stack),
                 )
-                out_stack = os.path.join(
-                    self._gen_filename("output_dir_stacks"),
-                    os.path.basename(in_stack),
-                )
                 in_mask = self.inputs.masks[masks_run.index(s)]
-                out_mask = os.path.join(
-                    self._gen_filename("output_dir_masks"),
-                    os.path.basename(in_mask),
-                )
                 out_mask = os.path.join(
                     self._gen_filename("output_dir_masks"),
                     os.path.basename(in_mask),
@@ -452,9 +452,6 @@ class CheckAndSortStacksAndMasks(BaseInterface):
                 out_stacks.append(out_stack)
                 out_masks.append(out_mask)
             else:
-                raise RuntimeError(
-                    f"Stack {os.path.basename(self.inputs.stacks[i])} has "
-                    f"no corresponding mask (existing IDs: {masks_run})."
                 raise RuntimeError(
                     f"Stack {os.path.basename(self.inputs.stacks[i])} has "
                     f"no corresponding mask (existing IDs: {masks_run})."
@@ -484,12 +481,6 @@ class CheckAndSortStacksAndMasks(BaseInterface):
         return outputs
 
 
-def run_prepro_cmd(
-    input_stacks,
-    cmd,
-    is_enabled=True,
-    input_masks=None,
-):
 def run_prepro_cmd(
     input_stacks,
     cmd,

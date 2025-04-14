@@ -8,7 +8,7 @@ docker:
     --batch-size 4096 
     --n-levels-bias 1"
 singularity:
-  cmd: "singularity exec --bind /gpfs:/gpfs --nv /home/gmarti/SINGULARITY/nesvor_latest.sif 
+  cmd: "singularity exec --bind /gpfs:/gpfs --nv <singularity_path>/nesvor_latest.sif 
     nesvor reconstruct 
     --input-stacks <input_stacks> 
     --stack-masks <input_masks> 

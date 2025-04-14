@@ -477,6 +477,7 @@ def run_prepro_cmd(
     cmd,
     is_enabled=True,
     input_masks=None,
+    cfg=None,
 ):
     import os
     from fetpype import VALID_PREPRO_TAGS
@@ -549,6 +550,10 @@ def run_prepro_cmd(
                 in_stacks_dir, in_masks_dir, output_dir
             )
             cmd = cmd.replace("<mount>", mount_cmd)
+        if "<singularity_path>" in cmd:
+            singularity_path = cfg.singularity_path
+            cmd = cmd.replace("<singularity_path>", singularity_path)
+
         print(f"Running command:\n {cmd}")
         os.system(cmd)
     else:

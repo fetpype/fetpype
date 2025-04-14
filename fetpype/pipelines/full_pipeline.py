@@ -53,6 +53,9 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         container = cfg.container
         be_config = cfg_prepro.brain_extraction
         be_cfg_cont = be_config[container]
+        # if the container is singularity, add singularity path to the cfg_reco_base
+        if cfg.container == "singularity":
+            be_config.singularity_path = cfg.singularity_path
 
         brain_extraction = pe.Node(
             interface=niu.Function(
@@ -60,6 +63,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                     "input_stacks",
                     "name",
                     "cmd",
+                    "cfg",
                 ],
                 output_names=["output_masks"],
                 function=run_prepro_cmd,
@@ -67,6 +71,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
             name="BrainExtraction",
         )
         brain_extraction.inputs.cmd = be_cfg_cont.cmd
+        brain_extraction.inputs.cfg = be_config
 
        
     # 2. Check stacks and masks
@@ -97,6 +102,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                 "input_stacks",
                 "is_enabled",
                 "cmd",
+                "cfg",
             ],
             output_names=["output_stacks"],
             function=run_prepro_cmd,
@@ -107,6 +113,12 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     denoising_cfg = cfg_prepro.denoising
     denoising.inputs.is_enabled = enabled_denoising
     denoising.inputs.cmd = denoising_cfg[container].cmd
+
+    # if the container is singularity, add singularity path to the cfg_reco_base
+    if cfg.container == "singularity":
+        denoising_cfg.singularity_path = cfg.singularity_path
+
+    denoising.inputs.cfg = denoising_cfg
 
     merge_denoise = pe.Node(
         interface=niu.Merge(1, ravel_inputs=True), name="MergeDenoise"
@@ -124,6 +136,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                 "input_masks",
                 "is_enabled",
                 "cmd",
+                "cfg",
             ],
             output_names=["output_stacks"],
             function=run_prepro_cmd,
@@ -134,6 +147,13 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     bias_cfg = cfg_prepro.bias_correction
     bias_corr.inputs.is_enabled = enabled_bias_corr
     bias_corr.inputs.cmd = bias_cfg[container].cmd
+
+    # if the container is singularity, add singularity path to the cfg_reco_base
+    if cfg.container == "singularity":
+        bias_corr.singularity_path = cfg.singularity_path
+
+    bias_corr.inputs.cfg = denoising_cfg
+
 
     # 6. Verify output
     check_output = pe.Node(
@@ -212,7 +232,11 @@ def get_recon(cfg):
 
     container = cfg.container
     cfg_reco_base = cfg.reconstruction
+    # if the container is singularity, add singularity path to the cfg_reco_base
+    if cfg.container == "singularity":
+        cfg_reco_base.singularity_path = cfg.singularity_path
     cfg_reco = cfg.reconstruction[container]
+
     recon = pe.Node(
         interface=niu.Function(
             input_names=[
@@ -273,6 +297,9 @@ def get_seg(cfg):
     container = cfg.container
     cfg_seg_base = cfg.segmentation
     cfg_seg = cfg.segmentation[container]
+
+    if cfg.container == "singularity":
+        cfg_seg_base.singularity_path = cfg.singularity_path
 
     seg = pe.Node(
         interface=niu.Function(

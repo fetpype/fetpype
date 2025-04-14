@@ -50,6 +50,9 @@ def run_seg_cmd(input_srr, cmd, cfg):
     if "<mount>" in cmd:
         mount_cmd = get_mount_docker(input_srr_dir, output_dir)
         cmd = cmd.replace("<mount>", mount_cmd)
+    if "<singularity_path>" in cmd:
+        singularity_path = cfg.singularity_path
+        cmd = cmd.replace("<singularity_path>", singularity_path)
     print(f"Running command:\n {cmd}")
     os.system(cmd)
     return seg

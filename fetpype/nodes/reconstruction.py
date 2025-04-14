@@ -47,6 +47,10 @@ def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
                 f"Error when calculating <input_tp>: {e}"
                 f"\n{traceback.format_exc()}"
             )
+    
+    if "<singularity_path>" in cmd:
+        singularity_path = cfg.singularity_path
+        cmd = cmd.replace("<singularity_path>", singularity_path)
 
     if "<output_res>" in cmd:
         output_res = cfg.output_resolution

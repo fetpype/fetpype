@@ -31,7 +31,7 @@ def get_default_parser(desc):
         type=str,
         help=(
             "Directory, where the nipype processing will be saved. "
-            "(default: <out>/derivatives/<output_dir>/nipype/)"
+            "(default: <out>/nipype/)"
         ),
     )
     parser.add_argument(
@@ -165,7 +165,7 @@ def check_and_update_paths(data_dir, out_dir, nipype_dir, cfg):
         print("out_dir {} already exists".format(out_dir))
     if nipype_dir is None:
         nipype_dir = os.path.join(
-            data_dir, "derivatives", get_pipeline_name(cfg), "nipype"
+            data_dir, "nipype"
         )
     else:
         nipype_dir = os.path.abspath(nipype_dir)

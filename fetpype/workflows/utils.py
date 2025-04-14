@@ -31,7 +31,7 @@ def get_default_parser(desc):
         type=str,
         help=(
             "Directory, where the nipype processing will be saved. "
-            "(default: <out>/nipype/)"
+            "(default: nipype/ on the same folder as the data directory)"
         ),
     )
     parser.add_argument(
@@ -164,8 +164,10 @@ def check_and_update_paths(data_dir, out_dir, nipype_dir, cfg):
     except OSError:
         print("out_dir {} already exists".format(out_dir))
     if nipype_dir is None:
+        # Get parent directory of data_dir
+        parent_dir = os.path.dirname(data_dir)
         nipype_dir = os.path.join(
-            data_dir, "nipype"
+            parent_dir, "nipype"
         )
     else:
         nipype_dir = os.path.abspath(nipype_dir)

@@ -477,7 +477,7 @@ def run_prepro_cmd(
     cmd,
     is_enabled=True,
     input_masks=None,
-    cfg=None,
+    singularity_path=None
 ):
     import os
     from fetpype import VALID_PREPRO_TAGS
@@ -551,7 +551,8 @@ def run_prepro_cmd(
             )
             cmd = cmd.replace("<mount>", mount_cmd)
         if "<singularity_path>" in cmd:
-            singularity_path = cfg.singularity_path
+            # assume that if we have a singularity path, we are using singularity and the 
+            # parameter has been set in the config file
             cmd = cmd.replace("<singularity_path>", singularity_path)
 
         print(f"Running command:\n {cmd}")

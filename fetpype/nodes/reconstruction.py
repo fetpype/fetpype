@@ -1,4 +1,4 @@
-def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
+def run_recon_cmd(input_stacks, input_masks, cmd, cfg, singularity_path=None):
     import os
     import numpy as np
     import nibabel as nib
@@ -49,7 +49,8 @@ def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
             )
     
     if "<singularity_path>" in cmd:
-        singularity_path = cfg.singularity_path
+        # assume that if we have a singularity path, we are using singularity and the 
+        # parameter has been set in the config file
         cmd = cmd.replace("<singularity_path>", singularity_path)
 
     if "<output_res>" in cmd:

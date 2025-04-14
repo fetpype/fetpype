@@ -53,9 +53,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         container = cfg.container
         be_config = cfg_prepro.brain_extraction
         be_cfg_cont = be_config[container]
-        # if the container is singularity, add singularity path to the cfg_reco_base
-        if cfg.container == "singularity":
-            be_config.singularity_path = cfg.singularity_path
 
         brain_extraction = pe.Node(
             interface=niu.Function(
@@ -63,7 +60,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                     "input_stacks",
                     "name",
                     "cmd",
-                    "cfg",
+                    "singularity_path",
                 ],
                 output_names=["output_masks"],
                 function=run_prepro_cmd,
@@ -72,6 +69,9 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         )
         brain_extraction.inputs.cmd = be_cfg_cont.cmd
         brain_extraction.inputs.cfg = be_config
+        # if the container is singularity, add singularity path to the brain_extraction
+        if cfg.container == "singularity":
+            brain_extraction.inputs.singularity_path = cfg.singularity_path
 
        
     # 2. Check stacks and masks
@@ -102,7 +102,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                 "input_stacks",
                 "is_enabled",
                 "cmd",
-                "cfg",
+                "singularity_path",
             ],
             output_names=["output_stacks"],
             function=run_prepro_cmd,
@@ -113,10 +113,9 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     denoising_cfg = cfg_prepro.denoising
     denoising.inputs.is_enabled = enabled_denoising
     denoising.inputs.cmd = denoising_cfg[container].cmd
-
-    # if the container is singularity, add singularity path to the cfg_reco_base
+    # if the container is singularity, add singularity path to the denoising
     if cfg.container == "singularity":
-        denoising_cfg.singularity_path = cfg.singularity_path
+        denoising.inputs.singularity_path = cfg.singularity_path
 
     denoising.inputs.cfg = denoising_cfg
 
@@ -127,8 +126,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     bias_name = "BiasCorrection"
     bias_name += "_disabled" if not enabled_bias_corr else ""
 
-
-
     bias_corr = pe.MapNode(
         interface=niu.Function(
             input_names=[
@@ -136,7 +133,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                 "input_masks",
                 "is_enabled",
                 "cmd",
-                "cfg",
+                "singularity_path",
             ],
             output_names=["output_stacks"],
             function=run_prepro_cmd,
@@ -148,9 +145,9 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     bias_corr.inputs.is_enabled = enabled_bias_corr
     bias_corr.inputs.cmd = bias_cfg[container].cmd
 
-    # if the container is singularity, add singularity path to the cfg_reco_base
+    # if the container is singularity, add singularity path to the bias_corr
     if cfg.container == "singularity":
-        bias_corr.singularity_path = cfg.singularity_path
+        bias_corr.inputs.singularity_path = cfg.singularity_path
 
     bias_corr.inputs.cfg = denoising_cfg
 
@@ -232,9 +229,6 @@ def get_recon(cfg):
 
     container = cfg.container
     cfg_reco_base = cfg.reconstruction
-    # if the container is singularity, add singularity path to the cfg_reco_base
-    if cfg.container == "singularity":
-        cfg_reco_base.singularity_path = cfg.singularity_path
     cfg_reco = cfg.reconstruction[container]
 
     recon = pe.Node(
@@ -244,6 +238,7 @@ def get_recon(cfg):
                 "input_masks",
                 "cmd",
                 "cfg",
+                "singularity_path",
             ],
             output_names=["srr_volume"],
             function=run_recon_cmd,
@@ -253,6 +248,9 @@ def get_recon(cfg):
 
     recon.inputs.cmd = cfg_reco.cmd
     recon.inputs.cfg = cfg_reco_base
+    # if the container is singularity, add singularity path to the recon node
+    if cfg.container == "singularity":
+        recon.inputs.singularity_path = cfg.singularity_path
 
     rec_pipe.connect(
         [
@@ -298,15 +296,13 @@ def get_seg(cfg):
     cfg_seg_base = cfg.segmentation
     cfg_seg = cfg.segmentation[container]
 
-    if cfg.container == "singularity":
-        cfg_seg_base.singularity_path = cfg.singularity_path
-
     seg = pe.Node(
         interface=niu.Function(
             input_names=[
                 "input_srr",
                 "cmd",
                 "cfg",
+                "singularity_path",
             ],
             output_names=["seg_volume"],
             function=run_seg_cmd,
@@ -316,6 +312,8 @@ def get_seg(cfg):
 
     seg.inputs.cmd = cfg_seg.cmd
     seg.inputs.cfg = cfg_seg_base
+    if cfg.container == "singularity":
+        seg.inputs.singularity_path = cfg.singularity_path
 
     seg_pipe.connect(inputnode, "srr_volume", seg, "input_srr")
     seg_pipe.connect(seg, "seg_volume", outputnode, "seg_volume")

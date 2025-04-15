@@ -60,6 +60,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                     "input_stacks",
                     "name",
                     "cmd",
+                    "singularity_path",
                 ],
                 output_names=["output_masks"],
                 function=run_prepro_cmd,
@@ -67,6 +68,10 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
             name="BrainExtraction",
         )
         brain_extraction.inputs.cmd = be_cfg_cont.cmd
+        brain_extraction.inputs.cfg = be_config
+        # if the container is singularity, add singularity path to the brain_extraction
+        if cfg.container == "singularity":
+            brain_extraction.inputs.singularity_path = cfg.singularity_path
 
        
     # 2. Check stacks and masks
@@ -97,6 +102,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                 "input_stacks",
                 "is_enabled",
                 "cmd",
+                "singularity_path",
             ],
             output_names=["output_stacks"],
             function=run_prepro_cmd,
@@ -107,6 +113,11 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     denoising_cfg = cfg_prepro.denoising
     denoising.inputs.is_enabled = enabled_denoising
     denoising.inputs.cmd = denoising_cfg[container].cmd
+    # if the container is singularity, add singularity path to the denoising
+    if cfg.container == "singularity":
+        denoising.inputs.singularity_path = cfg.singularity_path
+
+    denoising.inputs.cfg = denoising_cfg
 
     merge_denoise = pe.Node(
         interface=niu.Merge(1, ravel_inputs=True), name="MergeDenoise"
@@ -115,8 +126,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     bias_name = "BiasCorrection"
     bias_name += "_disabled" if not enabled_bias_corr else ""
 
-
-
     bias_corr = pe.MapNode(
         interface=niu.Function(
             input_names=[
@@ -124,6 +133,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                 "input_masks",
                 "is_enabled",
                 "cmd",
+                "singularity_path",
             ],
             output_names=["output_stacks"],
             function=run_prepro_cmd,
@@ -134,6 +144,13 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     bias_cfg = cfg_prepro.bias_correction
     bias_corr.inputs.is_enabled = enabled_bias_corr
     bias_corr.inputs.cmd = bias_cfg[container].cmd
+
+    # if the container is singularity, add singularity path to the bias_corr
+    if cfg.container == "singularity":
+        bias_corr.inputs.singularity_path = cfg.singularity_path
+
+    bias_corr.inputs.cfg = denoising_cfg
+
 
     # 6. Verify output
     check_output = pe.Node(
@@ -213,6 +230,7 @@ def get_recon(cfg):
     container = cfg.container
     cfg_reco_base = cfg.reconstruction
     cfg_reco = cfg.reconstruction[container]
+
     recon = pe.Node(
         interface=niu.Function(
             input_names=[
@@ -220,6 +238,7 @@ def get_recon(cfg):
                 "input_masks",
                 "cmd",
                 "cfg",
+                "singularity_path",
             ],
             output_names=["srr_volume"],
             function=run_recon_cmd,
@@ -229,6 +248,9 @@ def get_recon(cfg):
 
     recon.inputs.cmd = cfg_reco.cmd
     recon.inputs.cfg = cfg_reco_base
+    # if the container is singularity, add singularity path to the recon node
+    if cfg.container == "singularity":
+        recon.inputs.singularity_path = cfg.singularity_path
 
     rec_pipe.connect(
         [
@@ -280,6 +302,7 @@ def get_seg(cfg):
                 "input_srr",
                 "cmd",
                 "cfg",
+                "singularity_path",
             ],
             output_names=["seg_volume"],
             function=run_seg_cmd,
@@ -289,6 +312,8 @@ def get_seg(cfg):
 
     seg.inputs.cmd = cfg_seg.cmd
     seg.inputs.cfg = cfg_seg_base
+    if cfg.container == "singularity":
+        seg.inputs.singularity_path = cfg.singularity_path
 
     seg_pipe.connect(inputnode, "srr_volume", seg, "input_srr")
     seg_pipe.connect(seg, "seg_volume", outputnode, "seg_volume")

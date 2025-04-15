@@ -1,10 +1,11 @@
 defaults:
   # - dataset/testing
   - preprocessing/default
-  - reconstruction/niftymic
+  - reconstruction/nesvor
   - segmentation/bounti
   - _self_
 container: "singularity"
+singularity_path: "/home/gmarti/SINGULARITY/"
 #preprocessing:
 #  disable_cropping: null
 reconstruction:

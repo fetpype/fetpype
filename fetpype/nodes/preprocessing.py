@@ -23,6 +23,7 @@ class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
         desc="Padding (in mm) to be set around the cropped image and mask",
         usedefault=True,
     )
+
     is_enabled = traits.Bool(
         True,
         desc="Whether cropping and masking are enabled.",
@@ -476,6 +477,7 @@ def run_prepro_cmd(
     cmd,
     is_enabled=True,
     input_masks=None,
+    singularity_path=None
 ):
     import os
     from fetpype import VALID_PREPRO_TAGS
@@ -548,6 +550,11 @@ def run_prepro_cmd(
                 in_stacks_dir, in_masks_dir, output_dir
             )
             cmd = cmd.replace("<mount>", mount_cmd)
+        if "<singularity_path>" in cmd:
+            # assume that if we have a singularity path, we are using singularity and the 
+            # parameter has been set in the config file
+            cmd = cmd.replace("<singularity_path>", singularity_path)
+
         print(f"Running command:\n {cmd}")
         os.system(cmd)
     else:

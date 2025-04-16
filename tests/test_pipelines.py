@@ -86,8 +86,8 @@ recon_methods = ["niftymic", "nesvor", "svrtk"]
 
 
 @pytest.mark.parametrize("sr_method", recon_methods)
-def test_read_config(generate_config2, sr_method):
-    cfg = generate_config2(sr_method,"bounti")
+def test_read_config(generate_config, sr_method):
+    cfg = generate_config(sr_method,"bounti")
     cfg = init_and_load_cfg(cfg)
     assert cfg["reconstruction"]["pipeline"] == sr_method
     assert cfg["segmentation"]["pipeline"] == "bounti"

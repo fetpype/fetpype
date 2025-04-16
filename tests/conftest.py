@@ -4,6 +4,9 @@ import os
 import shutil
 import json
 from pathlib import Path
+from hydra import initialize, compose
+from omegaconf import OmegaConf
+import yaml
 
 @pytest.fixture(scope="function") # Use "function" scope for clean state per test
 def mock_bids_root(tmp_path_factory):
@@ -98,3 +101,31 @@ def mock_output_dir(tmp_path_factory):
     yield str(out_base)
     print(f"Mock output dir {out_base} will be cleaned up by pytest.")
 
+@pytest.fixture(scope="function")
+def generate_config(tmp_path_factory):
+    def _generate(sr, seg):
+        default_cfg = {
+            "defaults": [
+                "preprocessing/default",
+                f"reconstruction/{sr}",
+                f"segmentation/{seg}",
+                "_self_"
+            ],
+            "container": "docker",
+            "reconstruction": {
+                "output_resolution": 0.8
+            },
+            "save_graph": True
+        }
+
+        temp_dir = tmp_path_factory.mktemp("config_test")
+        config_folder = Path(__file__).parent.parent / "configs"
+        shutil.copytree(config_folder, temp_dir, dirs_exist_ok=True)
+
+        config_path = temp_dir / "cfg_test.yaml"
+        with open(config_path, "w") as f:
+            yaml.dump(default_cfg, f)
+
+        return config_path
+
+    return _generate

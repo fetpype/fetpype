@@ -44,13 +44,13 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         niu.IdentityInterface(fields=["stacks", "masks"]), name="outputnode"
     )
     # 1. Load masks or brain extraction
+    container = cfg.container
     if load_masks:
         check_input = pe.Node(
             interface=CheckAndSortStacksAndMasks(), name="CheckInput"
         )
 
     else:
-        container = cfg.container
         be_config = cfg_prepro.brain_extraction
         be_cfg_cont = be_config[container]
 

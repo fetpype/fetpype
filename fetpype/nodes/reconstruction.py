@@ -1,4 +1,4 @@
-def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
+def run_recon_cmd(input_stacks, input_masks, cmd, cfg, singularity_path=None):
     import os
     import numpy as np
     import nibabel as nib
@@ -47,6 +47,11 @@ def run_recon_cmd(input_stacks, input_masks, cmd, cfg):
                 f"Error when calculating <input_tp>: {e}"
                 f"\n{traceback.format_exc()}"
             )
+    
+    if "<singularity_path>" in cmd:
+        # assume that if we have a singularity path, we are using singularity and the 
+        # parameter has been set in the config file
+        cmd = cmd.replace("<singularity_path>", singularity_path)
 
     if "<output_res>" in cmd:
         output_res = cfg.output_resolution

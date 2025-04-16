@@ -1,11 +1,15 @@
 brain_extraction:
   docker:
     cmd: "docker run --gpus all <mount> thsanchez/fetpype_utils:latest run_brain_extraction 
-    --input_stacks <input_stacks> 
-    --output_masks <output_masks> 
-    --method fet_bet"
+      --input_stacks <input_stacks> 
+      --output_masks <output_masks> 
+      --method fet_bet"
   singularity:
-    cmd: null
+    cmd: "singularity run --bind /gpfs:/gpfs --nv
+      <singularity_path>/fetpype_utils.sif
+      run_brain_extraction
+      --input_stacks <input_stacks> 
+      --output_masks <output_masks> --method monaifbs"
 
 check_stacks_and_masks:
   enabled: true
@@ -17,8 +21,11 @@ denoising:
       --input_stacks <input_stacks> 
       --output_stacks <output_stacks>"
   singularity:
-    cmd: null
-
+    cmd: "singularity run --bind /gpfs:/gpfs
+      <singularity_path>/fetpype_utils.sif
+      run_denoising
+      --input_stacks <input_stacks> 
+      --output_stacks <output_stacks>"
 cropping:
   enabled: true
   
@@ -30,4 +37,9 @@ bias_correction:
       --input_masks <input_masks> 
       --output_stacks <output_stacks>"
   singularity:
-    cmd: null
+    cmd: "singularity run --bind /gpfs:/gpfs
+      <singularity_path>/fetpype_utils.sif
+      run_bias_field_correction
+      --input_stacks <input_stacks> 
+      --input_masks <input_masks> 
+      --output_stacks <output_stacks>"

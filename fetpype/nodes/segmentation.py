@@ -1,4 +1,4 @@
-def run_seg_cmd(input_srr, cmd, cfg, singularity_path=None):
+def run_seg_cmd(input_srr, cmd, cfg, singularity_path=None, singularity_mount=None):
     import os
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_mount_docker
@@ -54,6 +54,10 @@ def run_seg_cmd(input_srr, cmd, cfg, singularity_path=None):
         # assume that if we have a singularity path, we are using singularity and the 
         # parameter has been set in the config file
         cmd = cmd.replace("<singularity_path>", singularity_path)
+    if "<singularity_mount>" in cmd:
+        # assume that if we have a singularity mount path, we are using singularity and the
+        # parameter has been set in the config file
+        cmd = cmd.replace("<singularity_mount>", singularity_mount)
     print(f"Running command:\n {cmd}")
     os.system(cmd)
     return seg

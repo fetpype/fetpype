@@ -72,6 +72,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         # if the container is singularity, add singularity path to the brain_extraction
         if cfg.container == "singularity":
             brain_extraction.inputs.singularity_path = cfg.singularity_path
+            brain_extraction.inputs.singularity_mount = cfg.singularity_mount
 
        
     # 2. Check stacks and masks

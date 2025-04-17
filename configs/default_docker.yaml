@@ -4,10 +4,9 @@ defaults:
   - reconstruction/nesvor
   - segmentation/bounti
   - _self_
-container: "singularity"
-singularity_path: "/scratch/gauzias/softs/fetpype_singularity_images"
+container: "docker"
 #preprocessing:
 #  disable_cropping: null
 reconstruction:
-  output_resolution: 0.5
-save_graph: False
+  output_resolution: 0.8
+save_graph: True

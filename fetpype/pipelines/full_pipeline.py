@@ -61,6 +61,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                     "name",
                     "cmd",
                     "singularity_path",
+                    "singularity_mount",
                 ],
                 output_names=["output_masks"],
                 function=run_prepro_cmd,

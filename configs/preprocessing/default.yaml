@@ -5,7 +5,7 @@ brain_extraction:
       --output_masks <output_masks> 
       --method fet_bet"
   singularity:
-    cmd: "singularity run --bind /gpfs:/gpfs --nv
+    cmd: "singularity run --bind /scratch/gauzias:/scratch/gauzias --nv
       <singularity_path>/fetpype_utils.sif
       run_brain_extraction
       --input_stacks <input_stacks> 

@@ -61,6 +61,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                     "name",
                     "cmd",
                     "singularity_path",
+                    "singularity_mount",
                 ],
                 output_names=["output_masks"],
                 function=run_prepro_cmd,
@@ -72,6 +73,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         # if the container is singularity, add singularity path to the brain_extraction
         if cfg.container == "singularity":
             brain_extraction.inputs.singularity_path = cfg.singularity_path
+            brain_extraction.inputs.singularity_mount = cfg.singularity_mount
 
        
     # 2. Check stacks and masks
@@ -103,6 +105,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                 "is_enabled",
                 "cmd",
                 "singularity_path",
+                "singularity_mount",
             ],
             output_names=["output_stacks"],
             function=run_prepro_cmd,
@@ -116,6 +119,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     # if the container is singularity, add singularity path to the denoising
     if cfg.container == "singularity":
         denoising.inputs.singularity_path = cfg.singularity_path
+        denoising.inputs.singularity_mount = cfg.singularity_mount
 
     denoising.inputs.cfg = denoising_cfg
 
@@ -134,6 +138,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
                 "is_enabled",
                 "cmd",
                 "singularity_path",
+                "singularity_mount",
             ],
             output_names=["output_stacks"],
             function=run_prepro_cmd,
@@ -148,6 +153,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     # if the container is singularity, add singularity path to the bias_corr
     if cfg.container == "singularity":
         bias_corr.inputs.singularity_path = cfg.singularity_path
+        bias_corr.inputs.singularity_mount = cfg.singularity_mount
 
     bias_corr.inputs.cfg = denoising_cfg
 
@@ -239,6 +245,7 @@ def get_recon(cfg):
                 "cmd",
                 "cfg",
                 "singularity_path",
+                "singularity_mount",
             ],
             output_names=["srr_volume"],
             function=run_recon_cmd,
@@ -251,6 +258,7 @@ def get_recon(cfg):
     # if the container is singularity, add singularity path to the recon node
     if cfg.container == "singularity":
         recon.inputs.singularity_path = cfg.singularity_path
+        recon.inputs.singularity_mount = cfg.singularity_mount
 
     rec_pipe.connect(
         [
@@ -303,6 +311,7 @@ def get_seg(cfg):
                 "cmd",
                 "cfg",
                 "singularity_path",
+                "singularity_mount",
             ],
             output_names=["seg_volume"],
             function=run_seg_cmd,
@@ -314,6 +323,7 @@ def get_seg(cfg):
     seg.inputs.cfg = cfg_seg_base
     if cfg.container == "singularity":
         seg.inputs.singularity_path = cfg.singularity_path
+        seg.inputs.singularity_mount = cfg.singularity_mount
 
     seg_pipe.connect(inputnode, "srr_volume", seg, "input_srr")
     seg_pipe.connect(seg, "seg_volume", outputnode, "seg_volume")

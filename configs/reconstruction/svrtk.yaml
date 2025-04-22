@@ -5,7 +5,7 @@ docker:
     bash /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 
     <input_dir> <output_dir> 1 <input_tp> <output_res> 1"
 singularity:
-  cmd: " singularity exec --bind /gpfs:/gpfs
+  cmd: " singularity exec --bind <singularity_mount>
     fetalsvrtk/svrtk:general_auto_amd
     <singularity_path>/svrtk.sif 
     /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 

@@ -16,6 +16,7 @@ VALID_PREPRO_TAGS = [
     "output_stacks",
     "output_masks",
     "singularity_path",
+    "singularity_mount",
 ]
 
 VALID_RECON_TAGS = [
@@ -29,6 +30,7 @@ VALID_RECON_TAGS = [
     "input_tp",
     "output_res",
     "singularity_path",
+    "singularity_mount",
 ]
 
 VALID_SEG_TAGS = [
@@ -38,4 +40,5 @@ VALID_SEG_TAGS = [
     "output_dir",
     "output_seg",
     "singularity_path",
+    "singularity_mount",
 ]

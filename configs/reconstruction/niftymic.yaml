@@ -6,7 +6,7 @@ docker:
     --filenames-masks <input_masks>
     --dir-output <output_dir>"
 singularity:
-  cmd: "singularity exec --bind /gpfs:/gpfs --nv  
+  cmd: "singularity exec --bind <singularity_mount> --nv  
     <singularity_path>/niftymic.sif
     niftymic_run_reconstruction_pipeline
     --filenames <input_stacks>

@@ -34,7 +34,7 @@ jobs:
 
       - name: Test with pytest
         run:
-            py.test --cov fetpype --ignore=initial_scripts/
+            py.test --cov tests --ignore=initial_scripts/
 
       - name: Install dependencies
         run: |

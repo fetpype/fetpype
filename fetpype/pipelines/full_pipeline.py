@@ -113,6 +113,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         iterfield=["input_stacks"],
         name=denoising_name,
     )
+
     denoising_cfg = cfg_prepro.denoising
     denoising.inputs.is_enabled = enabled_denoising
     denoising.inputs.cmd = denoising_cfg[container].cmd
@@ -121,7 +122,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         denoising.inputs.singularity_path = cfg.singularity_path
         denoising.inputs.singularity_mount = cfg.singularity_mount
 
-    denoising.inputs.cfg = denoising_cfg
 
     merge_denoise = pe.Node(
         interface=niu.Merge(1, ravel_inputs=True), name="MergeDenoise"
@@ -155,7 +155,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         bias_corr.inputs.singularity_path = cfg.singularity_path
         bias_corr.inputs.singularity_mount = cfg.singularity_mount
 
-    bias_corr.inputs.cfg = denoising_cfg
 
     # 6. Verify output
     check_output = pe.Node(

@@ -423,64 +423,6 @@ def get_gestational_age(bids_dir, T2):
 
 
 
-def get_gestational_age(bids_dir, T2):
-    """
-    Retrieve the gestational age for a specific subject from a BIDS dataset.
-
-    Parameters
-    ----------
-    bids_dir : str
-        The file path to the root of the BIDS dataset,
-        which must contain a 'participants.tsv' file.
-    T2 : str
-        The path of the image. We can get the subject id from there if
-        it follows a BIDS format.
-
-    Returns
-    -------
-    float
-        The gestational age of the subject.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the 'participants.tsv' file is not found
-        in the specified BIDS directory.
-    KeyError
-        If the 'gestational_age' column is
-        not found in the 'participants.tsv' file.
-    IndexError
-        If the specified subject ID is not
-        found in the 'participants.tsv' file.
-    """
-    import pandas as pd
-    import os
-
-    participants_path = f"{bids_dir}/participants.tsv"
-
-    try:
-        df = pd.read_csv(participants_path, delimiter="\t")
-    except FileNotFoundError:
-        raise FileNotFoundError(f"participants.tsv not found in {bids_dir}")
-
-    # TODO This T2[0] not really clean
-    subject_id = os.path.basename(T2).split("_")[0]
-    try:
-        gestational_age = df.loc[
-            df["participant_id"] == f"{subject_id}", "gestational_age"
-        ].values[0]
-    except KeyError:
-        raise KeyError(
-            "Column 'gestational_age' not found in participants.tsv"
-        )
-    except IndexError:
-        raise IndexError(
-            f"Subject sub-{subject_id} not found in participants.tsv"
-        )
-
-    return gestational_age
-
-
 def create_description_file(out_dir, algo, prev_desc=None, cfg=None):
     """Create a dataset_description.json file in the derivatives folder.
 

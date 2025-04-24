@@ -1,0 +1,10 @@
+defaults:
+  - preprocessing/default
+  - reconstruction/nesvor
+  - segmentation/bounti
+  - _self_
+container: "singularity"
+singularity_path: "/home/gmarti/SINGULARITY/"
+reconstruction:
+  output_resolution: 0.8
+save_graph: False

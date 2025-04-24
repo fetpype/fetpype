@@ -1,0 +1,9 @@
+defaults:
+  - preprocessing/default
+  - reconstruction/niftymic
+  - segmentation/bounti
+  - _self_
+container: "singularity"
+reconstruction:
+  output_resolution: 0.8
+save_graph: False

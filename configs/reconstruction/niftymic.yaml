@@ -1,0 +1,15 @@
+pipeline: "niftymic"
+docker: 
+  cmd: "docker run --gpus '\"device=0\"' <mount> renbem/niftymic 
+    niftymic_run_reconstruction_pipeline
+    --filenames <input_stacks>
+    --filenames-masks <input_masks>
+    --dir-output <output_dir>"
+singularity:
+  cmd: "singularity exec --bind <singularity_mount> --nv  
+    <singularity_path>/niftymic.sif
+    niftymic_run_reconstruction_pipeline
+    --filenames <input_stacks>
+    --filenames-masks <input_masks>
+    --dir-output <output_dir>"
+path_to_output: "recon_template_space/srr_template.nii.gz"

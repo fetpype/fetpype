@@ -74,7 +74,7 @@ def get_default_parser(desc):
     parser.add_argument(
         "--config",
         dest="cfg_path",
-        default="../config/default.yaml",
+        default="../configs/default_docker.yaml",
         type=str,
         help=(
             "Parameters yaml file specifying the parameters, containers and "

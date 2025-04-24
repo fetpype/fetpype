@@ -70,12 +70,12 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         )
         brain_extraction.inputs.cmd = be_cfg_cont.cmd
         brain_extraction.inputs.cfg = be_config
-        # if the container is singularity, add singularity path to the brain_extraction
+        # if the container is singularity, add
+        # singularity path to the brain_extraction
         if cfg.container == "singularity":
             brain_extraction.inputs.singularity_path = cfg.singularity_path
             brain_extraction.inputs.singularity_mount = cfg.singularity_mount
 
-       
     # 2. Check stacks and masks
     check_name = "CheckAffineAndRes"
     check_name += "_disabled" if not enabled_check else ""
@@ -156,7 +156,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         bias_corr.inputs.singularity_mount = cfg.singularity_mount
 
     bias_corr.inputs.cfg = denoising_cfg
-
 
     # 6. Verify output
     check_output = pe.Node(
@@ -364,7 +363,6 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     print("Full pipeline name: ", name)
     # Creating pipeline
     full_fet_pipe = pe.Workflow(name=name)
-
 
     config.update_config(full_fet_pipe.config)
     # Creating input node

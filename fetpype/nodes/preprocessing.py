@@ -44,18 +44,20 @@ class CropStacksAndMasks(BaseInterface):
     """
     Interface to crop the field of view of an image and its mask.
 
-    This class provides functionality to crop a Nifti image and its corresponding mask 
-    to the bounding box defined by the mask. It also allows for adding boundaries 
-    around the cropped region.
+    This class provides functionality to crop a Nifti image
+    and its corresponding mask to the bounding box defined by
+    the mask. It also allows for adding boundaries around the
+    cropped region.
 
     Args:
         image (str): Input image filename
         mask (input; str): Input mask filename
-        boundary (input; int): Padding (in mm) to be set around the cropped image and mask.
+        boundary (input; int):  Padding (in mm) to be set around
+                                the cropped image and mask.
         is_enabled (input; bool): Whether cropping and masking are enabled.
         output_image (output; str): Path to the cropped image.
         output_mask (output; str): Path to the cropped mask.
-    
+
     Examples:
         >>> from fetpype.nodes.preprocessing import CropStacksAndMasks
         >>> crop_input = CropStacksAndMasks()
@@ -64,7 +66,8 @@ class CropStacksAndMasks(BaseInterface):
         >>> crop_input.run() # doctest: +SKIP
 
     References:
-        - Michael Ebner's NiftyMIC repository: https://github.com/gift-surg/NiftyMIC
+        - Michael Ebner's NiftyMIC repository:
+        https://github.com/gift-surg/NiftyMIC
     """
 
     input_spec = CropStacksAndMasksInputSpec
@@ -93,13 +96,17 @@ class CropStacksAndMasks(BaseInterface):
         Args:
             image_path (str): Path to a Nifti image.
             mask_path (str): Path to the corresponding Nifti mask.
-            boundary_i (int): Boundary to add to the bounding box in the i direction.
-            boundary_j (int): Boundary to add to the bounding box in the j direction.
-            boundary_k (int): Boundary to add to the bounding box in the k direction.
+            boundary_i (int):   Boundary to add to the bounding box in
+                                the i direction.
+            boundary_j (int):   Boundary to add to the bounding box in
+                                the j direction.
+            boundary_k (int):   Boundary to add to the bounding box in
+                                the k direction.
             unit (str): The unit defining the dimension size in Nifti.
 
         Returns:
-            image_cropped: Image cropped to the bounding box of mask_ni, including boundary.
+            image_cropped:  Image cropped to the bounding box of mask_ni,
+                            including boundary.
             mask_cropped: Mask cropped to its bounding box.
 
         Notes:
@@ -171,7 +178,7 @@ class CropStacksAndMasks(BaseInterface):
         mask: np.ndarray,
     ) -> tuple:
         """
-        Computes the bounding box around the given mask. 
+        Computes the bounding box around the given mask.
         Code inspired by Michael Ebner:
         https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
 
@@ -183,7 +190,7 @@ class CropStacksAndMasks(BaseInterface):
 
         Returns:
             tuple: A tuple containing the bounding box ranges for x, y, and z.
-            
+
         """
         if np.sum(abs(mask)) == 0:
             return None, None, None
@@ -303,12 +310,12 @@ class CheckAffineResStacksAndMasks(BaseInterface):
         is_enabled (input; bool): Whether the check is enabled.
         output_stacks (output; list): List of stacks that passed the check.
         output_masks (output; list): List of masks that passed the check.
-        
+
     Examples:
-        >>> from fetpype.nodes.preprocessing import CheckAffineResStacksAndMasks
+        >>> from fetpype.nodes.preprocessing import CheckAffineResStacksAndMasks # noqa: E501
         >>> check_input = CheckAffineResStacksAndMasks()
         >>> check_input.inputs.stacks = ['sub-01_acq-haste_run-1_T2w.nii.gz']
-        >>> check_input.inputs.masks = ['sub-01_acq-haste_run-1_T2w_mask.nii.gz']
+        >>> check_input.inputs.masks = ['sub-01_acq-haste_run-1_T2w_mask.nii.gz']  # noqa: E501
         >>> check_input.run() # doctest: +SKIP
     """
 
@@ -371,7 +378,9 @@ class CheckAffineResStacksAndMasks(BaseInterface):
                 ):
                     skip_stack = True
                     print(
-                        f"Resolution/shape/affine mismatch -- Skipping the stack {os.path.basename(imp)} and mask {os.path.basename(maskp)}"
+                        f"Resolution/shape/affine mismatch -- "
+                        f"Skipping the stack {os.path.basename(imp)} "
+                        f"and mask {os.path.basename(maskp)}"
                     )
             if not skip_stack:
                 ni.save(image_ni, out_stack)
@@ -382,7 +391,8 @@ class CheckAffineResStacksAndMasks(BaseInterface):
         self._results["output_masks"] = masks_out
         if len(stacks_out) == 0:
             raise ValueError(
-                "All stacks and masks were discarded during the metadata check."
+                "All stacks and masks were "
+                "discarded during the metadata check."
             )
         return runtime
 
@@ -501,7 +511,7 @@ def run_prepro_cmd(
     is_enabled=True,
     input_masks=None,
     singularity_path=None,
-    singularity_mount=None
+    singularity_mount=None,
 ):
     import os
     from fetpype import VALID_PREPRO_TAGS
@@ -575,11 +585,13 @@ def run_prepro_cmd(
             )
             cmd = cmd.replace("<mount>", mount_cmd)
         if "<singularity_path>" in cmd:
-            # assume that if we have a singularity path, we are using singularity and the 
+            # assume that if we have a singularity path,
+            # we are using singularity and the
             # parameter has been set in the config file
             cmd = cmd.replace("<singularity_path>", singularity_path)
         if "<singularity_mount>" in cmd:
-            # assume that if we have a singularity mount path, we are using singularity and the
+            # assume that if we have a singularity mount path,
+            # we are using singularity and the
             # parameter has been set in the config file
             cmd = cmd.replace("<singularity_mount>", singularity_mount)
 

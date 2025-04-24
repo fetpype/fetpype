@@ -166,9 +166,7 @@ def check_and_update_paths(data_dir, out_dir, nipype_dir, cfg):
     if nipype_dir is None:
         # Get parent directory of data_dir
         parent_dir = os.path.dirname(data_dir)
-        nipype_dir = os.path.join(
-            parent_dir, "nipype"
-        )
+        nipype_dir = os.path.join(parent_dir, "nipype")
     else:
         nipype_dir = os.path.abspath(nipype_dir)
 

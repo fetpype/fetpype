@@ -333,7 +333,7 @@ def get_seg(cfg, bids_dir=None):
     return seg_pipe
 
 
-def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
+def create_full_pipeline(cfg, load_masks=False, bids_dir = None, name="full_pipeline"):
     """
     Create the fetal processing pipeline (sub-workflow).
 
@@ -382,7 +382,7 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     )
     prepro_pipe = get_prepro(cfg, load_masks, enabled_cropping)
     recon = get_recon(cfg)
-    segmentation = get_seg(cfg)
+    segmentation = get_seg(cfg, bids_dir=bids_dir)
 
     full_fet_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
 

@@ -1,10 +1,11 @@
 defaults:
   - preprocessing/default
   - reconstruction/nesvor
-  - segmentation/bounti
+  - segmentation/dhcp
   - _self_
 container: "singularity"
 singularity_path: "/home/gmarti/SINGULARITY/"
+singularity_mount: "/gpfs/home/gmarti:/gpfs/home/gmarti"
 reconstruction:
   output_resolution: 0.8
 save_graph: False

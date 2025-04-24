@@ -86,7 +86,7 @@ def create_main_workflow(
     # main_workflow
     main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
     main_workflow.base_dir = nipype_dir
-    fet_pipe = create_full_pipeline(cfg, load_masks)
+    fet_pipe = create_full_pipeline(cfg, load_masks, bids_dir=data_dir)
 
     output_query = {
         "stacks": {

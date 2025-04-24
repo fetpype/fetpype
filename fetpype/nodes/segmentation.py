@@ -4,7 +4,7 @@ def run_seg_cmd(
     import os
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_mount_docker
-    from fetpype.utils import get_gestational_age
+    from fetpype.utils.utils_bids import get_gestational_age
 
     is_valid_cmd(cmd, VALID_TAGS)
 

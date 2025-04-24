@@ -7,6 +7,7 @@ VALID_RECONSTRUCTION = [
 
 VALID_SEGMENTATION = [
     "bounti",
+    "dhcp",
 ]
 
 VALID_PREPRO_TAGS = [
@@ -41,4 +42,5 @@ VALID_SEG_TAGS = [
     "output_seg",
     "singularity_path",
     "singularity_mount",
+    "gestational_age",
 ]

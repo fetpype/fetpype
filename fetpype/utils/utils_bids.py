@@ -385,6 +385,76 @@ def get_gestational_age(bids_dir, T2):
     """
     import pandas as pd
     import os
+    import warnings
+
+    participants_path = os.path.join(bids_dir, "participants.tsv")
+
+    try:
+        df = pd.read_csv(participants_path, delimiter="\t")
+    except FileNotFoundError:
+        raise FileNotFoundError(f"participants.tsv not found in {bids_dir}")
+
+    # Extract subject ID from filename
+    subject_id = os.path.basename(T2).split("_")[0]
+    
+    # Try to find a gestational age column - check various possible names
+    ga_column = None
+    for col in df.columns:
+        if col.lower() in ["gestational_age", "gestational_weeks", "ga", "age"]:
+            ga_column = col
+            break
+    
+    if ga_column is None:
+        raise KeyError(f"No gestational age column found in participants.tsv {bids_dir}")
+
+    try:
+        # Try matching with sub- prefix 
+        gestational_age = df.loc[df["participant_id"] == subject_id, ga_column].values[0]
+        return float(gestational_age)
+    except KeyError:
+        raise KeyError(f"No gestational age column found in participants.tsv {bids_dir}")
+    except IndexError:
+        raise IndexError(f"Subject {subject_id} not found in participants.tsv")
+    except ValueError:
+        # Handle the case where age is not convertible to float
+        raise ValueError(
+            f"Gestational age for subject {subject_id} is not a valid float: {gestational_age}"
+        )
+
+
+
+def get_gestational_age(bids_dir, T2):
+    """
+    Retrieve the gestational age for a specific subject from a BIDS dataset.
+
+    Parameters
+    ----------
+    bids_dir : str
+        The file path to the root of the BIDS dataset,
+        which must contain a 'participants.tsv' file.
+    T2 : str
+        The path of the image. We can get the subject id from there if
+        it follows a BIDS format.
+
+    Returns
+    -------
+    float
+        The gestational age of the subject.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the 'participants.tsv' file is not found
+        in the specified BIDS directory.
+    KeyError
+        If the 'gestational_age' column is
+        not found in the 'participants.tsv' file.
+    IndexError
+        If the specified subject ID is not
+        found in the 'participants.tsv' file.
+    """
+    import pandas as pd
+    import os
 
     participants_path = f"{bids_dir}/participants.tsv"
 

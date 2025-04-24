@@ -90,7 +90,7 @@ def create_seg_workflow(
     # main_workflow
     main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
     main_workflow.base_dir = nipype_dir
-    fet_pipe = create_seg_pipeline(cfg)
+    fet_pipe = create_seg_pipeline(cfg, bids_dir=data_dir)
 
     output_query = {
         "srr_volume": {

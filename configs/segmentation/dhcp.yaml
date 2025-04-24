@@ -1,0 +1,9 @@
+pipeline: "dhcp"
+docker:
+  cmd: "docker run <mount> gerardmartijuan/dhcp-pipeline-multifact 
+    <input_volume> <gestational_age> -data-dir <output_dir> -all"
+singularity:
+  cmd: "singularity exec <singularity_mount> <singularity_path> 
+    /usr/local/src/structural-pipeline/fetal-pipeline.sh 
+    <input_volume> <gestational_age> -data-dir <output_dir> -all"
+path_to_output: "segmentations/<basename>_all_labels.nii.gz"

@@ -75,7 +75,7 @@ This config defines a pipeline that will run the default preprocessing step (def
 The details of the configs, the attributes and methods implemented is available [in this page](methods.md).
 
 ### Singularity 
-Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder. You can indicate the folder in the .yaml file in the "singularity_path" field (see configs/default_sg.yaml for an example). The list of images and their name that are needed to run the pipeline is as follows:
+Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder. You need to indicate the folder in the .yaml file in the "singularity_path" field (see configs/default_sg.yaml for an example). The list of images and their name that are needed to run the pipeline is as follows:
 
 - `nesvor.sif` for the NeSVoR pipeline (junshenxu/nesvor:v0.5.0)
 - `niftymic.sif` for the NiftyMIC pipeline (from renbem/niftymic:latest)

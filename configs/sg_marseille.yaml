@@ -1,5 +1,4 @@
 defaults:
-  # - dataset/testing
   - preprocessing/default
   - reconstruction/nesvor
   - segmentation/bounti

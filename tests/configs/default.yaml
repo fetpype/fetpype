@@ -1,0 +1,11 @@
+defaults:
+  - preprocessing/default
+  - reconstruction/nesvor
+  - segmentation/bounti
+  - _self_
+container: "docker"
+#preprocessing:
+#  disable_cropping: null
+reconstruction:
+  output_resolution: 0.8
+save_graph: True

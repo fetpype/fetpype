@@ -122,7 +122,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         denoising.inputs.singularity_path = cfg.singularity_path
         denoising.inputs.singularity_mount = cfg.singularity_mount
 
-
     merge_denoise = pe.Node(
         interface=niu.Merge(1, ravel_inputs=True), name="MergeDenoise"
     )
@@ -154,7 +153,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     if cfg.container == "singularity":
         bias_corr.inputs.singularity_path = cfg.singularity_path
         bias_corr.inputs.singularity_mount = cfg.singularity_mount
-
 
     # 6. Verify output
     check_output = pe.Node(

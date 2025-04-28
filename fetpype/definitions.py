@@ -43,4 +43,5 @@ VALID_SEG_TAGS = [
     "singularity_path",
     "singularity_mount",
     "gestational_age",
+    "input_srr",
 ]

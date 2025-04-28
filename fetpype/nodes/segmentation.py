@@ -1,10 +1,9 @@
 def run_seg_cmd(
-    input_srr, cmd, cfg, singularity_path=None, singularity_mount=None, bids_dir=None
+    input_srr, cmd, cfg, singularity_path=None, singularity_mount=None, gestational_age=None
 ):
     import os
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_mount_docker
-    from fetpype.utils.utils_bids import get_gestational_age
 
     is_valid_cmd(cmd, VALID_TAGS)
 
@@ -66,16 +65,7 @@ def run_seg_cmd(
         cmd = cmd.replace("<singularity_mount>", singularity_mount)
 
     if "<gestational_age>" in cmd:
-        # Try to find the BIDS root directory
-        # This assumes input_srr is in derivatives/pipeline/sub-XXX/...
-        try:
-            ga = get_gestational_age(bids_dir, input_srr)
-            cmd = cmd.replace("<gestational_age>", str(ga))
-        except Exception as e:
-            raise ValueError(
-                "Could not find the gestational age. "
-                "Please make sure the input_srr is in a BIDS directory."
-            ) from e
+        cmd = cmd.replace("<gestational_age>", str(gestational_age))
 
     print(f"Running command:\n {cmd}")
     os.system(cmd)

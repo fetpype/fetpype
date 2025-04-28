@@ -362,9 +362,10 @@ def get_gestational_age(bids_dir, T2):
     bids_dir : str
         The file path to the root of the BIDS dataset,
         which must contain a 'participants.tsv' file.
-    T2 : str
+    T2 : str or list
         The path of the image. We can get the subject id from there if
-        it follows a BIDS format.
+        it follows a BIDS format. If a list is provided, the first
+        element is used to extract the subject ID.
 
     Returns
     -------
@@ -389,10 +390,18 @@ def get_gestational_age(bids_dir, T2):
 
     participants_path = os.path.join(bids_dir, "participants.tsv")
 
+
     try:
         df = pd.read_csv(participants_path, delimiter="\t")
     except FileNotFoundError:
         raise FileNotFoundError(f"participants.tsv not found in {bids_dir}")
+
+    # Check if T2 is a list and extract the first element
+    if isinstance(T2, list):
+        if len(T2) > 0:
+            T2 = T2[0]
+        else:
+            raise ValueError("T2 list is empty, cannot extract subject ID.")
 
     # Extract subject ID from filename
     subject_id = os.path.basename(T2).split("_")[0]

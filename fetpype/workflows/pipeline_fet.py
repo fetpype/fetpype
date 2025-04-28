@@ -88,6 +88,7 @@ def create_main_workflow(
     main_workflow.base_dir = nipype_dir
     fet_pipe = create_full_pipeline(cfg, load_masks, bids_dir=data_dir)
 
+
     output_query = {
         "stacks": {
             "datatype": "anat",
@@ -101,6 +102,7 @@ def create_main_workflow(
             "suffix": "mask",
             "extension": ["nii", ".nii.gz"],
         }
+
 
     # datasource
     datasource = create_datasource(

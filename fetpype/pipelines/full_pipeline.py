@@ -10,6 +10,7 @@ from ..nodes.dhcp import dhcp_pipeline
 from nipype import config
 from fetpype.nodes.reconstruction import run_recon_cmd
 from fetpype.nodes.segmentation import run_seg_cmd
+from fetpype.utils.utils_bids import get_gestational_age
 
 
 def print_files(files):
@@ -266,7 +267,7 @@ def get_recon(cfg):
     return rec_pipe
 
 
-def get_seg(cfg, bids_dir=None):
+def get_seg(cfg):
     """
     Get the reconstruction workflow based on the pipeline specified
     in params. Currently, the supported pipelines are niftymic and nesvor.
@@ -294,7 +295,7 @@ def get_seg(cfg, bids_dir=None):
     seg_pipe = pe.Workflow(name="Segmentation")
     # Creating input node
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=["srr_volume"]), name="inputnode"
+        niu.IdentityInterface(fields=["srr_volume", "gestational_age"]), name="inputnode"
     )
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["seg_volume"]), name="outputnode"
@@ -312,7 +313,7 @@ def get_seg(cfg, bids_dir=None):
                 "cfg",
                 "singularity_path",
                 "singularity_mount",
-                "bids_dir",
+                "gestational_age",
             ],
             output_names=["seg_volume"],
             function=run_seg_cmd,
@@ -322,13 +323,13 @@ def get_seg(cfg, bids_dir=None):
 
     seg.inputs.cmd = cfg_seg.cmd
     seg.inputs.cfg = cfg_seg_base
-    seg.inputs.bids_dir = bids_dir
     if cfg.container == "singularity":
         seg.inputs.singularity_path = cfg.singularity_path
         seg.inputs.singularity_mount = cfg.singularity_mount
 
     seg_pipe.connect(inputnode, "srr_volume", seg, "input_srr")
     seg_pipe.connect(seg, "seg_volume", outputnode, "seg_volume")
+    seg_pipe.connect(inputnode, "gestational_age", seg, "gestational_age")
 
     return seg_pipe
 
@@ -382,12 +383,11 @@ def create_full_pipeline(cfg, load_masks=False, bids_dir = None, name="full_pipe
     )
     prepro_pipe = get_prepro(cfg, load_masks, enabled_cropping)
     recon = get_recon(cfg)
-    segmentation = get_seg(cfg, bids_dir=bids_dir)
+    segmentation = get_seg(cfg)
 
     full_fet_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
 
     # RECONSTRUCTION
-
     full_fet_pipe.connect(
         prepro_pipe, "outputnode.stacks", recon, "inputnode.stacks"
     )
@@ -403,6 +403,7 @@ def create_full_pipeline(cfg, load_masks=False, bids_dir = None, name="full_pipe
         recon, "outputnode.srr_volume", outputnode, "output_srr"
     )
 
+    # SEGMENTATION
     full_fet_pipe.connect(
         recon, "outputnode.srr_volume", segmentation, "inputnode.srr_volume"
     )
@@ -410,6 +411,29 @@ def create_full_pipeline(cfg, load_masks=False, bids_dir = None, name="full_pipe
     full_fet_pipe.connect(
         segmentation, "outputnode.seg_volume", outputnode, "output_seg"
     )
+
+    if cfg.segmentation.pipeline == "dhcp" and bids_dir is not None:
+        # Create a node to extract the gestational age
+        ga_node = pe.Node(
+            interface=niu.Function(
+                input_names=["bids_dir", "T2"],
+                output_names=["gestational_age"],
+                function=get_gestational_age,
+            ),
+            name="GetGestationalAge",
+        )
+        ga_node.inputs.bids_dir = bids_dir
+        
+        # Connect the first stack to the gestational age node
+        full_fet_pipe.connect(
+            inputnode, "stacks", ga_node, "T2"
+        )
+
+        # Connect the gestational age node to the segmentation node
+        full_fet_pipe.connect(
+            ga_node, "gestational_age", segmentation, "inputnode.gestational_age"
+        )
+    # Do we need to pass none to the gestational age?
 
     return full_fet_pipe
 

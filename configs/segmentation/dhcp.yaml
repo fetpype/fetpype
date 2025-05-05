@@ -6,4 +6,4 @@ singularity:
   cmd: "singularity exec --env PREPEND_PATH=/home/gmarti/LIB/fsl/bin --bind <singularity_mount> <singularity_path>/dhcp-pipeline-multifact.sif 
     /usr/local/src/structural-pipeline/fetal-pipeline.sh 
     <input_srr> <gestational_age> -data-dir <output_dir> -all"
-path_to_output: "segmentations/<basename>_all_labels.nii.gz"
+path_to_output: "" # Leave it out so that the whole path and files are copied

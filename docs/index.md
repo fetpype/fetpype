@@ -63,7 +63,7 @@ It starts by a master config located at `configs/default.yaml` with the followin
 defaults:
   - preprocessing/default # Default preprocessing
   - reconstruction/nesvor # NeSVoR reconstruction -- You can choose between svrtk, nifymic or nesvor
-  - segmentation/bounti   # BOUNTI segmentation     
+  - segmentation/bounti   # BOUNTI segmentation -- you can choose between bounti and dhcp  
   - _self_
 container: "docker"       # Running on docker (other option is singularity)
 reconstruction:           # Generic reconstruction arguments
@@ -82,6 +82,7 @@ Fetpype also supports running pipelines using Singularity containers. To run you
 - `svrtk.sif` for the SVRTK pipeline (from fetalsvrtk/svrtk:general_auto_amd)
 - `bounti.sif` for the BOUNTI pipeline (from fetalsvrtk/segmentation:general_auto_amd)
 - `fetpype_utils.sif` for the utils pipeline (from geradrmartijuan/fetpype_utils:latest)
+- `dhcp.sif` for the DHCP pipeline (from gerardmartijuan/dhcp_structural_pipeline:latest)
 
 #### Just run it!
 Once you chose the pipeline that you are going to run, you can then run it by calling 

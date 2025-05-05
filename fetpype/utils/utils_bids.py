@@ -249,6 +249,22 @@ def create_bids_datasink(
             )
         )
 
+    # ** Rule 5: Segmentation Output (dHCP) **
+    if seg_label == "dhcp" and rec_label and pipeline_name != "preprocessing":
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                ),
+                # Groups: \1=SESS, \2=SUBJ, \3=ext
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1_dhcp/"
+                ),
+            )
+        )
+
     # Add more specific rules here if other file types need handling
     regex_subs.extend(
         [

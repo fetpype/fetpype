@@ -553,17 +553,40 @@ def create_seg_pipeline(cfg, bids_dir=None, name="seg_pipeline"):
         # "use_relative_paths": True,
         "write_provenance": False,
     }
+
+
+
     config.update_config(seg_pipe.config)
     # Creating input node
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["srr_volume"]), name="inputnode"
     )
 
-    segmentation = get_seg(cfg, bids_dir=bids_dir)
+    segmentation = get_seg(cfg)
 
     seg_pipe.connect(
         inputnode, "srr_volume", segmentation, "inputnode.srr_volume"
     )
+
+    if cfg.segmentation.pipeline == "dhcp" and bids_dir is not None:
+        # Create a node to extract the gestational age
+        ga_node = pe.Node(
+            interface=niu.Function(
+                input_names=["bids_dir", "T2"],
+                output_names=["gestational_age"],
+                function=get_gestational_age,
+            ),
+            name="GetGestationalAge",
+        )
+        ga_node.inputs.bids_dir = bids_dir
+        # Connect the T2 
+        seg_pipe.connect(
+            inputnode, "srr_volume", ga_node, "T2"
+        )
+        # Connect the gestational age node to the segmentation node
+        seg_pipe.connect(
+            ga_node, "gestational_age", segmentation, "inputnode.gestational_age"
+        )
 
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["output_seg"]),

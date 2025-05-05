@@ -63,7 +63,7 @@ It starts by a master config located at `configs/default.yaml` with the followin
 defaults:
   - preprocessing/default # Default preprocessing
   - reconstruction/nesvor # NeSVoR reconstruction -- You can choose between svrtk, nifymic or nesvor
-  - segmentation/bounti   # BOUNTI segmentation     
+  - segmentation/bounti   # BOUNTI segmentation -- you can choose between bounti and dhcp  
   - _self_
 container: "docker"       # Running on docker (other option is singularity)
 reconstruction:           # Generic reconstruction arguments
@@ -75,13 +75,14 @@ This config defines a pipeline that will run the default preprocessing step (def
 The details of the configs, the attributes and methods implemented is available [in this page](methods.md).
 
 ### Singularity 
-Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder. You can indicate the folder in the .yaml file in the "singularity_path" field (see configs/default_sg.yaml for an example). The list of images and their name that are needed to run the pipeline is as follows:
+Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder. You need to indicate the folder in the .yaml file in the "singularity_path" field (see configs/default_sg.yaml for an example). The list of images and their name that are needed to run the pipeline is as follows:
 
 - `nesvor.sif` for the NeSVoR pipeline (junshenxu/nesvor:v0.5.0)
 - `niftymic.sif` for the NiftyMIC pipeline (from renbem/niftymic:latest)
 - `svrtk.sif` for the SVRTK pipeline (from fetalsvrtk/svrtk:general_auto_amd)
 - `bounti.sif` for the BOUNTI pipeline (from fetalsvrtk/segmentation:general_auto_amd)
 - `fetpype_utils.sif` for the utils pipeline (from geradrmartijuan/fetpype_utils:latest)
+- `dhcp.sif` for the DHCP pipeline (from gerardmartijuan/dhcp_structural_pipeline:latest)
 
 #### Just run it!
 Once you chose the pipeline that you are going to run, you can then run it by calling 

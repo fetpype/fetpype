@@ -6,10 +6,10 @@ from ..nodes.preprocessing import (
     CheckAndSortStacksAndMasks,
     run_prepro_cmd,
 )
-from ..nodes.dhcp import dhcp_pipeline
 from nipype import config
 from fetpype.nodes.reconstruction import run_recon_cmd
 from fetpype.nodes.segmentation import run_seg_cmd
+from fetpype.utils.utils_bids import get_gestational_age
 
 
 def print_files(files):
@@ -272,11 +272,15 @@ def get_seg(cfg):
     in params. Currently, the supported pipelines are niftymic and nesvor.
 
     Params:
-        params:
+        cfg:
             dictionary of parameters (default = {}). This
             dictionary contains the parameters given in a JSON
             config file. It specifies which containers to use
             for each step of the pipeline.
+        bids_dir:
+            optional string representing the BIDS root directory.
+            This is used to find the gestational age if needed.
+
 
     Inputs:
         inputnode:
@@ -290,7 +294,8 @@ def get_seg(cfg):
     seg_pipe = pe.Workflow(name="Segmentation")
     # Creating input node
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=["srr_volume"]), name="inputnode"
+        niu.IdentityInterface(fields=["srr_volume", "gestational_age"]),
+        name="inputnode",
     )
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["seg_volume"]), name="outputnode"
@@ -308,6 +313,7 @@ def get_seg(cfg):
                 "cfg",
                 "singularity_path",
                 "singularity_mount",
+                "gestational_age",
             ],
             output_names=["seg_volume"],
             function=run_seg_cmd,
@@ -323,11 +329,14 @@ def get_seg(cfg):
 
     seg_pipe.connect(inputnode, "srr_volume", seg, "input_srr")
     seg_pipe.connect(seg, "seg_volume", outputnode, "seg_volume")
+    seg_pipe.connect(inputnode, "gestational_age", seg, "gestational_age")
 
     return seg_pipe
 
 
-def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
+def create_full_pipeline(
+    cfg, load_masks=False, bids_dir=None, name="full_pipeline"
+):
     """
     Create the fetal processing pipeline (sub-workflow).
 
@@ -381,7 +390,6 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     full_fet_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
 
     # RECONSTRUCTION
-
     full_fet_pipe.connect(
         prepro_pipe, "outputnode.stacks", recon, "inputnode.stacks"
     )
@@ -397,6 +405,7 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
         recon, "outputnode.srr_volume", outputnode, "output_srr"
     )
 
+    # SEGMENTATION
     full_fet_pipe.connect(
         recon, "outputnode.srr_volume", segmentation, "inputnode.srr_volume"
     )
@@ -404,6 +413,30 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     full_fet_pipe.connect(
         segmentation, "outputnode.seg_volume", outputnode, "output_seg"
     )
+
+    if cfg.segmentation.pipeline == "dhcp" and bids_dir is not None:
+        # Create a node to extract the gestational age
+        ga_node = pe.Node(
+            interface=niu.Function(
+                input_names=["bids_dir", "T2"],
+                output_names=["gestational_age"],
+                function=get_gestational_age,
+            ),
+            name="GetGestationalAge",
+        )
+        ga_node.inputs.bids_dir = bids_dir
+
+        # Connect the first stack to the gestational age node
+        full_fet_pipe.connect(inputnode, "stacks", ga_node, "T2")
+
+        # Connect the gestational age node to the segmentation node
+        full_fet_pipe.connect(
+            ga_node,
+            "gestational_age",
+            segmentation,
+            "inputnode.gestational_age",
+        )
+    # Do we need to pass none to the gestational age?
 
     return full_fet_pipe
 
@@ -482,7 +515,7 @@ def create_rec_pipeline(cfg, load_masks=False, name="rec_pipeline"):
     return rec_pipe
 
 
-def create_seg_pipeline(cfg, name="seg_pipeline"):
+def create_seg_pipeline(cfg, bids_dir=None, name="seg_pipeline"):
     """
     Create the fetal processing pipeline (sub-workflow).
 
@@ -523,6 +556,7 @@ def create_seg_pipeline(cfg, name="seg_pipeline"):
         # "use_relative_paths": True,
         "write_provenance": False,
     }
+
     config.update_config(seg_pipe.config)
     # Creating input node
     inputnode = pe.Node(
@@ -535,6 +569,27 @@ def create_seg_pipeline(cfg, name="seg_pipeline"):
         inputnode, "srr_volume", segmentation, "inputnode.srr_volume"
     )
 
+    if cfg.segmentation.pipeline == "dhcp" and bids_dir is not None:
+        # Create a node to extract the gestational age
+        ga_node = pe.Node(
+            interface=niu.Function(
+                input_names=["bids_dir", "T2"],
+                output_names=["gestational_age"],
+                function=get_gestational_age,
+            ),
+            name="GetGestationalAge",
+        )
+        ga_node.inputs.bids_dir = bids_dir
+        # Connect the T2
+        seg_pipe.connect(inputnode, "srr_volume", ga_node, "T2")
+        # Connect the gestational age node to the segmentation node
+        seg_pipe.connect(
+            ga_node,
+            "gestational_age",
+            segmentation,
+            "inputnode.gestational_age",
+        )
+
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["output_seg"]),
         name="outputnode",
@@ -544,108 +599,3 @@ def create_seg_pipeline(cfg, name="seg_pipeline"):
     )
 
     return seg_pipe
-
-
-def create_dhcp_subpipe(name="dhcp_pipe", params={}):
-    """
-    Create a dhcp pipeline for segmentation of fetal MRI
-
-    Given an reconstruction of fetal MRI and a mask, this
-    pipeline performs the following steps:
-        1. Run the dhcp pipeline for segmentation
-        2. Run it for surface extraction
-
-    Params:
-        name:
-            pipeline name (default = "full_fet_pipe")
-        params:
-            dictionary of parameters (default = {}). This
-            dictionary contains the parameters given in a JSON
-            config file. It specifies which containers to use
-            for each step of the pipeline.
-
-    Inputs:
-        inputnode:
-            MRI brain:
-                Reconstruction of MRI brain
-            Mask:
-                Corresponding brain mask of the reconstruction
-            GA:
-                gestational age of the fetus
-    Outputs:
-        outputnode:
-            dhcp_files:
-                folder with dhcp outputs
-
-    TODO:
-    - EM algorithm halting, solve it better or in the messy way?
-    """
-
-    print("Full pipeline name: ", name)
-
-    # Creating pipeline
-    full_fet_pipe = pe.Workflow(name=name)
-
-    # Creating input node
-    inputnode = pe.Node(
-        niu.IdentityInterface(fields=["T2", "mask", "gestational_age"]),
-        name="inputnode",
-    )
-
-    # Check params to see if we need to run the seg or surf part, or both.
-    # Params to look is [dhcp][seg] and [dhcp][surf]
-    flag = None
-    if "dhcp" in params.keys():
-        if params["dhcp"]["surf"] and params["dhcp"]["seg"]:
-            flag = "-all"
-        elif params["dhcp"]["seg"]:
-            flag = "-seg"
-        elif params["dhcp"]["surf"]:
-            flag = "-surf"
-
-    else:
-        print("No dhcp parameters found, running both seg and surf")
-        flag = "-all"
-
-    # PREPROCESSING
-    # 1. Run the dhcp pipeline for segmentation
-    dhcp_seg = pe.Node(
-        interface=niu.Function(
-            input_names=[
-                "T2",
-                "mask",
-                "gestational_age",
-                "pre_command",
-                "dhcp_image",
-                "threads",
-                "flag",
-            ],
-            output_names=["dhcp_files"],
-            function=dhcp_pipeline,
-        ),
-        name="dhcp_seg",
-    )
-
-    if "general" in params.keys():
-        dhcp_seg.inputs.pre_command = params["general"].get("pre_command", "")
-        dhcp_seg.inputs.dhcp_image = params["general"].get("dhcp_image", "")
-
-    if "dhcp" in params.keys():
-        dhcp_seg.inputs.threads = params["dhcp"].get("threads", "")
-        dhcp_seg.inputs.flag = flag
-
-    full_fet_pipe.connect(inputnode, "T2", dhcp_seg, "T2")
-    full_fet_pipe.connect(inputnode, "mask", dhcp_seg, "mask")
-
-    full_fet_pipe.connect(
-        inputnode, "gestational_age", dhcp_seg, "gestational_age"
-    )
-
-    # OUTPUT
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=["dhcp_files"]), name="outputnode"
-    )
-
-    full_fet_pipe.connect(dhcp_seg, "dhcp_files", outputnode, "dhcp_files")
-
-    return full_fet_pipe

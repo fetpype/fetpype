@@ -10,7 +10,7 @@ brain_extraction:
       run_brain_extraction
       --input_stacks <input_stacks> 
       --output_masks <output_masks> --method monaifbs"
-
+  
 check_stacks_and_masks:
   enabled: true
 

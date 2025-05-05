@@ -1,5 +1,10 @@
 def run_seg_cmd(
-    input_srr, cmd, cfg, singularity_path=None, singularity_mount=None, gestational_age=None
+    input_srr,
+    cmd,
+    cfg,
+    singularity_path=None,
+    singularity_mount=None,
+    gestational_age=None,
 ):
     import os
     from fetpype import VALID_SEG_TAGS as VALID_TAGS

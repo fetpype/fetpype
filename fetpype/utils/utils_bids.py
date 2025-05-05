@@ -402,10 +402,8 @@ def get_gestational_age(bids_dir, T2):
     """
     import pandas as pd
     import os
-    import warnings
 
     participants_path = os.path.join(bids_dir, "participants.tsv")
-
 
     try:
         df = pd.read_csv(participants_path, delimiter="\t")
@@ -421,31 +419,42 @@ def get_gestational_age(bids_dir, T2):
 
     # Extract subject ID from filename
     subject_id = os.path.basename(T2).split("_")[0]
-    
+
     # Try to find a gestational age column - check various possible names
     ga_column = None
     for col in df.columns:
-        if col.lower() in ["gestational_age", "gestational_weeks", "ga", "age"]:
+        if col.lower() in [
+            "gestational_age",
+            "gestational_weeks",
+            "ga",
+            "age",
+        ]:
             ga_column = col
             break
-    
+
     if ga_column is None:
-        raise KeyError(f"No gestational age column found in participants.tsv {bids_dir}")
+        raise KeyError(
+            f"No gestational age column found in participants.tsv {bids_dir}"
+        )
 
     try:
-        # Try matching with sub- prefix 
-        gestational_age = df.loc[df["participant_id"] == subject_id, ga_column].values[0]
+        # Try matching with sub- prefix
+        gestational_age = df.loc[
+            df["participant_id"] == subject_id, ga_column
+        ].values[0]
         return float(gestational_age)
     except KeyError:
-        raise KeyError(f"No gestational age column found in participants.tsv {bids_dir}")
+        raise KeyError(
+            f"No gestational age column found in participants.tsv {bids_dir}"
+        )
     except IndexError:
         raise IndexError(f"Subject {subject_id} not found in participants.tsv")
     except ValueError:
         # Handle the case where age is not convertible to float
         raise ValueError(
-            f"Gestational age for subject {subject_id} is not a valid float: {gestational_age}"
+            f"Gestational age for subject {subject_id} is not a valid float: "
+            f"{gestational_age}"
         )
-
 
 
 def create_description_file(out_dir, algo, prev_desc=None, cfg=None):

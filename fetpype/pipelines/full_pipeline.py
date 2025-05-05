@@ -6,7 +6,6 @@ from ..nodes.preprocessing import (
     CheckAndSortStacksAndMasks,
     run_prepro_cmd,
 )
-from ..nodes.dhcp import dhcp_pipeline
 from nipype import config
 from fetpype.nodes.reconstruction import run_recon_cmd
 from fetpype.nodes.segmentation import run_seg_cmd
@@ -281,7 +280,7 @@ def get_seg(cfg):
         bids_dir:
             optional string representing the BIDS root directory.
             This is used to find the gestational age if needed.
-        
+
 
     Inputs:
         inputnode:
@@ -295,7 +294,8 @@ def get_seg(cfg):
     seg_pipe = pe.Workflow(name="Segmentation")
     # Creating input node
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=["srr_volume", "gestational_age"]), name="inputnode"
+        niu.IdentityInterface(fields=["srr_volume", "gestational_age"]),
+        name="inputnode",
     )
     outputnode = pe.Node(
         niu.IdentityInterface(fields=["seg_volume"]), name="outputnode"
@@ -334,7 +334,9 @@ def get_seg(cfg):
     return seg_pipe
 
 
-def create_full_pipeline(cfg, load_masks=False, bids_dir = None, name="full_pipeline"):
+def create_full_pipeline(
+    cfg, load_masks=False, bids_dir=None, name="full_pipeline"
+):
     """
     Create the fetal processing pipeline (sub-workflow).
 
@@ -423,15 +425,16 @@ def create_full_pipeline(cfg, load_masks=False, bids_dir = None, name="full_pipe
             name="GetGestationalAge",
         )
         ga_node.inputs.bids_dir = bids_dir
-        
+
         # Connect the first stack to the gestational age node
-        full_fet_pipe.connect(
-            inputnode, "stacks", ga_node, "T2"
-        )
+        full_fet_pipe.connect(inputnode, "stacks", ga_node, "T2")
 
         # Connect the gestational age node to the segmentation node
         full_fet_pipe.connect(
-            ga_node, "gestational_age", segmentation, "inputnode.gestational_age"
+            ga_node,
+            "gestational_age",
+            segmentation,
+            "inputnode.gestational_age",
         )
     # Do we need to pass none to the gestational age?
 
@@ -554,8 +557,6 @@ def create_seg_pipeline(cfg, bids_dir=None, name="seg_pipeline"):
         "write_provenance": False,
     }
 
-
-
     config.update_config(seg_pipe.config)
     # Creating input node
     inputnode = pe.Node(
@@ -579,13 +580,14 @@ def create_seg_pipeline(cfg, bids_dir=None, name="seg_pipeline"):
             name="GetGestationalAge",
         )
         ga_node.inputs.bids_dir = bids_dir
-        # Connect the T2 
-        seg_pipe.connect(
-            inputnode, "srr_volume", ga_node, "T2"
-        )
+        # Connect the T2
+        seg_pipe.connect(inputnode, "srr_volume", ga_node, "T2")
         # Connect the gestational age node to the segmentation node
         seg_pipe.connect(
-            ga_node, "gestational_age", segmentation, "inputnode.gestational_age"
+            ga_node,
+            "gestational_age",
+            segmentation,
+            "inputnode.gestational_age",
         )
 
     outputnode = pe.Node(

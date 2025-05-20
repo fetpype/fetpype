@@ -90,7 +90,9 @@ def create_datasource(
                 acquisitions_subj = acquisitions
             # If there is no acquisition found, maybe the acquisition
             # tag was not specified.
-            acquisitions_subj = [None] if len(acquisitions_subj) == 0 else acquisitions_subj
+            acquisitions_subj = (
+                [None] if len(acquisitions_subj) == 0 else acquisitions_subj
+            )
             for acq in acquisitions_subj:
                 if acq is not None and acq not in existing_acq:
                     print(
@@ -117,9 +119,11 @@ def create_bids_datasink(
     custom_regex_subs=None,
 ):
     """
-    Creates a BIDS-compatible datasink using parameterization and regex substitutions.
+    Creates a BIDS-compatible datasink using parameterization and
+    regex substitutions.
     Organizes outputs into:
-    <out_dir>/derivatives/<pipeline_name>/sub-<ID>/[ses-<ID>/]<datatype>/<BIDS_filename>
+    <out_dir>/derivatives/<pipeline_name>/sub-<ID>/[ses-<ID>/]
+    <datatype>/<BIDS_filename>
 
     Parameters
     ----------
@@ -134,11 +138,14 @@ def create_bids_datasink(
     name : str, optional
         Name for the datasink node, by default None
     rec_label : str, optional
-        Reconstruction label (e.g., 'nesvor') for rec-... entity, by default None
+        Reconstruction label (e.g., 'nesvor') for
+        rec-... entity, by default None
     seg_label : str, optional
-        Segmentation label (e.g., 'bounti') for seg-... entity, by default None
+        Segmentation label (e.g., 'bounti') for
+        seg-... entity, by default None
     desc_label : str, optional
-        Description label for desc-... entity (e.g., 'denoised'), by default None
+        Description label for desc-... entity
+        (e.g., 'denoised'), by default None
     custom_subs : list, optional
         List of custom simple substitutions, by default None
     custom_regex_subs : list, optional
@@ -179,16 +186,33 @@ def create_bids_datasink(
         if desc_label == "denoised":
             regex_subs.append(
                 (
-                    rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*?/?_denoising.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+))?_T2w_noise_corrected(\.nii\.gz|\.nii)$",
-                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-denoised_T2w\4",
+                    (
+                        rf"^{escaped_bids_derivatives_root}/"
+                        rf".*?_?session_([^/]+)"
+                        rf"_subject_([^/]+).*?/?_denoising.*/"
+                        rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+))?"
+                        rf"_T2w_noise_corrected(\.nii\.gz|\.nii)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
+                        rf"/\3_desc-denoised_T2w\4"
+                    ),
                 )
             )
         # ** Rule 2: Preprocessing Masks (Cropped) **
         if desc_label == "cropped":
             regex_subs.append(
                 (
-                    rf"^{escaped_bids_derivatives_root}/.*?_session_([^/]+)_subject_([^/]+).*/?_cropping.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_mask(\.nii\.gz|\.nii)$",
-                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-cropped_mask\4",
+                    (
+                        rf"^{escaped_bids_derivatives_root}/.*?_session_"
+                        rf"([^/]+)_subject_([^/]+).*/?_cropping.*/"
+                        rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_"
+                        rf"mask(\.nii\.gz|\.nii)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
+                        rf"/\3_desc-cropped_mask\4"
+                    ),
                 )
             )
 
@@ -196,9 +220,15 @@ def create_bids_datasink(
     if rec_label and not seg_label and pipeline_name != "preprocessing":
         regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/(?:[^/]+)(\.nii\.gz|\.nii)$",
+                (
+                    rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)"
+                    rf"_subject_([^/]+).*/(?:[^/]+)(\.nii\.gz|\.nii)$"
+                ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3",
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/"
+                    rf"{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3"
+                ),
             )
         )
 
@@ -206,9 +236,16 @@ def create_bids_datasink(
     if seg_label and rec_label and pipeline_name != "preprocessing":
         regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/input_srr-mask-brain_bounti-19(\.nii\.gz|\.nii)$",
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"input_srr-mask-brain_bounti-19(\.nii\.gz|\.nii)$"
+                ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3",
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
+                ),
             )
         )
 

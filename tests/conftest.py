@@ -5,11 +5,12 @@ import os
 import shutil
 import json
 from pathlib import Path
-from hydra import initialize, compose
-from omegaconf import OmegaConf
 import yaml
 
-@pytest.fixture(scope="function") # Use "function" scope for clean state per test
+
+@pytest.fixture(
+    scope="function"
+)  # Use "function" scope for clean state per test
 def mock_bids_root(tmp_path_factory):
     """Creates a mock BIDS dataset in a temporary directory within tests/."""
 
@@ -18,7 +19,8 @@ def mock_bids_root(tmp_path_factory):
     test_tmp_dir = project_root / "tests" / "tmp_test_data"
     test_tmp_dir.mkdir(exist_ok=True)
 
-    # Create a unique directory for this specific test run within tests/tmp_test_data
+    # Create a unique directory for this specific
+    # test run within tests/tmp_test_data
     bids_root = test_tmp_dir / f"mock_bids_{os.urandom(4).hex()}"
     bids_root.mkdir(parents=True, exist_ok=True)
     print(f"Creating mock BIDS dataset at: {bids_root}")
@@ -44,24 +46,17 @@ def mock_bids_root(tmp_path_factory):
     for file_rel_path in files_to_create:
         file_path = bids_root / file_rel_path
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.touch() # Create empty file
+        file_path.touch()  # Create empty file
 
     # --- Create a dummy derivative ---
     deriv_root = bids_root / "derivatives" / "fmriprep"
-    deriv_root.mkdir(parents=True, exist_ok=True) # Ensure deriv root exists
+    deriv_root.mkdir(parents=True, exist_ok=True)  # Ensure deriv root exists
 
     deriv_dataset_desc = {
         "Name": "Mock Derivative Dataset",
         "BIDSVersion": "1.6.0",
-        "GeneratedBy": [
-            {
-                "Name": "MockPipeline",
-                "Version": "1.0.0"
-            }
-        ],
-        "PipelineDescription": {
-            "Name": "MockPipeline"
-        }
+        "GeneratedBy": [{"Name": "MockPipeline", "Version": "1.0.0"}],
+        "PipelineDescription": {"Name": "MockPipeline"},
     }
     with open(deriv_root / "dataset_description.json", "w") as f:
         json.dump(deriv_dataset_desc, f, indent=2)
@@ -75,7 +70,7 @@ def mock_bids_root(tmp_path_factory):
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.touch()
 
-    yield bids_root # Provide the path to the test
+    yield bids_root  # Provide the path to the test
 
     # --- Teardown ---
     print(f"Removing mock BIDS dataset at: {bids_root}")
@@ -84,12 +79,13 @@ def mock_bids_root(tmp_path_factory):
     except OSError as e:
         print(f"Error removing directory {bids_root}: {e}")
 
+
 @pytest.fixture(scope="function")
 def mock_nipype_wf_dir(tmp_path_factory):
     # Use pytest's tmp_path_factory for simplicity and robust cleanup
     wf_base = tmp_path_factory.mktemp("nipype_wf")
     print(f"Creating mock Nipype WF base dir at: {wf_base}")
-    yield str(wf_base) # Pass the path as a string, like real usage
+    yield str(wf_base)  # Pass the path as a string, like real usage
     print(f"Mock Nipype WF base dir {wf_base} will be cleaned up by pytest.")
     # No explicit shutil needed when using tmp_path_factory
 
@@ -102,6 +98,7 @@ def mock_output_dir(tmp_path_factory):
     yield str(out_base)
     print(f"Mock output dir {out_base} will be cleaned up by pytest.")
 
+
 @pytest.fixture(scope="function")
 def generate_config(tmp_path_factory):
     def _generate(sr, seg):
@@ -110,13 +107,11 @@ def generate_config(tmp_path_factory):
                 "preprocessing/default",
                 f"reconstruction/{sr}",
                 f"segmentation/{seg}",
-                "_self_"
+                "_self_",
             ],
             "container": "docker",
-            "reconstruction": {
-                "output_resolution": 0.8
-            },
-            "save_graph": True
+            "reconstruction": {"output_resolution": 0.8},
+            "save_graph": True,
         }
 
         temp_dir = tmp_path_factory.mktemp("config_test")

@@ -6,6 +6,22 @@ def run_recon_cmd(
     singularity_path=None,
     singularity_mount=None,
 ):
+    """
+    Run a reconstruction command with the given input stacks and masks.
+
+    Args:
+
+        input_stacks (list): List of input stack file paths.
+        input_masks (list): List of input mask file paths.
+        cmd (str): Command to run, with placeholders for input and output.
+        cfg (object): Configuration object containing output directory and resolution.
+        singularity_path (str, optional): Path to the Singularity executable.
+        singularity_mount (str, optional): Mount point for Singularity.
+    Returns:
+        str: Path to the output volume after reconstruction.
+        
+
+    """
     import os
     import numpy as np
     import nibabel as nib

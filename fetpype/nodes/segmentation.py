@@ -1,6 +1,19 @@
 def run_seg_cmd(
     input_srr, cmd, cfg, singularity_path=None, singularity_mount=None
 ):
+    """
+    Run a segmentation command with the given input SRR.
+
+    Args:
+        input_srr (str or list): Path to the input SRR file or a list containing a single SRR file.
+        cmd (str): Command to run, with placeholders for input and output.
+        cfg (object): Configuration object containing output directory.
+        singularity_path (str, optional): Path to the Singularity executable.
+        singularity_mount (str, optional): Mount point for Singularity.
+    Returns:
+        str: Path to the output segmentation file after running the command.
+    
+    """
     import os
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_mount_docker

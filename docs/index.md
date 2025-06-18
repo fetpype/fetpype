@@ -81,7 +81,7 @@ Fetpype also supports running pipelines using Singularity containers. To run you
 - `niftymic.sif` for the NiftyMIC pipeline (from renbem/niftymic:latest)
 - `svrtk.sif` for the SVRTK pipeline (from fetalsvrtk/svrtk:general_auto_amd)
 - `bounti.sif` for the BOUNTI pipeline (from fetalsvrtk/segmentation:general_auto_amd)
-- `fetpype_utils.sif` for the utils pipeline (from geradrmartijuan/fetpype_utils:latest)
+- `fetpype_utils.sif` for the utils pipeline (from gerardmartijuan/fetpype_utils:latest)
 
 #### Just run it!
 Once you chose the pipeline that you are going to run, you can then run it by calling 

@@ -11,9 +11,12 @@ nav:
         - segmentation.md
         - surface.md
     - API:
-        - workflows.md
-        - pipelines.md
-        - nodes.md
+        - api_nodes.md
+        - api_pipelines.md
+        - api_utils.md
+        - api_workflows.md
+        
+        
 
 
    

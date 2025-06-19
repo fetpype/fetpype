@@ -1,48 +1,46 @@
 # Config files
 
-Config files are the bread and butter of fetpype. They allow to define how the data should be processed within a container and what output should be returned. They also specify optional parameters that can be modified by the user, without touching at the code.
+Config files are the bread and butter of fetpype. They allow to define how the data should be processed within a container and what output should be returned. They also specify optional parameters that can be modified by the user, without touching at the code. They are based on the [Hydra](https://hydra.cc/docs/intro/) framework, that allows to flexibly parse a hierarchical structure of `.yaml` configs into a unified data structure. 
 
-## Calls to docker and singularity containers
-Fetpype acts as a wrapper around calls to various containers, and uses a limited set of tags in each dedicated node to construct the command that will be called.
-
-## Reconstruction configs
-The reconstruction algorithms used are described in greater depth in their [dedicated page](reconstruction.md). Here, we look at an example of how the config file of niftymic (in `configs/reconstruction/niftymic.yaml`) is structured.
-
-This is how the config file looks.
+## The general structure
+Fetpype acts as a wrapper around calls to various containers, and uses a limited set of tags in each dedicated node to construct the command that will be called. Config files define the commands that will be called by fetpype. Fetpype starts from a master config located at `configs/default_docker.yaml` (or `default_sg.yaml` for singularity), with the following structure
+```yaml
+defaults:
+  - preprocessing/default # Default preprocessing
+  - reconstruction/nesvor # NeSVoR reconstruction -- You can choose between svrtk, nifymic or nesvor
+  - segmentation/bounti   # BOUNTI segmentation     
+  - _self_
+container: "docker"       # Running on docker (other option is singularity)
+reconstruction:           # Generic reconstruction arguments
+  output_resolution: 0.8  # Target resolution for reconstruction
+save_graph: True
 ```
-pipeline: "niftymic"
+Each of the `defaults` entries call to other config files, located respectively at `configs/preprocessing/default.yaml`, `configs/reconstruction/nesvor.yaml`, etc.
+
+## Example of a specific config
+Let's look at an example of how a specific config is structured. If we open `configs/reconstruction/nesvor.yaml`, we see 
+
+```yaml
+pipeline: "nesvor"
 docker: 
-  cmd: "docker run --gpus '\"device=0\"' <mount> renbem/niftymic 
-    niftymic_run_reconstruction_pipeline
-    --filenames <input_stacks>
-    --filenames-masks <input_masks>
-    --dir-output <output_dir>"
+  cmd: "docker run --gpus '\"device=0\"' <mount> junshenxu/nesvor:v0.5.0 
+    nesvor reconstruct 
+    --input-stacks <input_stacks> 
+    --stack-masks <input_masks> 
+    --output-volume <output_volume> 
+    --batch-size 4096 
+    --n-levels-bias 1"
 singularity:
-  cmd: null
-path_to_output: "recon_template_space/srr_template.nii.gz"
+  cmd: "singularity exec --bind <singularity_mount> --nv <singularity_path>/nesvor.sif 
+    nesvor reconstruct 
+    --input-stacks <input_stacks> 
+    --stack-masks <input_masks> 
+    --output-volume <output_volume> 
+    --batch-size 4096 
+    --n-levels-bias 1"
+args:
+    path_to_output: "nesvor.nii.gz"
 ```
 
-The structuring of the docker call features: 
-
-- A set of tags: `<mount>`, `<input_stacks>`, `<input_masks>`, ` <output_dir>`
-- The bulk of the call to the reconstruction pipeline of niftymic.
-
-### Tags
-There are a limited set of tags that can be used for reconstruction: 
-
-| <div style="width:150px">Command</div> | Description                                               | Comments                                                                            |
-| -------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `<mount>`                              | Where the different folders will be mounted               | Docker only (not needed in singularity)                                             |
-| `<input_stacks>`                       | The list of inputs stacks will be given as arguments      | Mutually exclusive with `<input_dir>`                                               |
-| `<input_dir>`                          | The folder that contains the input stacks                 | Mutually exclusive with `<input_stacks>`                                            |
-| `<input_masks>`                        | The list of inputs masks will be given as arguments       | Mutually exclusive with `<input_masks_dir>`                                         |
-| `<input_masks_dir>`                    | The folder that contains the input masks                  | Mutually exclusive with `<input_masks>`                                             |
-| `<output_volume>`                      | The output volume                                         | Mutually exclusive with `<output_dir>`                                              |
-| `<output_dir>`                         | The output directory                                      | Mutually exclusive with `<output_volume>`                                           |
-| `<input_tp>`                           | The through-plane resolution of input stacks              | Needed for SVRTK - Automatically calculated                                         |
-| `<output_res>`                         | The desired voxel resolution for the reconstructed volume | This tag be set in the config file in the field `reconstruction/output_resolution`. |
-
-!!! Note 
-    The NiftyMIC config contains an additional variable `path_to_output`. This is needed when only an `<output_dir>` is given to the method. This variable contains the path where the reconstructed volume will be located *relative* to `<output_dir>`.
-
+In this config, we see a common structure that we will find in most of the configs. There is a `docker` and a `singularity` entry that define the command (`cmd`) that fetpype will run. The command has specific tags (marked as `<tag>`) that can be specified. The structure is globally similar for all configs, but specific information on how config files are structured is provided in the [pipelines page](pipelines.md).
 

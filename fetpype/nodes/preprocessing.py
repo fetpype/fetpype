@@ -446,6 +446,20 @@ class CheckAndSortStacksAndMasks(BaseInterface):
     """
     Interface to check the input stacks and masks and make sure that
     all stacks have a corresponding mask.
+
+    Args:
+
+        stacks (input; list): List of input stacks.
+        masks (input; list): List of input masks.
+
+        output_stacks (output; list): List of stacks that passed the check.
+        output_masks (output; list): List of masks that passed the check.
+    Examples:
+        >>> from fetpype.nodes.preprocessing import CheckAndSortStacksAndMasks
+        >>> check_input = CheckAndSortStacksAndMasks()
+        >>> check_input.inputs.stacks = ['sub-01_acq-haste_run-1_T2w.nii.gz']
+        >>> check_input.inputs.masks = ['sub-01_acq-haste_run-1_mask.nii.gz']
+        >>> check_input.run() # doctest: +SKIP
     """
 
     input_spec = CheckAndSortStacksAndMasksInputSpec
@@ -513,6 +527,22 @@ def run_prepro_cmd(
     singularity_path=None,
     singularity_mount=None,
 ):
+    """
+    Run a preprocessing command on input stacks and masks.
+
+    Args:
+        input_stacks (str or list): Input stacks to process.
+        cmd (str): Command to run, with tags for input and output.
+        is_enabled (bool): Whether the command should be executed.
+        input_masks (str or list, optional): Input masks to process.
+        singularity_path (str, optional): Path to the Singularity executable.
+        singularity_mount (str, optional): Mount point for Singularity.
+    Returns:
+        tuple: Output stacks and masks, if specified in the command.
+               If only one of them is specified, returns that one.
+               If none are specified, returns None.
+
+    """
     import os
     from fetpype import VALID_PREPRO_TAGS
 

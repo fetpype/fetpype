@@ -5,6 +5,15 @@ import sys
 
 
 def flatten_cfg(cfg, base=""):
+    """
+    Flatten a nested configuration dictionary into a flat dictionary
+    with keys as paths and values as the corresponding values.
+    Args:
+        cfg (dict): The configuration dictionary to flatten.
+        base (str): The base path to prepend to the keys.
+    Returns:
+        generator: A generator that yields tuples of (path, value).
+    """
     for k, v in cfg.items():
         if isinstance(v, dict):
             yield from flatten_cfg(v, "/".join([base, k]))
@@ -13,7 +22,15 @@ def flatten_cfg(cfg, base=""):
 
 
 def is_available_container(container_type, container_name):
-
+    """
+    Check if the container is available on the system.
+    Args:
+        container_type (str):   The type of container, either 'docker'
+                                or 'singularity'
+        container_name (str): The name of the container to check.
+    Returns:
+        bool: True if the container is available, False otherwise.
+    """
     if container_type == "docker":
         try:
             subprocess.run(
@@ -40,7 +57,12 @@ def is_available_container(container_type, container_name):
 
 def retrieve_container(container_type, container_name):
     """
-    Retrieve the container from the registry.
+        Retrieve the container from the registry.
+    Args:
+        container_type (str):   The type of container, either 'docker' or
+                                'singularity'
+        container_name (str): The name of the container to retrieve.
+
     """
     if container_type == "docker":
 
@@ -78,6 +100,13 @@ def check_container_commands(container_type, cfg):
     """
     Check if the required docker or singularity images are available
     on the system.
+
+    Args:
+        container_type (str):   The type of container, either 'docker' or
+                                'singularity'
+        cfg (dict): The configuration dictionary containing the
+                    container names.
+
     """
     # Check if the container_type is valid
     if container_type not in ["docker", "singularity"]:

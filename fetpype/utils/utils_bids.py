@@ -40,6 +40,27 @@ def create_datasource(
     [("sub01", "01", "haste"), ("sub01", "01","tru"),
      ("sub02", "01", "haste"), ("sub02", "01","tru")]
     ```
+
+    Args:
+        output_query (dict): A dictionary specifying the output query
+            for the BIDSDataGrabber.
+        data_dir (str): The base directory of the BIDS dataset.
+        subjects (list, optional): List of subject IDs to include.
+            If None, all subjects in the dataset are included.
+        sessions (list, optional): List of session IDs to include.
+            If None, all sessions for each subject are included.
+        acquisitions (list, optional): List of acquisition types to include.
+            If None, all acquisitions for each subject/session are included.
+        derivative (str, optional): The name of the derivative to query.
+            If None, no derivative is queried.
+        name (str, optional): Name for the datasource node. Defaults to
+                            "bids_datasource".
+        extra_derivatives (list or str, optional): Additional
+            derivatives to include. If provided, these will be
+            added to the BIDSDataGrabber.
+    Returns:
+        pe.Node: A configured BIDSDataGrabber node that retrieves data
+        according to the specified parameters.
     """
 
     bids_datasource = pe.Node(
@@ -125,41 +146,30 @@ def create_bids_datasink(
     <out_dir>/derivatives/<pipeline_name>/sub-<ID>/[ses-<ID>/]
     <datatype>/<BIDS_filename>
 
-    Parameters
-    ----------
-    out_dir : str
-        Base output directory (e.g., /path/to/project/derivatives)
-    pipeline_name : str
-        Name of the pipeline (e.g., 'nesvor_bounti', 'preprocessing')
-    strip_dir : str
-        Absolute path to the Nipype working directory base to strip
-    datatype : str, optional
-        BIDS datatype ('anat', 'func', 'dwi', etc.), by default "anat"
-    name : str, optional
-        Name for the datasink node, by default None
-    rec_label : str, optional
-        Reconstruction label (e.g., 'nesvor') for
-        rec-... entity, by default None
-    seg_label : str, optional
-        Segmentation label (e.g., 'bounti') for
-        seg-... entity, by default None
-    desc_label : str, optional
-        Description label for desc-... entity
-        (e.g., 'denoised'), by default None
-    custom_subs : list, optional
-        List of custom simple substitutions, by default None
-    custom_regex_subs : list, optional
-        List of custom regex substitutions, by default None
+    Args:
+        out_dir (str): Base output directory
+                        (e.g., /path/to/project/derivatives)
+        pipeline_name (str): Name of the pipeline (e.g., 'nesvor_bounti',
+                            'preprocessing')
+        strip_dir (str): Absolute path to the Nipype working directory
+            base to strip (e.g., /path/to/nipype/workdir).
+        datatype (str, optional): BIDS datatype ('anat', etc.).
+            Defaults to "anat".
+        name (str, optional): Name for the datasink node.
+            Defaults to None, which will use the pipeline name.
+        rec_label (str, optional): Reconstruction label (e.g., 'nesvor')
+            for rec-... entity. Defaults to None.
+        seg_label (str, optional): Segmentation label (e.g., 'bounti
+            ') for seg-... entity. Defaults to None.
+        desc_label (str, optional): Description label for desc-... entity
+        custom_subs (list, optional): List of custom simple substitutions
+            to apply to output paths. Defaults to None.
+        custom_regex_subs (list, optional): List of custom regex
+            substitutions to apply to output paths. Defaults to None.
 
-    Returns
-    -------
-    datasink : nipype.Node
-        A Nipype DataSink node configured for BIDS-compatible output.
-
-    Raises
-    ------
-    ValueError
-        If `strip_dir` (Nipype work dir base path) is not provided.
+    Returns:
+        datasink (nipype.Node): A Nipype DataSink node configured for
+        BIDS-compatible output.
 
     """
     if not strip_dir:
@@ -291,7 +301,8 @@ def create_datasink(
     iterables, name="output", params_subs={}, params_regex_subs={}
 ):
     """
-    Creates a data sink node for reformatting and organizing relevant outputs.
+    Deprecated. Creates a data sink node for reformatting and organizing
+    relevant outputs.
 
     From: https://github.com/Macatools/macapype (adapted)
 
@@ -357,31 +368,14 @@ def get_gestational_age(bids_dir, T2):
     """
     Retrieve the gestational age for a specific subject from a BIDS dataset.
 
-    Parameters
-    ----------
-    bids_dir : str
-        The file path to the root of the BIDS dataset,
-        which must contain a 'participants.tsv' file.
-    T2 : str
-        The path of the image. We can get the subject id from there if
-        it follows a BIDS format.
+    Args:
+        bids_dir : The file path to the root of the BIDS dataset,
+            which must contain a 'participants.tsv' file.
+        T2 : The path of the image. We can get the subject id from there if
+            it follows a BIDS format.
+    Returns:
+        gestational_age : The gestational age of the subject.
 
-    Returns
-    -------
-    float
-        The gestational age of the subject.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the 'participants.tsv' file is not found
-        in the specified BIDS directory.
-    KeyError
-        If the 'gestational_age' column is
-        not found in the 'participants.tsv' file.
-    IndexError
-        If the specified subject ID is not
-        found in the 'participants.tsv' file.
     """
     import pandas as pd
     import os
@@ -413,15 +407,11 @@ def get_gestational_age(bids_dir, T2):
 
 def create_description_file(out_dir, algo, prev_desc=None, cfg=None):
     """Create a dataset_description.json file in the derivatives folder.
-
-    Parameters
-    ----------
-    args : dictionary
-        Dictionary containing the arguments passed to the script.
-    container_type : string
-        Type of container used to run the algorithm.
-
     TODO: should look for the extra parameters and also add them
+
+    Args:
+        args : Dictionary containing the arguments passed to the script.
+        container_type : Type of container used to run the algorithm.
     """
     if not os.path.exists(os.path.join(out_dir, "dataset_description.json")):
         description = {

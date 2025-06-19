@@ -56,9 +56,9 @@ sub-myname
 Here, [ses-XX] is an optional tag/folder level. The `anat` folder will contain the different runs, which are the different stacks acquired for a given subject. More information about BIDS formatting is available [here](https://bids.neuroimaging.io/index.html).
 
 #### Choose what you will run
-The pipeline that will be run is defined by a structure of config files. A default pipeline, featuring pre-processing (mask extraction, denoising, cropping and masks), reconstruction (using NeSVoR [REF]) and segmentation (using BOUNTI [REF]) is defined by the following config file.
+The pipeline that will be run is defined by a structure of config files. A default pipeline, featuring pre-processing (mask extraction, denoising, cropping and masks), reconstruction (using NeSVoR[@xu2023nesvor]) and segmentation (using BOUNTI[@uus2023bounti]) is defined by the following config file.
 
-It starts by a master config located at `configs/default.yaml` with the following structure
+It starts by a master config located at `configs/default_docker.yaml` with the following structure
 ```yaml
 defaults:
   - preprocessing/default # Default preprocessing
@@ -72,7 +72,7 @@ save_graph: True
 ```
 This config defines a pipeline that will run the default preprocessing step (defined in `configs/preprocessing/default.yaml`), the NeSVoR reconstruction pipeline (defined in `configs/reconstruction/nesvor.yaml`) followed by the BOUNTI segmentation pipeline (defined in `configs/preprocessing/bounti.yaml`). Hydra will go in the corresponding folder and load the files to create a global config defined in a nested manner. Changing the pipeline that you want to run is as easy as changing the reconstruction pipeline from `nesvor` to `niftymic`. 
 
-The details of the configs, the attributes and methods implemented is available [in this page](methods.md).
+The details of the configs, the attributes and methods implemented is available [in this page](pipelines.md).
 
 ### Singularity 
 Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder. You can indicate the folder in the .yaml file in the "singularity_path" field (see configs/default_sg.yaml for an example). The list of images and their name that are needed to run the pipeline is as follows:

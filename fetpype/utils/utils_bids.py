@@ -40,6 +40,27 @@ def create_datasource(
     [("sub01", "01", "haste"), ("sub01", "01","tru"),
      ("sub02", "01", "haste"), ("sub02", "01","tru")]
     ```
+
+    Args:
+        output_query (dict): A dictionary specifying the output query
+            for the BIDSDataGrabber.
+        data_dir (str): The base directory of the BIDS dataset.
+        subjects (list, optional): List of subject IDs to include.
+            If None, all subjects in the dataset are included.
+        sessions (list, optional): List of session IDs to include.
+            If None, all sessions for each subject are included.
+        acquisitions (list, optional): List of acquisition types to include.
+            If None, all acquisitions for each subject/session are included.
+        derivative (str, optional): The name of the derivative to query.
+            If None, no derivative is queried.
+        name (str, optional): Name for the datasource node. Defaults to
+                            "bids_datasource".
+        extra_derivatives (list or str, optional): Additional
+            derivatives to include. If provided, these will be
+            added to the BIDSDataGrabber.
+    Returns:
+        pe.Node: A configured BIDSDataGrabber node that retrieves data
+        according to the specified parameters.
     """
 
     bids_datasource = pe.Node(
@@ -90,7 +111,9 @@ def create_datasource(
                 acquisitions_subj = acquisitions
             # If there is no acquisition found, maybe the acquisition
             # tag was not specified.
-            acquisitions_subj = [None] if len(acquisitions_subj) == 0 else acquisitions_subj
+            acquisitions_subj = (
+                [None] if len(acquisitions_subj) == 0 else acquisitions_subj
+            )
             for acq in acquisitions_subj:
                 if acq is not None and acq not in existing_acq:
                     print(
@@ -117,42 +140,36 @@ def create_bids_datasink(
     custom_regex_subs=None,
 ):
     """
-    Creates a BIDS-compatible datasink using parameterization and regex substitutions.
+    Creates a BIDS-compatible datasink using parameterization and
+    regex substitutions.
     Organizes outputs into:
-    <out_dir>/derivatives/<pipeline_name>/sub-<ID>/[ses-<ID>/]<datatype>/<BIDS_filename>
+    <out_dir>/derivatives/<pipeline_name>/sub-<ID>/[ses-<ID>/]
+    <datatype>/<BIDS_filename>
 
-    Parameters
-    ----------
-    out_dir : str
-        Base output directory (e.g., /path/to/project/derivatives)
-    pipeline_name : str
-        Name of the pipeline (e.g., 'nesvor_bounti', 'preprocessing')
-    strip_dir : str
-        Absolute path to the Nipype working directory base to strip
-    datatype : str, optional
-        BIDS datatype ('anat', 'func', 'dwi', etc.), by default "anat"
-    name : str, optional
-        Name for the datasink node, by default None
-    rec_label : str, optional
-        Reconstruction label (e.g., 'nesvor') for rec-... entity, by default None
-    seg_label : str, optional
-        Segmentation label (e.g., 'bounti') for seg-... entity, by default None
-    desc_label : str, optional
-        Description label for desc-... entity (e.g., 'denoised'), by default None
-    custom_subs : list, optional
-        List of custom simple substitutions, by default None
-    custom_regex_subs : list, optional
-        List of custom regex substitutions, by default None
+    Args:
+        out_dir (str): Base output directory
+                        (e.g., /path/to/project/derivatives)
+        pipeline_name (str): Name of the pipeline (e.g., 'nesvor_bounti',
+                            'preprocessing')
+        strip_dir (str): Absolute path to the Nipype working directory
+            base to strip (e.g., /path/to/nipype/workdir).
+        datatype (str, optional): BIDS datatype ('anat', etc.).
+            Defaults to "anat".
+        name (str, optional): Name for the datasink node.
+            Defaults to None, which will use the pipeline name.
+        rec_label (str, optional): Reconstruction label (e.g., 'nesvor')
+            for rec-... entity. Defaults to None.
+        seg_label (str, optional): Segmentation label (e.g., 'bounti
+            ') for seg-... entity. Defaults to None.
+        desc_label (str, optional): Description label for desc-... entity
+        custom_subs (list, optional): List of custom simple substitutions
+            to apply to output paths. Defaults to None.
+        custom_regex_subs (list, optional): List of custom regex
+            substitutions to apply to output paths. Defaults to None.
 
-    Returns
-    -------
-    datasink : nipype.Node
-        A Nipype DataSink node configured for BIDS-compatible output.
-
-    Raises
-    ------
-    ValueError
-        If `strip_dir` (Nipype work dir base path) is not provided.
+    Returns:
+        datasink (nipype.Node): A Nipype DataSink node configured for
+        BIDS-compatible output.
 
     """
     if not strip_dir:
@@ -179,16 +196,33 @@ def create_bids_datasink(
         if desc_label == "denoised":
             regex_subs.append(
                 (
-                    rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*?/?_denoising.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+))?_T2w_noise_corrected(\.nii\.gz|\.nii)$",
-                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-denoised_T2w\4",
+                    (
+                        rf"^{escaped_bids_derivatives_root}/"
+                        rf".*?_?session_([^/]+)"
+                        rf"_subject_([^/]+).*?/?_denoising.*/"
+                        rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+))?"
+                        rf"_T2w_noise_corrected(\.nii\.gz|\.nii)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
+                        rf"/\3_desc-denoised_T2w\4"
+                    ),
                 )
             )
         # ** Rule 2: Preprocessing Masks (Cropped) **
         if desc_label == "cropped":
             regex_subs.append(
                 (
-                    rf"^{escaped_bids_derivatives_root}/.*?_session_([^/]+)_subject_([^/]+).*/?_cropping.*/(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_mask(\.nii\.gz|\.nii)$",
-                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/\3_desc-cropped_mask\4",
+                    (
+                        rf"^{escaped_bids_derivatives_root}/.*?_session_"
+                        rf"([^/]+)_subject_([^/]+).*/?_cropping.*/"
+                        rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_"
+                        rf"mask(\.nii\.gz|\.nii)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
+                        rf"/\3_desc-cropped_mask\4"
+                    ),
                 )
             )
 
@@ -196,9 +230,15 @@ def create_bids_datasink(
     if rec_label and not seg_label and pipeline_name != "preprocessing":
         regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/(?:[^/]+)(\.nii\.gz|\.nii)$",
+                (
+                    rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)"
+                    rf"_subject_([^/]+).*/(?:[^/]+)(\.nii\.gz|\.nii)$"
+                ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3",
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/"
+                    rf"{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3"
+                ),
             )
         )
 
@@ -206,9 +246,16 @@ def create_bids_datasink(
     if seg_label and rec_label and pipeline_name != "preprocessing":
         regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)_subject_([^/]+).*/input_srr-mask-brain_bounti-19(\.nii\.gz|\.nii)$",
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"input_srr-mask-brain_bounti-19(\.nii\.gz|\.nii)$"
+                ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3",
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
+                ),
             )
         )
 
@@ -254,7 +301,8 @@ def create_datasink(
     iterables, name="output", params_subs={}, params_regex_subs={}
 ):
     """
-    Creates a data sink node for reformatting and organizing relevant outputs.
+    Deprecated. Creates a data sink node for reformatting and organizing
+    relevant outputs.
 
     From: https://github.com/Macatools/macapype (adapted)
 
@@ -320,31 +368,14 @@ def get_gestational_age(bids_dir, T2):
     """
     Retrieve the gestational age for a specific subject from a BIDS dataset.
 
-    Parameters
-    ----------
-    bids_dir : str
-        The file path to the root of the BIDS dataset,
-        which must contain a 'participants.tsv' file.
-    T2 : str
-        The path of the image. We can get the subject id from there if
-        it follows a BIDS format.
+    Args:
+        bids_dir : The file path to the root of the BIDS dataset,
+            which must contain a 'participants.tsv' file.
+        T2 : The path of the image. We can get the subject id from there if
+            it follows a BIDS format.
+    Returns:
+        gestational_age : The gestational age of the subject.
 
-    Returns
-    -------
-    float
-        The gestational age of the subject.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the 'participants.tsv' file is not found
-        in the specified BIDS directory.
-    KeyError
-        If the 'gestational_age' column is
-        not found in the 'participants.tsv' file.
-    IndexError
-        If the specified subject ID is not
-        found in the 'participants.tsv' file.
     """
     import pandas as pd
     import os
@@ -376,15 +407,11 @@ def get_gestational_age(bids_dir, T2):
 
 def create_description_file(out_dir, algo, prev_desc=None, cfg=None):
     """Create a dataset_description.json file in the derivatives folder.
-
-    Parameters
-    ----------
-    args : dictionary
-        Dictionary containing the arguments passed to the script.
-    container_type : string
-        Type of container used to run the algorithm.
-
     TODO: should look for the extra parameters and also add them
+
+    Args:
+        args : Dictionary containing the arguments passed to the script.
+        container_type : Type of container used to run the algorithm.
     """
     if not os.path.exists(os.path.join(out_dir, "dataset_description.json")):
         description = {

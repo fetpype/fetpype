@@ -41,15 +41,33 @@ class CropStacksAndMasksOutputSpec(TraitedSpec):
 
 
 class CropStacksAndMasks(BaseInterface):
-    """Interface to crop the field of view of an image and its mask.
+    """
+    Interface to crop the field of view of an image and its mask.
 
-    Examples
-    --------
-    >>> from fetpype.nodes.preprocessing import CropStacksAndMasks
-    >>> crop_input = CropStacksAndMasks()
-    >>> crop_input.inputs.image = 'sub-01_acq-haste_run-1_T2w.nii.gz'
-    >>> crop_input.inputs.mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
-    >>> crop_input.run() # doctest: +SKIP
+    This class provides functionality to crop a Nifti image
+    and its corresponding mask to the bounding box defined by
+    the mask. It also allows for adding boundaries around the
+    cropped region.
+
+    Args:
+        image (str): Input image filename
+        mask (input; str): Input mask filename
+        boundary (input; int):  Padding (in mm) to be set around
+                                the cropped image and mask.
+        is_enabled (input; bool): Whether cropping and masking are enabled.
+        output_image (output; str): Path to the cropped image.
+        output_mask (output; str): Path to the cropped mask.
+
+    Examples:
+        >>> from fetpype.nodes.preprocessing import CropStacksAndMasks
+        >>> crop_input = CropStacksAndMasks()
+        >>> crop_input.inputs.image = 'sub-01_acq-haste_run-1_T2w.nii.gz'
+        >>> crop_input.inputs.mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
+        >>> crop_input.run() # doctest: +SKIP
+
+    References:
+        - Michael Ebner's NiftyMIC repository:
+        https://github.com/gift-surg/NiftyMIC
     """
 
     input_spec = CropStacksAndMasksInputSpec
@@ -74,30 +92,26 @@ class CropStacksAndMasks(BaseInterface):
         """
         Crops the input image to the field of view given by the bounding box
         around its mask.
-        Code inspired from Michael Ebner:
-        https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
 
-        Input
-        -----
-        image_path: Str
-            Path to a Nifti image
-        mask_path: Str
-            Path to the corresponding nifti mask
-        boundary_i: int
-            Boundary to add to the bounding box in the i direction
-        boundary_j: int
-            Boundary to add to the bounding box in the j direction
-        boundary_k: int
-            Boundary to add to the bounding box in the k direction
-        unit: str
-            The unit defining the dimension size in nifti
+        Args:
+            image_path (str): Path to a Nifti image.
+            mask_path (str): Path to the corresponding Nifti mask.
+            boundary_i (int):   Boundary to add to the bounding box in
+                                the i direction.
+            boundary_j (int):   Boundary to add to the bounding box in
+                                the j direction.
+            boundary_k (int):   Boundary to add to the bounding box in
+                                the k direction.
+            unit (str): The unit defining the dimension size in Nifti.
 
-        Output
-        ------
-        image_cropped:
-            Image cropped to the bounding box of mask_ni, including boundary
-        mask_cropped
-            Mask cropped to its bounding box
+        Returns:
+            image_cropped:  Image cropped to the bounding box of mask_ni,
+                            including boundary.
+            mask_cropped: Mask cropped to its bounding box.
+
+        Notes:
+            Code inspired by Michael Ebner:
+            https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
         """
         print(f"Working on {image_path} and {mask_path}")
         image_ni = ni.load(image_path)
@@ -164,20 +178,19 @@ class CropStacksAndMasks(BaseInterface):
         mask: np.ndarray,
     ) -> tuple:
         """
-        Computes the bounding box around the given mask
-        Code inspired from Michael Ebner:
+        Computes the bounding box around the given mask.
+        Code inspired by Michael Ebner:
         https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
 
-        Input
-        -----
-        mask: np.ndarray
-            Input mask
-        range_x:
-            pair defining x interval of mask in voxel space
-        range_y:
-            pair defining y interval of mask in voxel space
-        range_z:
-            pair defining z interval of mask in voxel space
+        Args:
+            mask (np.ndarray): Input mask.
+            range_x (tuple): Pair defining x interval of mask in voxel space.
+            range_y (tuple): Pair defining y interval of mask in voxel space.
+            range_z (tuple): Pair defining z interval of mask in voxel space.
+
+        Returns:
+            tuple: A tuple containing the bounding box ranges for x, y, and z.
+
         """
         if np.sum(abs(mask)) == 0:
             return None, None, None
@@ -283,11 +296,27 @@ class CheckAffineResStacksAndMasksOutputSpec(TraitedSpec):
 
 
 class CheckAffineResStacksAndMasks(BaseInterface):
-    """Interface to check that the shape of stacks and masks are consistent.
+    """
+    Interface to check that the shape of stacks and masks are consistent.
     (e.g. no trailing dimensions of size 1).
     If enabled, also checks that the resolution, affine, and shape of the
     stacks and masks are consistent. Discards the stack and mask if they are
     not.
+
+    Args:
+
+        stacks (input; list): List of input stacks.
+        masks (input; list): List of input masks.
+        is_enabled (input; bool): Whether the check is enabled.
+        output_stacks (output; list): List of stacks that passed the check.
+        output_masks (output; list): List of masks that passed the check.
+
+    Examples:
+        >>> from fetpype.nodes.preprocessing import CheckAffineResStacksAndMasks # noqa: E501
+        >>> check_input = CheckAffineResStacksAndMasks()
+        >>> check_input.inputs.stacks = ['sub-01_acq-haste_run-1_T2w.nii.gz']
+        >>> check_input.inputs.masks = ['sub-01_acq-haste_run-1_T2w_mask.nii.gz']  # noqa: E501
+        >>> check_input.run() # doctest: +SKIP
     """
 
     input_spec = CheckAffineResStacksAndMasksInputSpec
@@ -349,7 +378,9 @@ class CheckAffineResStacksAndMasks(BaseInterface):
                 ):
                     skip_stack = True
                     print(
-                        f"Resolution/shape/affine mismatch -- Skipping the stack {os.path.basename(imp)} and mask {os.path.basename(maskp)}"
+                        f"Resolution/shape/affine mismatch -- "
+                        f"Skipping the stack {os.path.basename(imp)} "
+                        f"and mask {os.path.basename(maskp)}"
                     )
             if not skip_stack:
                 ni.save(image_ni, out_stack)
@@ -360,7 +391,8 @@ class CheckAffineResStacksAndMasks(BaseInterface):
         self._results["output_masks"] = masks_out
         if len(stacks_out) == 0:
             raise ValueError(
-                "All stacks and masks were discarded during the metadata check."
+                "All stacks and masks were "
+                "discarded during the metadata check."
             )
         return runtime
 
@@ -411,8 +443,23 @@ class CheckAndSortStacksAndMasksOutputSpec(TraitedSpec):
 
 
 class CheckAndSortStacksAndMasks(BaseInterface):
-    """Interface to check the input stacks and masks and make sure that
+    """
+    Interface to check the input stacks and masks and make sure that
     all stacks have a corresponding mask.
+
+    Args:
+
+        stacks (input; list): List of input stacks.
+        masks (input; list): List of input masks.
+
+        output_stacks (output; list): List of stacks that passed the check.
+        output_masks (output; list): List of masks that passed the check.
+    Examples:
+        >>> from fetpype.nodes.preprocessing import CheckAndSortStacksAndMasks
+        >>> check_input = CheckAndSortStacksAndMasks()
+        >>> check_input.inputs.stacks = ['sub-01_acq-haste_run-1_T2w.nii.gz']
+        >>> check_input.inputs.masks = ['sub-01_acq-haste_run-1_mask.nii.gz']
+        >>> check_input.run() # doctest: +SKIP
     """
 
     input_spec = CheckAndSortStacksAndMasksInputSpec
@@ -478,8 +525,24 @@ def run_prepro_cmd(
     is_enabled=True,
     input_masks=None,
     singularity_path=None,
-    singularity_mount=None
+    singularity_mount=None,
 ):
+    """
+    Run a preprocessing command on input stacks and masks.
+
+    Args:
+        input_stacks (str or list): Input stacks to process.
+        cmd (str): Command to run, with tags for input and output.
+        is_enabled (bool): Whether the command should be executed.
+        input_masks (str or list, optional): Input masks to process.
+        singularity_path (str, optional): Path to the Singularity executable.
+        singularity_mount (str, optional): Mount point for Singularity.
+    Returns:
+        tuple: Output stacks and masks, if specified in the command.
+               If only one of them is specified, returns that one.
+               If none are specified, returns None.
+
+    """
     import os
     from fetpype import VALID_PREPRO_TAGS
 
@@ -552,11 +615,13 @@ def run_prepro_cmd(
             )
             cmd = cmd.replace("<mount>", mount_cmd)
         if "<singularity_path>" in cmd:
-            # assume that if we have a singularity path, we are using singularity and the 
+            # assume that if we have a singularity path,
+            # we are using singularity and the
             # parameter has been set in the config file
             cmd = cmd.replace("<singularity_path>", singularity_path)
         if "<singularity_mount>" in cmd:
-            # assume that if we have a singularity mount path, we are using singularity and the
+            # assume that if we have a singularity mount path,
+            # we are using singularity and the
             # parameter has been set in the config file
             cmd = cmd.replace("<singularity_mount>", singularity_mount)
 

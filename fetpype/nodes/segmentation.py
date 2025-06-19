@@ -1,4 +1,20 @@
-def run_seg_cmd(input_srr, cmd, cfg, singularity_path=None, singularity_mount=None):
+def run_seg_cmd(
+    input_srr, cmd, cfg, singularity_path=None, singularity_mount=None
+):
+    """
+    Run a segmentation command with the given input SRR.
+
+    Args:
+        input_srr (str or list): Path to the input SRR file or a list
+                                containing a single SRR file.
+        cmd (str): Command to run, with placeholders for input and output.
+        cfg (object): Configuration object containing output directory.
+        singularity_path (str, optional): Path to the Singularity executable.
+        singularity_mount (str, optional): Mount point for Singularity.
+    Returns:
+        str: Path to the output segmentation file after running the command.
+
+    """
     import os
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_mount_docker
@@ -42,7 +58,8 @@ def run_seg_cmd(input_srr, cmd, cfg, singularity_path=None, singularity_mount=No
 
         seg = os.path.join(output_dir, cfg.path_to_output)
         if "<basename>" in seg:
-            # Remove all extensions from the basename (handles .nii.gz correctly)
+            # Remove all extensions from the basename
+            # (handles .nii.gz correctly)
             basename = os.path.basename(input_srr)
             # Remove all extensions (handles both .nii.gz and .nii cases)
             basename_no_ext = basename.split(".")[0]
@@ -51,11 +68,13 @@ def run_seg_cmd(input_srr, cmd, cfg, singularity_path=None, singularity_mount=No
         mount_cmd = get_mount_docker(input_srr_dir, output_dir)
         cmd = cmd.replace("<mount>", mount_cmd)
     if "<singularity_path>" in cmd:
-        # assume that if we have a singularity path, we are using singularity and the 
+        # assume that if we have a singularity path,
+        # we are using singularity and the
         # parameter has been set in the config file
         cmd = cmd.replace("<singularity_path>", singularity_path)
     if "<singularity_mount>" in cmd:
-        # assume that if we have a singularity mount path, we are using singularity and the
+        # assume that if we have a singularity mount path,
+        # we are using singularity and the
         # parameter has been set in the config file
         cmd = cmd.replace("<singularity_mount>", singularity_mount)
     print(f"Running command:\n {cmd}")

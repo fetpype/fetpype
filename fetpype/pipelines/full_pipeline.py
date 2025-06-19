@@ -19,7 +19,29 @@ def print_files(files):
 
 
 def get_prepro(cfg, load_masks=False, enabled_cropping=False):
+    """
+    Create the preprocessing workflow based on config `cfg`.
+    Given an input of T2w stacks, this pipeline performs the following steps:
+        1. Brain extraction using MONAIfbs
+        2. Check stacks and masks
+        3. Check affine and resolution of stacks and masks
+        4. Cropping stacks and masks
+        5. Denoising stacks
+        6. Bias field correction of stacks
 
+    Args:
+        cfg: Configuration object containing the parameters for the pipeline.
+        load_masks: Boolean indicating whether to load masks or
+                    perform brain extraction.
+        enabled_cropping:   Boolean indicating whether cropping is enabled.
+                            This is typically set to False for SVRTK
+                            pipelines, as they handle cropping internally.
+
+    Returns:
+        prepro_pipe:    A Nipype workflow object that contains
+                        the preprocessing steps.
+
+    """
     cfg_prepro = cfg.preprocessing
 
     prepro_pipe = pe.Workflow(name="Preprocessing")
@@ -70,12 +92,12 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         )
         brain_extraction.inputs.cmd = be_cfg_cont.cmd
         brain_extraction.inputs.cfg = be_config
-        # if the container is singularity, add singularity path to the brain_extraction
+        # if the container is singularity, add
+        # singularity path to the brain_extraction
         if cfg.container == "singularity":
             brain_extraction.inputs.singularity_path = cfg.singularity_path
             brain_extraction.inputs.singularity_mount = cfg.singularity_mount
 
-       
     # 2. Check stacks and masks
     check_name = "CheckAffineAndRes"
     check_name += "_disabled" if not enabled_check else ""
@@ -113,6 +135,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         iterfield=["input_stacks"],
         name=denoising_name,
     )
+
     denoising_cfg = cfg_prepro.denoising
     denoising.inputs.is_enabled = enabled_denoising
     denoising.inputs.cmd = denoising_cfg[container].cmd
@@ -120,8 +143,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     if cfg.container == "singularity":
         denoising.inputs.singularity_path = cfg.singularity_path
         denoising.inputs.singularity_mount = cfg.singularity_mount
-
-    denoising.inputs.cfg = denoising_cfg
 
     merge_denoise = pe.Node(
         interface=niu.Merge(1, ravel_inputs=True), name="MergeDenoise"
@@ -154,9 +175,6 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
     if cfg.container == "singularity":
         bias_corr.inputs.singularity_path = cfg.singularity_path
         bias_corr.inputs.singularity_mount = cfg.singularity_mount
-
-    bias_corr.inputs.cfg = denoising_cfg
-
 
     # 6. Verify output
     check_output = pe.Node(
@@ -204,25 +222,14 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
 def get_recon(cfg):
     """
     Get the reconstruction workflow based on the pipeline specified
-    in params. Currently, the supported pipelines are niftymic and nesvor.
+    in the config `cfg`.
 
-    Params:
-        params:
-            dictionary of parameters (default = {}). This
-            dictionary contains the parameters given in a JSON
-            config file. It specifies which containers to use
-            for each step of the pipeline.
+    Args:
+        cfg: Configuration object containing the parameters for the pipeline.
 
-    Inputs:
-        inputnode:
-            stacks:
-                list of T2w stacks
-            masks:
-                list of brain masks
-    Outputs:
-        outputnode:
-            srr_volume:
-                3D reconstructed volume
+    Returns:
+        rec_pipe:   A Nipype workflow object that contains
+                    the reconstruction steps.
     """
     rec_pipe = pe.Workflow(name="Reconstruction")
     # Creating input node
@@ -272,24 +279,14 @@ def get_recon(cfg):
 
 def get_seg(cfg):
     """
-    Get the reconstruction workflow based on the pipeline specified
-    in params. Currently, the supported pipelines are niftymic and nesvor.
+    Get the segmentation workflow based on the pipeline specified
+    in the config `cfg`.
 
-    Params:
-        params:
-            dictionary of parameters (default = {}). This
-            dictionary contains the parameters given in a JSON
-            config file. It specifies which containers to use
-            for each step of the pipeline.
-
-    Inputs:
-        inputnode:
-            srr_volume:
-                3D reconstructed volume
-    Outputs:
-        outputnode:
-            output_segmentation:
-                3D segmented volume
+    Args:
+        cfg: Configuration object containing the parameters for the pipeline.
+    Returns:
+        seg_pipe:   A Nipype workflow object that contains
+                    the segmentation steps.
     """
     seg_pipe = pe.Workflow(name="Segmentation")
     # Creating input node
@@ -333,38 +330,23 @@ def get_seg(cfg):
 
 def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     """
-    Create the fetal processing pipeline (sub-workflow).
+    Create a full fetal processing pipeline by combining preprocessing,
+    reconstruction, and segmentation workflows.
 
-    Given an input of T2w stacks, this pipeline performs the following steps:
-        1. Brain extraction using MONAIfbs (dirty wrapper around NiftyMIC's
-           command niftymic_segment_fetal_brains)
-        2. Denoising using ANTS' DenoiseImage
-        3. Perform reconstruction using NiftyMIC's command
-            niftymic_run_reconstruction_pipeline
+    Args:
+        cfg: Configuration object containing the parameters for the pipeline.
+        load_masks: Boolean indicating whether to load masks or perform
+                    brain extraction.
+        name: Name of the pipeline (default = "full_pipeline").
 
-    Params:
-        name:
-            pipeline name (default = "full_fet_pipe")
-        params:
-            dictionary of parameters (default = {}). This
-            dictionary contains the parameters given in a JSON
-            config file. It specifies which containers to use
-            for each step of the pipeline.
-
-    Inputs:
-        inputnode:
-            stacks:
-                list of T2w stacks
-    Outputs:
-        outputnode:
-            recon_files:
-                list of reconstructed files
+    Returns:
+        full_fet_pipe:  A Nipype workflow object that contains
+                        the full pipeline steps.
 
     """
     print("Full pipeline name: ", name)
     # Creating pipeline
     full_fet_pipe = pe.Workflow(name=name)
-
 
     config.update_config(full_fet_pipe.config)
     # Creating input node
@@ -415,33 +397,18 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
 
 def create_rec_pipeline(cfg, load_masks=False, name="rec_pipeline"):
     """
-    Create the fetal processing pipeline (sub-workflow).
+    Create the reconstruction workflow based on the pipeline specified
+    in the config `cfg`.
 
-    Given an input of T2w stacks, this pipeline performs the following steps:
-        1. Brain extraction using MONAIfbs (dirty wrapper around NiftyMIC's
-           command niftymic_segment_fetal_brains)
-        2. Denoising using ANTS' DenoiseImage
-        3. Perform reconstruction using NiftyMIC's command
-            niftymic_run_reconstruction_pipeline
+    Args:
+        cfg: Configuration object containing the parameters for the pipeline.
+        load_masks: Boolean indicating whether to load masks or perform
+                    brain extraction.
+        name: Name of the pipeline (default = "rec_pipeline").
 
-    Params:
-        name:
-            pipeline name (default = "full_fet_pipe")
-        params:
-            dictionary of parameters (default = {}). This
-            dictionary contains the parameters given in a JSON
-            config file. It specifies which containers to use
-            for each step of the pipeline.
-
-    Inputs:
-        inputnode:
-            stacks:
-                list of T2w stacks
-    Outputs:
-        outputnode:
-            recon_files:
-                list of reconstructed files
-
+    Returns:
+        rec_pipe: A Nipype workflow object that contains the
+                  reconstruction steps.
     """
     print("Full pipeline name: ", name)
     # Creating pipeline
@@ -489,33 +456,14 @@ def create_rec_pipeline(cfg, load_masks=False, name="rec_pipeline"):
 
 def create_seg_pipeline(cfg, name="seg_pipeline"):
     """
-    Create the fetal processing pipeline (sub-workflow).
+    Create the segmentation workflow based on the pipeline specified
+    in the config `cfg`.
 
-    Given an input of T2w stacks, this pipeline performs the following steps:
-        1. Brain extraction using MONAIfbs (dirty wrapper around NiftyMIC's
-           command niftymic_segment_fetal_brains)
-        2. Denoising using ANTS' DenoiseImage
-        3. Perform reconstruction using NiftyMIC's command
-            niftymic_run_reconstruction_pipeline
-
-    Params:
-        name:
-            pipeline name (default = "full_fet_pipe")
-        params:
-            dictionary of parameters (default = {}). This
-            dictionary contains the parameters given in a JSON
-            config file. It specifies which containers to use
-            for each step of the pipeline.
-
-    Inputs:
-        inputnode:
-            stacks:
-                list of T2w stacks
-    Outputs:
-        outputnode:
-            recon_files:
-                list of reconstructed files
-
+    Args:
+        cfg: Configuration object containing the parameters for the pipeline.
+        name: Name of the pipeline (default = "seg_pipeline").
+    Returns:
+        seg_pipe: A Nipype workflow object that contains the segmentation steps
     """
     print("Full pipeline name: ", name)
     # Creating pipeline
@@ -553,37 +501,8 @@ def create_seg_pipeline(cfg, name="seg_pipeline"):
 
 def create_dhcp_subpipe(name="dhcp_pipe", params={}):
     """
-    Create a dhcp pipeline for segmentation of fetal MRI
-
-    Given an reconstruction of fetal MRI and a mask, this
-    pipeline performs the following steps:
-        1. Run the dhcp pipeline for segmentation
-        2. Run it for surface extraction
-
-    Params:
-        name:
-            pipeline name (default = "full_fet_pipe")
-        params:
-            dictionary of parameters (default = {}). This
-            dictionary contains the parameters given in a JSON
-            config file. It specifies which containers to use
-            for each step of the pipeline.
-
-    Inputs:
-        inputnode:
-            MRI brain:
-                Reconstruction of MRI brain
-            Mask:
-                Corresponding brain mask of the reconstruction
-            GA:
-                gestational age of the fetus
-    Outputs:
-        outputnode:
-            dhcp_files:
-                folder with dhcp outputs
-
-    TODO:
-    - EM algorithm halting, solve it better or in the messy way?
+    Deprecated: Create a dHCP pipeline for fetal brain segmentation
+    and surface extraction.
     """
 
     print("Full pipeline name: ", name)

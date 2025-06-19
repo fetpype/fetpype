@@ -1,9 +1,9 @@
 defaults:
   - preprocessing/default
-  - reconstruction/nesvor
+  - reconstruction/niftymic
   - segmentation/bounti
   - _self_
-container: "docker"
+container: "singularity"
 reconstruction:
   output_resolution: 0.8
-save_graph: True
+save_graph: False

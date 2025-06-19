@@ -124,9 +124,13 @@ def create_main_workflow(
     if load_masks:
         input_data.connect(datasource, "masks", output, "masks")
 
-    main_workflow.connect(input_data, "outputnode.stacks", fet_pipe, "inputnode.stacks")
+    main_workflow.connect(
+        input_data, "outputnode.stacks", fet_pipe, "inputnode.stacks"
+    )
     if load_masks:
-        main_workflow.connect(datasource, "outputnode.masks", fet_pipe, "inputnode.masks")
+        main_workflow.connect(
+            datasource, "outputnode.masks", fet_pipe, "inputnode.masks"
+        )
 
     # Reconstruction data sink:
     pipeline_name = get_pipeline_name(cfg)

@@ -13,10 +13,10 @@ plugins:
       python:
         options:
           show_source: true
+          show_root_heading: true
+          show_root_full_path: false
           members_order: source
           relative_crossrefs: true
-
-        
 - search
 - autorefs
 - awesome-pages

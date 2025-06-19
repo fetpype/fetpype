@@ -112,7 +112,8 @@ def create_seg_workflow(
     )
 
     # in both cases we connect datsource outputs to main pipeline
-    main_workflow.connect(datasource, "srr_volume", fet_pipe, "inputnode.srr_volume")
+    main_workflow.connect(datasource, "srr_volume",
+                          fet_pipe, "inputnode.srr_volume")
 
     # DataSink
 
@@ -130,7 +131,8 @@ def create_seg_workflow(
     if not os.path.exists(prev_desc):
         prev_desc = None
 
-    create_description_file(out_dir, pipeline_name, prev_desc, cfg.segmentation)
+    create_description_file(out_dir, pipeline_name,
+                            prev_desc, cfg.segmentation)
     # Create another datasink for the segmentation pipeline
     seg_datasink = create_bids_datasink(
         out_dir=out_dir,

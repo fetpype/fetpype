@@ -1,6 +1,6 @@
 # Reconstruction
 
-## Available algorithms
+## Available tools
 Several state-of-the-art super-resolution reconstruction algorithms have been wrapped and tested in fetpype.
 
 | Algorithm                              | Repository                                               | Docker                                                                            |

@@ -458,9 +458,8 @@ class CheckAndSortStacksAndMasks(BaseInterface):
         >>> from fetpype.nodes.preprocessing import CheckAndSortStacksAndMasks
         >>> check_input = CheckAndSortStacksAndMasks()
         >>> check_input.inputs.stacks = ['sub-01_acq-haste_run-1_T2w.nii.gz']
-        >>> check_input.inputs.masks = ['sub-01_acq-haste_run-1_T2w_mask.nii.gz']
+        >>> check_input.inputs.masks = ['sub-01_acq-haste_run-1_mask.nii.gz']
         >>> check_input.run() # doctest: +SKIP
-    
     """
 
     input_spec = CheckAndSortStacksAndMasksInputSpec
@@ -542,7 +541,6 @@ def run_prepro_cmd(
         tuple: Output stacks and masks, if specified in the command.
                If only one of them is specified, returns that one.
                If none are specified, returns None.
-    
 
     """
     import os

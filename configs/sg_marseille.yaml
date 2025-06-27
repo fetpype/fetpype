@@ -6,6 +6,7 @@ defaults:
 container: "singularity"
 singularity_path: "/scratch/gauzias/softs/fetpype_singularity_images"
 singularity_mount: "/scratch/:/scratch/"
+singularity_home: "/scratch/dmeunier/tmp"
 #preprocessing:
 #  disable_cropping: null
 reconstruction:

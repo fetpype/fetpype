@@ -5,7 +5,7 @@ docker:
     bash /home/auto-proc-svrtk/scripts/auto-brain-bounti-segmentation-fetal.sh 
     <input_dir> <output_dir>"
 singularity:
-  cmd: "singularity exec -u --bind <singularity_mount> --bind /home/gmarti/tmp:/home/tmp_proc --nv
+  cmd: "singularity exec -u --bind <singularity_mount> --nv
     <singularity_path>/bounti.sif
     bash /home/auto-proc-svrtk/auto-brain-bounti-segmentation-fetal.sh 
     <input_dir> <output_dir>"

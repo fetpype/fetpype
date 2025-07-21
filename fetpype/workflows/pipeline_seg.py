@@ -8,6 +8,7 @@ from fetpype.utils.utils_bids import (
     create_datasource,
     create_bids_datasink,
     create_description_file,
+    check_participants_tsv_compliance,
 )
 from fetpype import VALID_RECONSTRUCTION
 from fetpype.workflows.utils import (
@@ -66,6 +67,9 @@ def create_seg_workflow(
         data_dir, out_dir, nipype_dir, cfg
     )
     check_valid_pipeline(cfg)
+    # Early check for participants.tsv compliance if using dHCP segmentation
+    if cfg.segmentation.pipeline == "dhcp":
+        check_participants_tsv_compliance(data_dir)
     # if general, pipeline is not in params ,create it and set it to niftymic
 
     data_desc = os.path.join(data_dir, "dataset_description.json")

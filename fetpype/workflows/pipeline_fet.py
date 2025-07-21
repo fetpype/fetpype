@@ -8,6 +8,7 @@ from fetpype.utils.utils_bids import (
     create_datasource,
     create_bids_datasink,
     create_description_file,
+    check_participants_tsv_compliance,
 )
 
 from fetpype.workflows.utils import (  # noqa: E402
@@ -65,6 +66,10 @@ def create_main_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
+
+    # Early check for participants.tsv compliance if using dHCP segmentation
+    if cfg.segmentation.pipeline == "dhcp":
+        check_participants_tsv_compliance(data_dir)
 
     # Print the three paths
     print(f"Data directory: {data_dir}")

@@ -369,6 +369,92 @@ def create_datasink(
     return datasink
 
 
+def find_bids_root_for_participants(start_dir):
+    """
+    Walk up the directory tree from start_dir to find the first directory containing participants.tsv.
+    Returns the path to that directory. Raises FileNotFoundError if not found.
+
+    The function is used to find the bids root directory for the participants.tsv file, in case
+    the dir is a derivatives directory.
+
+    Parameters
+    ----------
+    start_dir : str
+        The directory to start the search from.
+
+    Returns 
+    -------
+    str
+        The path to the bids root directory.
+
+    Raises
+    ------
+    FileNotFoundError
+    """
+    import os
+    current_dir = os.path.abspath(start_dir)
+    while True:
+        participants_path = os.path.join(current_dir, "participants.tsv")
+        if os.path.exists(participants_path):
+            return current_dir
+        parent = os.path.dirname(current_dir)
+        if parent == current_dir:
+            break
+        current_dir = parent
+    raise FileNotFoundError(f"participants.tsv not found in {start_dir} or any parent directory.")
+
+
+def check_participants_tsv_compliance(bids_dir):
+    """
+    Check that participants.tsv exists, is readable, and contains required columns.
+    Required columns: 'participant_id' and a gestational age column.
+    Raises informative errors if not compliant.
+
+    Parameters
+    ----------
+    bids_dir : str
+        The directory to check for participants.tsv.
+
+    Returns
+    -------
+    bool
+        True if the participants.tsv is compliant, False otherwise.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the participants.tsv file is not found.
+    """
+    import os
+    import pandas as pd
+    bids_root = find_bids_root_for_participants(bids_dir)
+    participants_path = os.path.join(bids_root, "participants.tsv")
+    if not os.path.exists(participants_path):
+        raise FileNotFoundError(f"participants.tsv not found in {bids_root}")
+    try:
+        df = pd.read_csv(participants_path, delimiter="\t")
+    except Exception as e:
+        raise RuntimeError(f"Could not read participants.tsv: {e}")
+    if "participant_id" not in df.columns:
+        raise KeyError(f"'participant_id' column not found in participants.tsv in {bids_root}")
+    ga_column = None
+    for col in df.columns:
+        if col.lower() in ["gestational_age", "gestational_weeks", "ga", "age"]:
+            ga_column = col
+            break
+    if ga_column is None:
+        raise KeyError(
+            f"No gestational age column (gestational_age/gestational_weeks/ga/age) found in participants.tsv in {bids_root}"
+        )
+    if df.shape[0] == 0:
+        raise ValueError(f"participants.tsv in {bids_root} is empty.")
+    try:
+        df[ga_column].astype(float)
+    except Exception:
+        raise ValueError(f"Some values in column '{ga_column}' in participants.tsv are not valid floats.")
+    return True
+
+
 def get_gestational_age(bids_dir, T2):
     """
     Retrieve the gestational age for a specific subject from a BIDS dataset.
@@ -376,8 +462,7 @@ def get_gestational_age(bids_dir, T2):
     Parameters
     ----------
     bids_dir : str
-        The file path to the root of the BIDS dataset,
-        which must contain a 'participants.tsv' file.
+        The file path to the root of the BIDS dataset or a derivatives directory.
     T2 : str or list
         The path of the image. We can get the subject id from there if
         it follows a BIDS format. If a list is provided, the first
@@ -392,7 +477,7 @@ def get_gestational_age(bids_dir, T2):
     ------
     FileNotFoundError
         If the 'participants.tsv' file is not found
-        in the specified BIDS directory.
+        in the specified BIDS directory or any parent directory.
     KeyError
         If the 'gestational_age' column is
         not found in the 'participants.tsv' file.
@@ -402,24 +487,20 @@ def get_gestational_age(bids_dir, T2):
     """
     import pandas as pd
     import os
-
-    participants_path = os.path.join(bids_dir, "participants.tsv")
-
+    bids_root = find_bids_root_for_participants(bids_dir)
+    participants_path = os.path.join(bids_root, "participants.tsv")
     try:
         df = pd.read_csv(participants_path, delimiter="\t")
     except FileNotFoundError:
-        raise FileNotFoundError(f"participants.tsv not found in {bids_dir}")
-
+        raise FileNotFoundError(f"participants.tsv not found in {bids_root}")
     # Check if T2 is a list and extract the first element
     if isinstance(T2, list):
         if len(T2) > 0:
             T2 = T2[0]
         else:
             raise ValueError("T2 list is empty, cannot extract subject ID.")
-
     # Extract subject ID from filename
     subject_id = os.path.basename(T2).split("_")[0]
-
     # Try to find a gestational age column - check various possible names
     ga_column = None
     for col in df.columns:
@@ -431,26 +512,22 @@ def get_gestational_age(bids_dir, T2):
         ]:
             ga_column = col
             break
-
     if ga_column is None:
         raise KeyError(
-            f"No gestational age column found in participants.tsv {bids_dir}"
+            f"No gestational age column found in participants.tsv {bids_root}"
         )
-
     try:
-        # Try matching with sub- prefix
         gestational_age = df.loc[
             df["participant_id"] == subject_id, ga_column
         ].values[0]
         return float(gestational_age)
     except KeyError:
         raise KeyError(
-            f"No gestational age column found in participants.tsv {bids_dir}"
+            f"No gestational age column found in participants.tsv {bids_root}"
         )
     except IndexError:
         raise IndexError(f"Subject {subject_id} not found in participants.tsv")
     except ValueError:
-        # Handle the case where age is not convertible to float
         raise ValueError(
             f"Gestational age for subject {subject_id} is not a valid float: "
             f"{gestational_age}"

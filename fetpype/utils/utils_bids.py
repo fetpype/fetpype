@@ -371,41 +371,37 @@ def create_datasink(
 
 def find_bids_root_for_participants(start_dir):
     """
-    Walk up the directory tree from start_dir to find the first
-    directory containing participants.tsv.
-
-    Returns the path to that directory. Raises FileNotFoundError
-    if not found.
-
-    The function is used to find the bids root directory for the
-    participants.tsv file, in case the directory
-    is a derivatives directory.
-
-    Parameters
-    ----------
-    start_dir : str
-        The directory to start the search from.
-
-    Returns
-    -------
-    str
-        The path to the bids root directory.
-
-    Raises
-    ------
-    FileNotFoundError
+    Find the BIDS root directory for participants.tsv, following these rules:
+    1. If participants.tsv exists in start_dir, return start_dir.
+    2. If 'derivatives' is in the path, check the parent of
+        'derivatives' for participants.tsv.
+    3. If not found, raise FileNotFoundError. Do not traverse further up.
+    Case-sensitive for 'derivatives'.
     """
+    import os
+
     current_dir = os.path.abspath(start_dir)
-    while True:
-        participants_path = os.path.join(current_dir, "participants.tsv")
+    participants_path = os.path.join(current_dir, "participants.tsv")
+    if os.path.exists(participants_path):
+        return current_dir
+
+    norm_path = os.path.normpath(current_dir)
+    path_parts = norm_path.split(os.sep)
+    if "derivatives" in path_parts:
+        derivatives_idx = path_parts.index("derivatives")
+        bids_root = os.sep.join(path_parts[:derivatives_idx])
+        if not bids_root:
+            bids_root = os.sep
+        participants_path = os.path.join(bids_root, "participants.tsv")
         if os.path.exists(participants_path):
-            return current_dir
-        parent = os.path.dirname(current_dir)
-        if parent == current_dir:
-            break
-        current_dir = parent
+            return bids_root
+        raise FileNotFoundError(
+            f"participants.tsv not found in {bids_root} "
+            "(parent of 'derivatives')"
+        )
     raise FileNotFoundError(
-        f"participants.tsv not found in {start_dir} or any parent directory."
+        f"participants.tsv not found in {current_dir} "
+        "and no 'derivatives' folder in path."
     )
 
 

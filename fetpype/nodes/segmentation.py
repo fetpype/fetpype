@@ -1,5 +1,8 @@
 def run_seg_cmd(
-    input_srr, cmd, cfg, singularity_path=None, singularity_mount=None
+    input_srr, cmd, cfg,
+    singularity_path=None,
+    singularity_mount=None,
+    singularity_home=None
 ):
     """
     Run a segmentation command with the given input SRR.

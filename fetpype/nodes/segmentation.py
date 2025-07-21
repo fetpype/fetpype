@@ -1,5 +1,10 @@
 def run_seg_cmd(
-    input_srr, cmd, cfg, singularity_path=None, singularity_mount=None
+    input_srr,
+    cmd,
+    cfg,
+    singularity_path=None,
+    singularity_mount=None,
+    gestational_age=None,
 ):
     import os
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
@@ -63,6 +68,10 @@ def run_seg_cmd(
         # we are using singularity and the
         # parameter has been set in the config file
         cmd = cmd.replace("<singularity_mount>", singularity_mount)
+
+    if "<gestational_age>" in cmd:
+        cmd = cmd.replace("<gestational_age>", str(gestational_age))
+
     print(f"Running command:\n {cmd}")
     os.system(cmd)
     return seg

@@ -8,6 +8,7 @@ from fetpype.utils.utils_bids import (
     create_datasource,
     create_bids_datasink,
     create_description_file,
+    check_participants_tsv_compliance,
 )
 
 from fetpype.workflows.utils import (  # noqa: E402
@@ -66,6 +67,10 @@ def create_main_workflow(
         data_dir, out_dir, nipype_dir, cfg
     )
 
+    # Early check for participants.tsv compliance if using dHCP segmentation
+    if cfg.segmentation.pipeline == "dhcp":
+        check_participants_tsv_compliance(data_dir)
+
     # Print the three paths
     print(f"Data directory: {data_dir}")
     print(f"Output directory: {out_dir}")
@@ -86,7 +91,7 @@ def create_main_workflow(
     # main_workflow
     main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
     main_workflow.base_dir = nipype_dir
-    fet_pipe = create_full_pipeline(cfg, load_masks)
+    fet_pipe = create_full_pipeline(cfg, load_masks, bids_dir=data_dir)
 
     output_query = {
         "stacks": {

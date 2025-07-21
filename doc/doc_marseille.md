@@ -17,16 +17,16 @@ in the .json the –nv serves to use GPU
 # server commands 
 - connect to a cluster node with GPU
 srun -p kepler -A b219 -t 4-2 --gres=gpu:1 --pty bash -i
-
+srun -p volta --gres=gpu:1 -t 2:00:00 -A b219 --pty bash -i
+- 
 - connect to a dev node which enables to git pull/push
 srun -p dev -A b219 --pty bash -i
 
+# load the modules
+module load userspace/all; module load cuda/11.6; conda activate fetpype
+
+
 # Run pipeline_minimal
-- on the simulated data from Lausanne (fabian)
-python workflows/pipeline_fet.py -data /scratch/gauzias/data/datasets/fabian/fabian/fabian/ -out /scratch/gauzias/output_sandbox/ -params workflows/params_segment_fet_minimal.json -sub simu010 -ses 01
-
 - on in house test subject
-python workflows/pipeline_fet.py -data /scratch/gauzias/data/datasets/test_db/ -out /scratch/gauzias/output_sandbox/ -params workflows/params_segment_fet_minimal.json -sub 0036 -ses 0045
-
-# test niftymic pipeline
-python workflows/pipeline_fet.py -data /scratch/gauzias/data/datasets/test_db/ -out /scratch/gauzias/output_sandbox/ -params workflows/params_niftymic_recon.json -sub 0036 -ses 0045
+fetpype_run --data /scratch/gauzias/data/test_fetpype/test_db --out /scratch/gauzias/data/test_fetpype/test_db/derivatives/fetpype --config ./configs/sg_marseille.yaml
+fetpype_run --data /scratch/gauzias/data/test_fetpype/test_fabian/fabian  --out /scratch/gauzias/data/test_fetpype/test_fabian --config ./configs/sg_marseille.yaml

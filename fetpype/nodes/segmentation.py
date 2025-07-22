@@ -1,5 +1,8 @@
 def run_seg_cmd(
-    input_srr, cmd, cfg, singularity_path=None, singularity_mount=None
+    input_srr, cmd, cfg,
+    singularity_path=None,
+    singularity_mount=None,
+    singularity_home=None
 ):
     """
     Run a segmentation command with the given input SRR.
@@ -77,6 +80,12 @@ def run_seg_cmd(
         # we are using singularity and the
         # parameter has been set in the config file
         cmd = cmd.replace("<singularity_mount>", singularity_mount)
+
+    if "<singularity_home>" in cmd:
+        # assume that if we have a singularity mount path,
+        # we are using singularity and the
+        # parameter has been set in the config file
+        cmd = cmd.replace("<singularity_home>", singularity_home)
     print(f"Running command:\n {cmd}")
     os.system(cmd)
     return seg

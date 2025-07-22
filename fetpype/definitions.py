@@ -41,4 +41,5 @@ VALID_SEG_TAGS = [
     "output_seg",
     "singularity_path",
     "singularity_mount",
+    "singularity_home",
 ]

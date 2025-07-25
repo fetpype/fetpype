@@ -4,7 +4,9 @@ defaults:
   - segmentation/bounti
   - _self_
 container: "singularity"
-singularity_path: "/home/gmarti/SINGULARITY/"
+singularity_path: "/home/gmarti/SINGULARITY"
+singularity_mount: "/gpfs/home/gmarti:/gpfs/home/gmarti"
+singularity_home: "/gpfs/home/gmarti/tmp_proc"
 reconstruction:
   output_resolution: 0.8
 save_graph: False

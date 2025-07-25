@@ -53,7 +53,9 @@ sub-myname
             sub-myname_[ses-01]_run-3_T2w.nii.gz
 ```
 
-Here, [ses-XX] is an optional tag/folder level. The `anat` folder will contain the different runs, which are the different stacks acquired for a given subject. More information about BIDS formatting is available [here](https://bids.neuroimaging.io/index.html).
+Here, [ses-XX] is an optional tag/folder level. The `anat` folder will contain the different runs, which are the different stacks acquired for a given subject. You can find a more detailed description on this format in our [input data preparation guide](input_data.md). More information about BIDS formatting is available [here](https://bids.neuroimaging.io/index.html).
+
+The output of the pipeline will be saved in the `derivatives` folder, which will contain the different steps of the pipeline, also in BIDS format. You can find a more detailed description of the output data structure [here](output_data.md).
 
 #### Choose what you will run
 The pipeline that will be run is defined by a structure of config files. A default pipeline, featuring pre-processing (mask extraction, denoising, cropping and masks), reconstruction (using NeSVoR[@xu2023nesvor]) and segmentation (using BOUNTI[@uus2023bounti]) is defined by the following config file.

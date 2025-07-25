@@ -1,38 +1,20 @@
 # Output Data Structure
 
-Fetpype organizes all processed data following the [BIDS (Brain Imaging Data Structure)](https://bids.neuroimaging.io/index.html) derivatives convention. This standardized organization ensures that your results are easily shareable, reproducible, and compatible with other neuroimaging analysis tools.
+Fetpype organizes all processed data following the [BIDS (Brain Imaging Data Structure)](https://bids.neuroimaging.io/index.html) derivatives convention. This ensures your results are shareable, reproducible, and compatible with other neuroimaging tools.
 
-To understand how to transform your raw data into the BIDS structure that Fetpype expects, please refer to this guide: [Input Data Structure](input_data.md).
-
-## Overall Structure
-
-Fetpype creates a derivatives directory structure that mirrors your input BIDS dataset but contains processed data instead of raw acquisitions. The structure is as follows:
-
-```
-your_project/
-├── sub-01/                          # Raw BIDS data (input)
-│   └── ses-01/
-│       └── anat/
-│           ├── sub-01_ses-01_run-1_T2w.nii.gz
-│           ├── sub-01_ses-01_run-2_T2w.nii.gz
-│           └── sub-01_ses-01_run-3_T2w.nii.gz
-└── derivatives/                     # Processed data (output)
-    ├── preprocessing/               # Intermediate preprocessing outputs
-    ├── nesvor/                      # Reconstruction outputs  
-    ├── bounti/                      # Segmentation outputs
-    └── nesvor_bounti/               # Combined pipeline outputs
-```
-
-Each derivatives subdirectory contains:
-
-- `dataset_description.json`: Metadata about the processing pipeline
-- Subject directories: Organized following BIDS conventions
+For transforming raw data into the BIDS structure Fetpype expects, see: [Input Data Structure](input_data.md).
 
 ## The DataSink Module
 
-The BIDS DataSink handles the organization and formatting of pipeline outputs according to BIDS conventions. It ensures that all processed data is properly structured and named.
+Fetpype uses a custom DataSink (see `create_bids_datasink` in `fetpype/utils/utils_bids.py`) to organize and rename pipeline outputs into BIDS-compliant structures. It wraps Nipype's DataSink and applies regex substitutions to ensure outputs are properly named and structured for downstream analysis. For a more detailed explanation of the DataSink module, see the [Nipype documentation](https://nipype.readthedocs.io/en/latest/api/generated/nipype.interfaces.io.html#datasink) or the [nipype-tutorial](https://miykael.github.io/nipype_tutorial/notebooks/basic_data_output.html) on DataSink.
 
-The BIDS DataSink automatically organizes pipeline outputs into the standard BIDS derivatives structure:
+### How DataSink Works
+
+- **Input:** Nipype working directory outputs (often with non-BIDS names)
+- **Processing:** Applies a set of regex and simple substitutions to transform paths and filenames into BIDS-compliant outputs
+- **Output:** Files organized in the BIDS derivatives structure, with correct naming and metadata
+
+### Example Output Structure
 
 ```
 derivatives/
@@ -46,89 +28,94 @@ derivatives/
 
 ### File Naming Convention
 
-The DataSink applies transformations to convert Nipype working directory paths into BIDS-compliant names:
-
 | Input (Nipype working dir) | Output (BIDS derivatives) |
 |----------------------------|---------------------------|
 | `preprocessing_wf/_session_01_subject_sub-01/denoise_wf/_denoising/sub-01_ses-01_run-1_T2w_noise_corrected.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_run-1_desc-denoised_T2w.nii.gz` |
 | `nesvor_pipeline_wf/_session_02_subject_sub-01/recon_node/recon.nii.gz` | `sub-01/ses-02/anat/sub-01_ses-02_rec-nesvor_T2w.nii.gz` |
 | `segmentation_wf/_session_01_subject_sub-01/seg_node/input_srr-mask-brain_bounti-19.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_dseg.nii.gz` |
 
+### Core BIDS Entities
 
-## Example of integration with pipelines
+- `sub-XX`: Subject identifier
+- `ses-XX`: Session identifier (omitted if no sessions)
+- `run-X`: Run number (from original stacks, preserved in preprocessing)
+- `rec-METHOD`: Reconstruction method (e.g., rec-nesvor)
+- `seg-METHOD`: Segmentation method (e.g., seg-bounti)
+- `desc-DESCRIPTION`: Processing description (e.g., desc-denoised)
+- Suffixes: `T2w`, `dseg`, `mask`, `surf.gii`, `shape.gii`
 
-The DataSink is automatically integrated into Fetpype workflows:
+## DataSink Regex and Substitution Rules
+
+The DataSink applies context-specific regex rules to convert Nipype outputs to BIDS-compliant names. Some examples of rules that are in use for various pipelines:
+
+- **Preprocessing (denoised):**
+  - Input: .../denoise_wf/.../sub-01_ses-01_run-1_T2w_noise_corrected.nii.gz
+  - Output: sub-01/ses-01/anat/sub-01_ses-01_run-1_desc-denoised_T2w.nii.gz
+- **Preprocessing (cropped):**
+  - Input: .../crop_wf/.../sub-01_ses-01_run-1_mask.nii
+  - Output: sub-01/ses-01/anat/sub-01_ses-01_run-1_desc-cropped_mask.nii
+- **Reconstruction:**
+  - Input: .../recon_node/recon.nii.gz
+  - Output: sub-01/ses-02/anat/sub-01_ses-02_rec-nesvor_T2w.nii.gz
+- **Segmentation:**
+  - Input: .../seg_node/input_srr-mask-brain_bounti-19.nii.gz
+  - Output: sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_dseg.nii.gz
+
+**Cleanup rules** (applied to all outputs):
+- Remove doubled prefixes (e.g., `sub-sub-` → `sub-`)
+- Collapse multiple underscores or slashes
+- Remove `None` session labels
+- Fix repeated extensions (e.g., `.nii.gz.gz` → `.nii.gz`)
+
+### Customization
+
+You can add custom substitutions for specialized file patterns using the `custom_subs` and `custom_regex_subs` arguments to `create_bids_datasink`.
+
+Example:
+```python
+custom_regex_subs = [
+    (r"_custom_suffix", ""),
+    (r"temp_", "")
+]
+datasink = create_bids_datasink(
+    ..., custom_regex_subs=custom_regex_subs
+)
+```
+
+## Example: Integrating DataSink in a Pipeline
 
 ```python
-# In pipeline creation
+from fetpype.utils.utils_bids import create_bids_datasink
+
 datasink = create_bids_datasink(
-    out_dir=output_directory,
-    pipeline_name=get_pipeline_name(cfg),
-    strip_dir=main_workflow.base_dir,
-    rec_label=cfg.reconstruction.pipeline,
-    seg_label=cfg.segmentation.pipeline
+    out_dir="/path/to/derivatives",
+    pipeline_name="nesvor_bounti",
+    strip_dir="/path/to/nipype/workdir",
+    rec_label="nesvor",
+    seg_label="bounti"
 )
 
-# Connect pipeline outputs to datasink
-main_workflow.connect(
-    reconstruction_node, "output_volume", 
-    datasink, "@reconstruction"
+workflow.connect(
+    node, "output", datasink, "@nesvor_bounti"
 )
 ```
 
-## BIDS Entity Explanation
-Fetpype uses standard BIDS entities to describe the processed data:
+## Best Practices
 
-### Core Entities
+- **Always set `strip_dir`:** This should point to the Nipype base working directory. If not set, DataSink will raise an error.
+- **Use descriptive labels:** For `rec_label`, `seg_label`, and `desc_label`, use values that reflect the actual processing method (e.g., `nesvor`, `bounti`, `denoised`).
+- **Pipeline names:** Should match the processing chain (e.g., `nesvor_bounti`, `preprocessing`).
+- **Test your DataSink configuration:** Use unit tests or inspect outputs to ensure correct organization and naming.
 
-- `sub-XX`: Subject identifier (matches input data)
-- `ses-XX`: Session identifier (matches input data, omitted if no sessions)
-- `run-X`: Run number (from original stacks, preserved in preprocessing)
+## Troubleshooting
 
-### Processing Entities
+If your pipeline finishes but you don't see outputs in `derivatives/`, check:
+- The Nipype working directory for your results (they may not have been moved/renamed correctly).
+- That your input BIDS dataset uses standard subject/session naming.
+- That there are no special characters or unexpected extensions in your filenames.
+- That session information is present/absent as expected.
 
-- `rec-METHOD`: Reconstruction method used (e.g., rec-nesvor, rec-niftymic, rec-svrtk)
-- `seg-METHOD`: Segmentation method used (e.g., seg-bounti, seg-dhcp)
-- `desc-DESCRIPTION`: Processing description (e.g., desc-denoised, desc-cropped)
-
-### File Suffixes
-
-- `T2w`: Reconstructed T2-weighted volume
-- `dseg`: Discrete segmentation (labeled volume)
-- `mask`: Binary mask
-- `surf.gii`: Surface mesh (GIFTI format)
-- `shape.gii`: Surface metric data (GIFTI format)
-
-
-## Possible issues
-If your Fetpype pipeline finishes successfully but you don't find any outputs in the derivatives/ folder, this typically indicates a DataSink organization error.
-
-### What to Do
-
-1. Check the Nipype working directory: Your processed files are likely still there, just not properly organized. Look in:
-
-```
-nipype/                          # Or your specified --nipype_dir
-└── pipeline_name_wf/
-    └── _session_XX_subject_XX/
-        └── [various_processing_nodes]/
-            └── [your_actual_results]
-```
-
-2. Locate your results: The actual processed volumes and segmentations will be in the individual node directories within the Nipype working directory.
-
-3. Check the naming of your raw files: This issue could be caused by your files having names that don't match the expected BIDS format by the DataSink, preventing it from working correctly. 
-
-**Common scenarios that cause DataSink issues:**
-
-- Non-standard subject/session naming in your input BIDS dataset
-- Special characters in filenames or paths
-- Unexpected file extensions or naming conventions
-- Missing session information when sessions are expected (or vice versa)
-
-If everything looks correct, please add an issue on the [GitHub repository](https://github.com/fetpype/fetpype/issues) with the following information:
-
-- Your input BIDS directory structure (subject/session naming).
-- The command you used to run Fetpype.
-- The configuration file used.
-- An example of the file paths in your Nipype working directory.
+If issues persist, please open an issue on [GitHub](https://github.com/fetpype/fetpype/issues) with:
+- Your input BIDS directory structure.
+- The command and config file used.
+- Example file paths from your Nipype working directory.

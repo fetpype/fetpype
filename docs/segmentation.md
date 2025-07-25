@@ -8,6 +8,8 @@ Several state-of-the-art segmentation algorithms have been wrapped and tested in
 | BOUNTI[@uus2023bounti]        | <https://github.com/gift-surg/NiftyMIC>  | <https://hub.docker.com/r/renbem/niftymic> |
 | dHCP[@makropoulos2018developing]  |<https://github.com/SVRTK/SVRTK> | <https://hub.docker.com/r/fetalsvrtk/svrtk> |
 
+**⚠️ Disclaimer:** The dHCP pipeline is only available in the dev branch as of now.
+
 The version of the algorithm used in fetpype is the one available on the Docker Hub, which have some changes to the original code. The repository is available at <https://github.com/fetpype/dhcp-structural-pipeline>.
 
 ## Config structure
@@ -39,11 +41,9 @@ There are a limited set of tags that can be used for reconstruction:
 | `<singularity_mount>`                              | Where the different folders will be mounted on Singularity               | Singularity only                                             |
 | `<singularity_path>`                   | The base path of the Singularity image               | Singularity only                                             |
 | `<singularity_home>`                   | A directory used for temporary files               | Singularity only                                             |
-
 | `<input_stacks>`                       | The list of inputs stacks will be given as arguments      | Mutually exclusive with `<input_dir>`                                               |
 | `<input_dir>`                          | The folder that contains the input stacks                 | Mutually exclusive with `<output_dir>`                                              |
 | `<output_dir>`                         | The output directory                                      | Mutually exclusive with 
-
 
 ## dHCP processing pipeline 
 

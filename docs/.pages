@@ -2,6 +2,7 @@ nav:
     - Home: index.md
     - In-depth:
         - configs.md
+        - input_data.md
         - output_data.md
         - run_parts.md
         - contributing.md

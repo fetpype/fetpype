@@ -309,6 +309,7 @@ def get_seg(cfg):
                 "cfg",
                 "singularity_path",
                 "singularity_mount",
+                "singularity_home",
             ],
             output_names=["seg_volume"],
             function=run_seg_cmd,
@@ -321,6 +322,7 @@ def get_seg(cfg):
     if cfg.container == "singularity":
         seg.inputs.singularity_path = cfg.singularity_path
         seg.inputs.singularity_mount = cfg.singularity_mount
+        seg.inputs.singularity_home = cfg.singularity_home
 
     seg_pipe.connect(inputnode, "srr_volume", seg, "input_srr")
     seg_pipe.connect(seg, "seg_volume", outputnode, "seg_volume")

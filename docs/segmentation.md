@@ -64,20 +64,11 @@ sub-03           25.8
 
 You can choose to run only the segmentation, the surface reconstruction, or both. The default is to run both. The following options are available, and you should add them to the "cmd" field of the configuration file:
 
-#### `-seg` (Segmentation Only)
-- Brain tissue segmentation using age-appropriate priors
-- White matter, gray matter, and CSF classification
-- Fastest processing option
+**`-seg` (Segmentation only):**
 
-#### `-surf` (Surface Reconstruction)
-- White matter and pial surface generation
-- Topology correction and smoothing
-- Enables surface-based analysis
+**`-surf` (Surface reconstruction):**
 
-#### `-all` (Complete Processing)
-- Full segmentation and surface pipeline
-- Cortical thickness computation
-- Surface-based analysis metrics
+**`-all` (Complete Processing):**
 
 ### Known dHCP issues
 

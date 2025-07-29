@@ -45,6 +45,8 @@ There are a limited set of tags that can be used for reconstruction:
 | `<input_dir>`                          | The folder that contains the input stacks                 | Mutually exclusive with `<output_dir>`                                              |
 | `<output_dir>`                         | The output directory                                      | Mutually exclusive with 
 
+--- 
+
 ## dHCP processing pipeline 
 
 The dHCP pipeline presents some particularities compared to the BOUNTI implementation.

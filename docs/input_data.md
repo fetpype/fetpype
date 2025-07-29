@@ -22,6 +22,8 @@ dataset/
             ├── sub-<subject_id>[_ses-<session_id>][_acq-<acquisition>]_run-<run_number>_T2w.nii.gz
             └── ...
 ```
+!!! Note
+    More information on the structure of the `participants.tsv` file needed for the dHCP pipeline is provided on [this page](segmentation.md#gestational-age-requirement).
 
 ## Naming Conventions
 

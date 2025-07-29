@@ -80,5 +80,5 @@ The pipeline has been shown to fail in specific systems. We are still investigat
 10%...Error: draw-em command returned non-zero exit status -8
 ```
 
-Try to run the pipeline in a different system or, if you are in an HPC, in a different node. If the problem persists, please open an issue on the [GitHub repository](https://github.com/gerardmartijuan/dhcp-pipeline-multifact/issues) with the characteristics of the system you are using.
+Try to run the pipeline in a different system or, if you are in an HPC, in a different node. If the problem persists, please open an issue on the [GitHub repository](https://github.com/fetpype/dhcp-structural-pipeline) with the characteristics of the system you are using.
 

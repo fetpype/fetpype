@@ -3,7 +3,8 @@
 Config files are the bread and butter of fetpype. They allow to define how the data should be processed within a container and what output should be returned. They also specify optional parameters that can be modified by the user, without touching at the code. They are based on the [Hydra](https://hydra.cc/docs/intro/) framework, that allows to flexibly parse a hierarchical structure of `.yaml` configs into a unified data structure. 
 
 ## The general structure
-Fetpype acts as a wrapper around calls to various containers, and uses a limited set of tags in each dedicated node to construct the command that will be called. Config files define the commands that will be called by fetpype. Fetpype starts from a master config located at `configs/default_docker.yaml` (or `default_sg.yaml` for singularity), with the following structure
+Fetpype acts as a wrapper around calls to various containers, and uses a limited set of tags in each dedicated node to construct the command that will be called. Config files define the commands that will be called by fetpype. Fetpype starts from a master config located at `configs/default_docker.yaml` (or `default_sg.yaml` for singularity), with the following structure:
+
 ```yaml
 defaults:
   - preprocessing/default # Default preprocessing

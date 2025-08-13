@@ -349,9 +349,10 @@ class CheckAffineResStacksAndMasks(BaseInterface):
         """
         Check if the smallest dimension of the stack is the last one.
         """
+        vx_str = " x ".join([f"{v:.2f}" for v in r1])
         assert r1[0] == r1[1], (
-            f"ERROR: Inconsistent voxel sizes at dimensions 0 and 1 "
-            f"for {path} (voxel size ={r1}).\n"
+            f"Inconsistent voxel sizes at dimensions 0 and 1 "
+            f"for {path} (voxel size = ({vx_str})). "
             "Are you sure that the data are "
             f"formatted as in-plane x in-plane x through-plane?"
         )
@@ -385,6 +386,7 @@ class CheckAffineResStacksAndMasks(BaseInterface):
                 im_shape = image_ni.shape
                 mask_shape = mask_ni.shape
                 self.check_inplane_pos(self.inputs.stacks[i], im_res)
+
                 if not self.compare_resolution_affine(
                     im_res, im_aff, mask_res, mask_aff, im_shape, mask_shape
                 ):
@@ -394,6 +396,14 @@ class CheckAffineResStacksAndMasks(BaseInterface):
                         f"Skipping the stack {os.path.basename(imp)} "
                         f"and mask {os.path.basename(maskp)}"
                     )
+                if mask.sum() == 0:
+                    skip_stack = True
+                    print(
+                        f"Mask {os.path.basename(maskp)} is empty -- "
+                        f"Skipping the stack {os.path.basename(imp)} "
+                        f"and mask {os.path.basename(maskp)}"
+                    )
+
             if not skip_stack:
                 ni.save(image_ni, out_stack)
                 ni.save(mask_ni, out_mask)

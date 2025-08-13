@@ -90,7 +90,10 @@ def create_datasource(
 
     for sub in subjects:
         if sub not in existing_sub:
-            print(f"Subject {sub} was not found.")
+            raise ValueError(
+                f"Requested subject {sub} was not found in the "
+                f"folder {data_dir}."
+            )
 
         existing_ses = layout.get_sessions(subject=sub)
         if sessions is None:

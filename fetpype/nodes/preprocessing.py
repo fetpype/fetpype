@@ -298,7 +298,7 @@ class CheckAffineResStacksAndMasksOutputSpec(TraitedSpec):
 class CheckAffineResStacksAndMasks(BaseInterface):
     """
     Interface to check that the shape of stacks and masks are consistent.
-    (e.g. no trailing dimensions of size 1).
+    (e.g. no trailing dimensions of size 1) and stack ordering in the last dimension.
     If enabled, also checks that the resolution, affine, and shape of the
     stacks and masks are consistent. Discards the stack and mask if they are
     not.
@@ -345,6 +345,17 @@ class CheckAffineResStacksAndMasks(BaseInterface):
             return False
         return True
 
+    def check_inplane_pos(self, path, r1):
+        """
+        Check if the smallest dimension of the stack is the last one.
+        """
+        assert r1[0] == r1[1], (
+            f"ERROR: Inconsistent voxel sizes at dimensions 0 and 1 "
+            f"for {path} (voxel size ={r1}).\n"
+            "Are you sure that the data are "
+            f"formatted as in-plane x in-plane x through-plane?"
+        )
+
     def _run_interface(self, runtime):
         stacks_out = []
         masks_out = []
@@ -373,6 +384,7 @@ class CheckAffineResStacksAndMasks(BaseInterface):
                 mask_aff = mask_ni.affine
                 im_shape = image_ni.shape
                 mask_shape = mask_ni.shape
+                self.check_inplane_pos(self.inputs.stacks[i], im_res)
                 if not self.compare_resolution_affine(
                     im_res, im_aff, mask_res, mask_aff, im_shape, mask_shape
                 ):
@@ -545,6 +557,7 @@ def run_prepro_cmd(
     """
     import os
     from fetpype import VALID_PREPRO_TAGS
+    import subprocess
 
     # Important for mapnodes
     unlist_stacks = False
@@ -626,7 +639,23 @@ def run_prepro_cmd(
             cmd = cmd.replace("<singularity_mount>", singularity_mount)
 
         print(f"Running command:\n {cmd}")
-        os.system(cmd)
+        try:
+            subprocess.run(
+                cmd, shell=True, check=True, text=True, capture_output=True
+            )
+        except subprocess.CalledProcessError as e:
+            if e.stderr:
+                msg = f"Error output:\n{e.stderr.strip()}"
+            elif e.stdout:
+                msg = f"Container stdout:\n{e.stdout.strip()}"
+            else:
+                msg = "No error message from container"
+            raise RuntimeError(
+                f"Container call failed with exit code {e.returncode}.\n"
+                f"Command: {getattr(e, 'cmd', cmd)}\n"
+                f"{msg}"
+            ) from e
+
     else:
         output_stacks = input_stacks if "<output_stacks>" in cmd else None
         output_masks = input_masks if "<output_masks>" in cmd else None
@@ -642,7 +671,6 @@ def run_prepro_cmd(
         ), "More than one mask was returned, but unlist_masks is True."
         output_masks = output_masks[0]
     if output_stacks is not None and output_masks is not None:
-
         return output_stacks, output_masks
     elif output_stacks is not None:
         return output_stacks

@@ -1,8 +1,10 @@
 def run_seg_cmd(
-    input_srr, cmd, cfg,
+    input_srr,
+    cmd,
+    cfg,
     singularity_path=None,
     singularity_mount=None,
-    singularity_home=None
+    singularity_home=None,
 ):
     """
     Run a segmentation command with the given input SRR.
@@ -19,6 +21,7 @@ def run_seg_cmd(
 
     """
     import os
+    import subprocess
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_mount_docker
 
@@ -87,5 +90,20 @@ def run_seg_cmd(
         # parameter has been set in the config file
         cmd = cmd.replace("<singularity_home>", singularity_home)
     print(f"Running command:\n {cmd}")
-    os.system(cmd)
+    try:
+        subprocess.run(
+            cmd, shell=True, check=True, text=True, capture_output=True
+        )
+    except subprocess.CalledProcessError as e:
+        if e.stderr:
+            msg = f"Error output:\n{e.stderr.strip()}"
+        elif e.stdout:
+            msg = f"Container stdout:\n{e.stdout.strip()}"
+        else:
+            msg = "No error message from container"
+        raise RuntimeError(
+            f"Container call failed with exit code {e.returncode}.\n"
+            f"Command: {getattr(e, 'cmd', cmd)}\n"
+            f"{msg}"
+        ) from e
     return seg

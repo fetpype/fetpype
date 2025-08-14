@@ -415,13 +415,6 @@ def create_rec_pipeline(cfg, load_masks=False, name="rec_pipeline"):
     print("Full pipeline name: ", name)
     # Creating pipeline
     rec_pipe = pe.Workflow(name=name)
-    rec_pipe.config["execution"] = {
-        "remove_unnecessary_outputs": True,
-        "stop_on_first_crash": True,
-        "stop_on_first_rerun": True,
-        "crashfile_format": "txt",
-        "write_provenance": False,
-    }
     config.update_config(rec_pipe.config)
     # Creating input node
     in_fields = ["stacks"]
@@ -470,14 +463,6 @@ def create_seg_pipeline(cfg, name="seg_pipeline"):
     print("Full pipeline name: ", name)
     # Creating pipeline
     seg_pipe = pe.Workflow(name=name)
-    seg_pipe.config["execution"] = {
-        "remove_unnecessary_outputs": True,
-        "stop_on_first_crash": True,
-        "stop_on_first_rerun": True,
-        "crashfile_format": "txt",
-        # "use_relative_paths": True,
-        "write_provenance": False,
-    }
     config.update_config(seg_pipe.config)
     # Creating input node
     inputnode = pe.Node(

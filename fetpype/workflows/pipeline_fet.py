@@ -17,8 +17,8 @@ from fetpype.workflows.utils import (  # noqa: E402
     get_pipeline_name,
     check_valid_pipeline,
 )
-
-###############################################################################
+from fetpype.utils.logging import setup_logging, status_line
+import logging
 
 
 def create_main_workflow(
@@ -32,6 +32,8 @@ def create_main_workflow(
     cfg_path,
     nprocs,
     save_intermediates=False,
+    debug=False,
+    verbose=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
@@ -58,6 +60,10 @@ def create_main_workflow(
             parameters.
         nprocs (int):
             Number of processes to be launched by MultiProc.
+        debug (bool):
+            Whether to enable debug mode.
+        verbose (bool):
+            Whether to enable verbose mode.
 
     """
 
@@ -66,10 +72,19 @@ def create_main_workflow(
         data_dir, out_dir, nipype_dir, cfg
     )
 
+    setup_logging(
+        base_dir=nipype_dir,
+        debug=debug,
+        verbose=verbose,
+        capture_prints=True,
+    )
+    log = logging.getLogger("nipype")
     # Print the three paths
-    print(f"Data directory: {data_dir}")
-    print(f"Output directory: {out_dir}")
-    print(f"Nipype directory: {nipype_dir}")
+    log.info(
+        f"Data directory: {data_dir}\n"
+        f"Output directory: {out_dir}\n"
+        f"Nipype directory: {nipype_dir}"
+    )
 
     load_masks = False
     if masks_dir is not None:
@@ -209,8 +224,10 @@ def create_main_workflow(
             simple_form=True,
         )
 
-    main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
-    main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
+    main_workflow.run(
+        plugin="MultiProc",
+        plugin_args={"n_procs": nprocs, "status_callback": status_line},
+    )
 
 
 def main():
@@ -225,6 +242,7 @@ def main():
         default=None,
         help="Path to the directory containing the masks.",
     )
+
     args = parser.parse_args()
 
     # main_workflow
@@ -240,6 +258,8 @@ def main():
         cfg_path=args.cfg_path,
         nprocs=args.nprocs,
         save_intermediates=args.save_intermediates,
+        debug=args.debug,
+        verbose=args.verbose,
     )
 
 

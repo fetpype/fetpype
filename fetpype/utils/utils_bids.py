@@ -23,9 +23,9 @@ def create_datasource(
     save_db=False,
 ):
     """Create a datasource node that have iterables following BIDS format.
-    By default, from a BIDSLayout, lists all the subjects (<sub>),
-    finds their session numbers (<ses>, if any) and their acquisition
-    type (<acq>, if any), and builds an iterable of tuples
+    By default, from a BIDSLayout, lists all the subjects (`<sub>`),
+    finds their session numbers (`<ses>`, if any) and their acquisition
+    type (`<acq>`, if any), and builds an iterable of tuples
     (sub, ses, acq) with all valid combinations.
 
     If a list of subjects/sessions/acquisitions is provided, the

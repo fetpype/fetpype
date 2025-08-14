@@ -285,12 +285,12 @@ def create_bids_datasink(
                 (
                     rf"^{escaped_bids_derivatives_root}/"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"input_srr-mask-brain_{surf_label}(\.nii\.gz|\.nii)$"
+                    rf"[^/]+\.gii$"
                 ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-                    rf"sub-\2_ses-\1_rec-{rec_label}_surf-{surf_label}_dseg\3"
+                    rf"sub-\2_ses-\1_surf.gii"
                 ),
             )
         )

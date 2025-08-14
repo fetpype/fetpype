@@ -72,12 +72,13 @@ def create_surf_workflow(
         data_dir, out_dir, nipype_dir, cfg
     )
 
-    setup_logging(
-        base_dir=nipype_dir,
-        debug=debug,
-        verbose=verbose,
-        capture_prints=True,
-    )
+    # setup_logging(
+    #     base_dir=nipype_dir,
+    #     debug=debug,
+    #     verbose=verbose,
+    #     capture_prints=True,
+    # )
+
 
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
@@ -155,20 +156,17 @@ def create_surf_workflow(
 
     create_description_file(out_dir, pipeline_name, prev_desc, cfg.surface)
     # Create another datasink for the surface pipeline
-    # surf_datasink = create_bids_datasink(
-    #     out_dir=out_dir,
-    #     pipeline_name=pipeline_name,
-    #     strip_dir=main_workflow.base_dir,
-    #     name="final_surf_datasink",
-    #     rec_label=cfg.reconstruction.pipeline,
-    #     seg_label=cfg.segmentation.pipeline,
-    # )
-    # Add the base directory
-
-    # Connect the pipeline to the datasink
-    # main_workflow.connect(
-    #     fet_pipe, "outputnode.output_seg", seg_datasink, pipeline_name
-    # )
+    surf_datasink = create_bids_datasink(
+        out_dir=out_dir,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
+        name="final_surf_datasink",
+        surf_label=cfg.surface.pipeline,
+    )
+    
+    main_workflow.connect(
+        fet_pipe, "outputnode.output_surf", surf_datasink, pipeline_name
+    )
 
     if cfg.save_graph:
         main_workflow.write_graph(
@@ -176,6 +174,9 @@ def create_surf_workflow(
             format="png",
             simple_form=True,
         )
+
+
+        
     main_workflow.run(
         plugin="MultiProc",
         plugin_args={"n_procs": nprocs, "status_callback": status_line},

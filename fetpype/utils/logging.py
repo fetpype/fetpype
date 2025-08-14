@@ -73,7 +73,6 @@ def setup_logging(
     Set up logging for the Nipype workflow.
     Ensures the possibility of limited console output
     while providing detailed logging to a file.
-
     Args:
         base_dir (str): The base directory for the workflow.
         debug (bool): Enable debug logging.
@@ -83,7 +82,6 @@ def setup_logging(
             to DEBUG if `debug` is `True`.
         capture_prints (bool): Capture print statements.
         container_logger_name (str): The name of the container logger.
-
     """
     log_dir = os.path.join(base_dir, "logs")
     os.makedirs(log_dir, exist_ok=True)
@@ -175,6 +173,9 @@ def setup_logging(
         sys.__excepthook__(exc_type, exc, tb)
 
     sys.excepthook = _excepthook
+
+
+
 
 
 def status_line(node, status, **_):

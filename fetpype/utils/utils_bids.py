@@ -13,12 +13,14 @@ import re
 def create_datasource(
     output_query,
     data_dir,
+    nipype_dir,
     subjects=None,
     sessions=None,
     acquisitions=None,
     derivative=None,
     name="bids_datasource",
     extra_derivatives=None,
+    save_db=False,
 ):
     """Create a datasource node that have iterables following BIDS format.
     By default, from a BIDSLayout, lists all the subjects (<sub>),
@@ -78,6 +80,18 @@ def create_datasource(
     bids_datasource.inputs.output_query = output_query
 
     layout = BIDSLayout(data_dir, validate=False)
+
+    # Needed as the layout uses validate which
+    # does not work with our segmentation files.
+
+    if save_db:
+        layout_db = os.path.join(nipype_dir, "layout_db")
+        if os.path.exists(layout_db):
+            os.remove(os.path.join(layout_db, "layout_index.sqlite"))
+        layout.save(layout_db)
+
+        bids_datasource.inputs.load_layout = layout_db
+
     # Verbose
     print("BIDS layout:", layout)
     print("\t", layout.get_subjects())
@@ -138,6 +152,7 @@ def create_bids_datasink(
     name=None,
     rec_label=None,
     seg_label=None,
+    surf_label=None,
     desc_label=None,
     custom_subs=None,
     custom_regex_subs=None,
@@ -162,8 +177,10 @@ def create_bids_datasink(
             Defaults to None, which will use the pipeline name.
         rec_label (str, optional): Reconstruction label (e.g., 'nesvor')
             for rec-... entity. Defaults to None.
-        seg_label (str, optional): Segmentation label (e.g., 'bounti
-            ') for seg-... entity. Defaults to None.
+        seg_label (str, optional): Segmentation label (e.g., 'bounti')
+            for seg-... entity. Defaults to None.
+        surf_label (str, optional): Surface extraction label (e.g., 'fetpype')
+            for surf-... entity. Defaults to None.
         desc_label (str, optional): Description label for desc-... entity
         custom_subs (list, optional): List of custom simple substitutions
             to apply to output paths. Defaults to None.
@@ -258,6 +275,22 @@ def create_bids_datasink(
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
                     rf"sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
+                ),
+            )
+        )
+
+    if surf_label:
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"input_srr-mask-brain_{surf_label}(\.nii\.gz|\.nii)$"
+                ),
+                # Groups: \1=SESS, \2=SUBJ, \3=ext
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1_rec-{rec_label}_surf-{surf_label}_dseg\3"
                 ),
             )
         )

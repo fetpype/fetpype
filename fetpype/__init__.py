@@ -7,6 +7,7 @@ from .definitions import (  # noqa
     VALID_PREPRO_TAGS,
     VALID_RECON_TAGS,
     VALID_SEG_TAGS,
+    VALID_SURF_TAGS,
 )
 
 __version__ = "unknown"

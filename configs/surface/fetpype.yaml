@@ -1,0 +1,18 @@
+pipeline: "fetpype"
+docker: 
+  cmd: "docker run --rm <mount>
+    macatools/surf_proc:v0.0.1e
+    python generate_mesh.py -l <labelling_scheme> 
+    -s <input_seg> 
+    -m <output_surf>"
+singularity:
+  cmd: "singularity exec --bind <singularity_mount> --home <singularity_home> --nv
+    <singularity_path>/macatools/surf_proc.sif
+    macatools/surf_proc:v0.0.1e
+    python generate_mesh.py -l <labelling_scheme> 
+    -s <input_seg> 
+    -m <output_surf>"
+use_scheme: "bounti"
+labelling_scheme: 
+  bounti: [5, 7, 14, 16]
+

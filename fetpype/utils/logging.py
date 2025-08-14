@@ -18,6 +18,19 @@ except Exception:
 _start_times = {}
 
 
+def _in_debugger() -> bool:
+    """True if a debugger/tracer is attached (pdb, ipdb, debugpy, pydevd…)."""
+    trace = sys.gettrace()
+    if trace is None:
+        return False
+    mod = getattr(trace, "__module__", "") or ""
+    name = getattr(trace, "__name__", "") or ""
+    return any(
+        k in (mod + "." + name)
+        for k in ("bdb", "pdb", "ipdb", "pydevd", "debugpy")
+    )
+
+
 class StdToLogger:
     """Redirect a stream (stdout/stderr) into a logger (line-buffered).
 

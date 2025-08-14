@@ -45,3 +45,14 @@ VALID_SEG_TAGS = [
     "singularity_mount",
     "singularity_home",
 ]
+
+
+VALID_SURF_TAGS = [
+    "mount",
+    "input_seg",
+    "labelling_scheme",
+    "output_surf",
+    "singularity_path",
+    "singularity_mount",
+    "singularity_home",
+]

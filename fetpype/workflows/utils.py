@@ -97,6 +97,12 @@ def get_default_parser(desc):
         help="Save intermediate files.",
     )
 
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug mode.",
+        default=False,
+    )
     return parser
 
 

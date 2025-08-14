@@ -17,6 +17,7 @@ from fetpype.workflows.utils import (
     get_default_parser,
     check_valid_pipeline,
 )
+from fetpype.utils.logging import setup_logging, status_line
 
 ###############################################################################
 
@@ -31,6 +32,7 @@ def create_rec_workflow(
     acquisitions,
     cfg_path,
     nprocs,
+    debug=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
@@ -59,6 +61,8 @@ def create_rec_workflow(
             parameters.
         nprocs (int):
             Number of processes to be launched by MultiProc.
+        debug (bool):
+            Whether to enable debug mode.
 
     """
 
@@ -66,6 +70,13 @@ def create_rec_workflow(
 
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
+    )
+
+    setup_logging(
+        base_dir=nipype_dir,
+        debug=debug,
+        console_level="ERROR",
+        capture_prints=True,
     )
 
     load_masks = False
@@ -139,8 +150,10 @@ def create_rec_workflow(
             simple_form=True,
         )
 
-    main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
-    main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
+    main_workflow.run(
+        plugin="MultiProc",
+        plugin_args={"n_procs": nprocs, "status_callback": status_line},
+    )
 
 
 def main():
@@ -170,6 +183,7 @@ def main():
         acquisitions=args.acq,
         cfg_path=args.cfg_path,
         nprocs=args.nprocs,
+        debug=args.debug,
     )
 
 

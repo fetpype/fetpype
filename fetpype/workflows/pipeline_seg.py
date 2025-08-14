@@ -17,7 +17,7 @@ from fetpype.workflows.utils import (
     get_default_parser,
     check_valid_pipeline,
 )
-
+from fetpype.utils.logging import setup_logging, status_line
 
 ###############################################################################
 
@@ -32,6 +32,7 @@ def create_seg_workflow(
     cfg_path,
     nprocs,
     ignore_checks=False,
+    debug=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
@@ -58,6 +59,8 @@ def create_seg_workflow(
             parameters.
         nprocs (int):
             Number of processes to be launched by MultiProc.
+        debug (bool):
+            Whether to enable debug mode.
 
     """
 
@@ -65,6 +68,14 @@ def create_seg_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, cfg
     )
+
+    setup_logging(
+        base_dir=nipype_dir,
+        debug=debug,
+        console_level="ERROR",
+        capture_prints=True,
+    )
+
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
 
@@ -112,8 +123,9 @@ def create_seg_workflow(
     )
 
     # in both cases we connect datsource outputs to main pipeline
-    main_workflow.connect(datasource, "srr_volume",
-                          fet_pipe, "inputnode.srr_volume")
+    main_workflow.connect(
+        datasource, "srr_volume", fet_pipe, "inputnode.srr_volume"
+    )
 
     # DataSink
 
@@ -131,8 +143,9 @@ def create_seg_workflow(
     if not os.path.exists(prev_desc):
         prev_desc = None
 
-    create_description_file(out_dir, pipeline_name,
-                            prev_desc, cfg.segmentation)
+    create_description_file(
+        out_dir, pipeline_name, prev_desc, cfg.segmentation
+    )
     # Create another datasink for the segmentation pipeline
     seg_datasink = create_bids_datasink(
         out_dir=out_dir,
@@ -155,8 +168,10 @@ def create_seg_workflow(
             format="png",
             simple_form=True,
         )
-    main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
-    main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
+    main_workflow.run(
+        plugin="MultiProc",
+        plugin_args={"n_procs": nprocs, "status_callback": status_line},
+    )
 
 
 def main():

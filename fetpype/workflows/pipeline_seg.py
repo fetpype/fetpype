@@ -33,6 +33,7 @@ def create_seg_workflow(
     nprocs,
     ignore_checks=False,
     debug=False,
+    verbose=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
@@ -61,7 +62,8 @@ def create_seg_workflow(
             Number of processes to be launched by MultiProc.
         debug (bool):
             Whether to enable debug mode.
-
+        verbose (bool):
+            Whether to enable verbose mode.
     """
 
     cfg = init_and_load_cfg(cfg_path)
@@ -72,7 +74,7 @@ def create_seg_workflow(
     setup_logging(
         base_dir=nipype_dir,
         debug=debug,
-        console_level="ERROR",
+        verbose=verbose,
         capture_prints=True,
     )
 
@@ -200,6 +202,8 @@ def main():
         cfg_path=args.cfg_path,
         nprocs=args.nprocs,
         ignore_checks=args.ignore_checks,
+        debug=args.debug,
+        verbose=args.verbose,
     )
 
 

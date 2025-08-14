@@ -103,6 +103,17 @@ def get_default_parser(desc):
         help="Enable debug mode.",
         default=False,
     )
+
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose mode. "
+        "Console will show INFO (or DEBUG if --debug is set) "
+        "messages. By default, only a minimal output is shown, "
+        "the rest is logged at <nipype_dir>/logs/pypeline.log",
+        default=False,
+    )
     return parser
 
 

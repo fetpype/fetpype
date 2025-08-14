@@ -33,6 +33,7 @@ def create_main_workflow(
     nprocs,
     save_intermediates=False,
     debug=False,
+    verbose=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
@@ -61,6 +62,8 @@ def create_main_workflow(
             Number of processes to be launched by MultiProc.
         debug (bool):
             Whether to enable debug mode.
+        verbose (bool):
+            Whether to enable verbose mode.
 
     """
 
@@ -72,7 +75,7 @@ def create_main_workflow(
     setup_logging(
         base_dir=nipype_dir,
         debug=debug,
-        console_level="ERROR",
+        verbose=verbose,
         capture_prints=True,
     )
     log = logging.getLogger("nipype")
@@ -256,6 +259,7 @@ def main():
         nprocs=args.nprocs,
         save_intermediates=args.save_intermediates,
         debug=args.debug,
+        verbose=args.verbose,
     )
 
 

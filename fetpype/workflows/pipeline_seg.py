@@ -65,10 +65,10 @@ def create_seg_workflow(
         verbose (bool):
             Whether to enable verbose mode.
     """
-
     cfg = init_and_load_cfg(cfg_path)
+    pipeline_name = get_pipeline_name(cfg, only_seg=True)
     data_dir, out_dir, nipype_dir = check_and_update_paths(
-        data_dir, out_dir, nipype_dir, cfg
+        data_dir, out_dir, nipype_dir, pipeline_name
     )
 
     setup_logging(
@@ -103,7 +103,7 @@ def create_seg_workflow(
                 "Please provide a valid BIDS directory."
             )
     # main_workflow
-    main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
+    main_workflow = pe.Workflow(name=pipeline_name)
     main_workflow.base_dir = nipype_dir
     fet_pipe = create_seg_pipeline(cfg)
 
@@ -119,6 +119,7 @@ def create_seg_workflow(
     datasource = create_datasource(
         output_query,
         data_dir,
+        nipype_dir,
         subjects,
         sessions,
         acquisitions,

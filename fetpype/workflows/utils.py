@@ -117,7 +117,7 @@ def get_default_parser(desc):
     return parser
 
 
-def get_pipeline_name(cfg):
+def get_pipeline_name(cfg, only_rec=False, only_seg=False, only_surf=False):
     """
     Get the pipeline name from the configuration file.
     Args:
@@ -126,11 +126,16 @@ def get_pipeline_name(cfg):
         str: Pipeline name.
     """
     pipeline_name = []
-    if "reconstruction" in cfg:
+    # Assert only one only_<type> flag is set at once
+    assert (
+        sum([only_rec, only_seg, only_surf]) <= 1
+    ), "Only one of only_rec, only_seg, or only_surf can be True."
+    if "reconstruction" in cfg and (not only_seg) and (not only_surf):
         pipeline_name += [cfg.reconstruction.pipeline]
-    if "segmentation" in cfg:
+    if "segmentation" in cfg and (not only_rec) and (not only_surf):
         pipeline_name += [cfg.segmentation.pipeline]
-
+    if "surface" in cfg and (not only_rec) and (not only_seg):
+        pipeline_name += [cfg.surface.pipeline]
     return "_".join(pipeline_name)
 
 
@@ -156,25 +161,23 @@ def init_and_load_cfg(cfg_path):
     return cfg
 
 
-def check_and_update_paths(data_dir, out_dir, nipype_dir, cfg):
+def check_and_update_paths(data_dir, out_dir, nipype_dir, pipeline_name):
     """
     Check and update the paths for data_dir, out_dir, and nipype_dir.
     Args:
         data_dir (str): Path to the BIDS directory.
         out_dir (str): Path to the output directory.
         nipype_dir (str): Path to the nipype directory.
-        cfg: Configuration object.
+        pipeline_name (str): Name of the pipeline.
     Returns:
         tuple: Updated paths for data_dir, out_dir, and nipype_dir.
     """
     data_dir = os.path.abspath(data_dir)
 
     if out_dir is None:
-        out_dir = os.path.join(data_dir, "derivatives", get_pipeline_name(cfg))
+        out_dir = os.path.join(data_dir, "derivatives", pipeline_name)
     else:
-        out_dir = os.path.join(
-            os.path.abspath(out_dir), get_pipeline_name(cfg)
-        )
+        out_dir = os.path.join(os.path.abspath(out_dir), pipeline_name)
 
     try:
         os.makedirs(out_dir)
@@ -198,7 +201,7 @@ def check_valid_pipeline(cfg):
     Args:
         cfg: Configuration object.
     """
-    from fetpype import VALID_RECONSTRUCTION, VALID_SEGMENTATION
+    from fetpype import VALID_RECONSTRUCTION, VALID_SEGMENTATION, VALID_SURFACE
 
     if "reconstruction" in cfg:
         if cfg.reconstruction.pipeline not in VALID_RECONSTRUCTION:
@@ -212,4 +215,11 @@ def check_valid_pipeline(cfg):
             raise ValueError(
                 f"Invalid segmentation pipeline: {cfg.segmentation.pipeline}."
                 f"Please choose one of {VALID_SEGMENTATION}"
+            )
+
+    if "surface" in cfg:
+        if cfg.surface.pipeline not in VALID_SURFACE:
+            raise ValueError(
+                f"Invalid surface pipeline: {cfg.surface.pipeline}."
+                f"Please choose one of {VALID_SURFACE}"
             )

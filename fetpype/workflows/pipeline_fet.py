@@ -68,8 +68,9 @@ def create_main_workflow(
     """
 
     cfg = init_and_load_cfg(cfg_path)
+    pipeline_name = get_pipeline_name(cfg)
     data_dir, out_dir, nipype_dir = check_and_update_paths(
-        data_dir, out_dir, nipype_dir, cfg
+        data_dir, out_dir, nipype_dir, pipeline_name
     )
 
     setup_logging(
@@ -99,7 +100,7 @@ def create_main_workflow(
     check_valid_pipeline(cfg)
 
     # main_workflow
-    main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
+    main_workflow = pe.Workflow(name=pipeline_name)
     main_workflow.base_dir = nipype_dir
     fet_pipe = create_full_pipeline(cfg, load_masks)
 
@@ -121,6 +122,7 @@ def create_main_workflow(
     datasource = create_datasource(
         output_query,
         data_dir,
+        nipype_dir,
         subjects,
         sessions,
         acquisitions,
@@ -206,6 +208,16 @@ def create_main_workflow(
         seg_label=cfg.segmentation.pipeline,
     )
 
+    surf_datasink = create_bids_datasink(
+        out_dir=out_dir,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
+        name="final_surf_datasink",
+        rec_label=cfg.reconstruction.pipeline,
+        seg_label=cfg.segmentation.pipeline,
+        surf_label=cfg.surface.pipeline,
+    )
+
     # Connect the pipeline to the datasink
     main_workflow.connect(
         fet_pipe, "outputnode.output_srr", recon_datasink, f"@{pipeline_name}"
@@ -215,6 +227,13 @@ def create_main_workflow(
         "outputnode.output_seg",
         seg_datasink,
         f"@{cfg.segmentation.pipeline}",
+    )
+
+    main_workflow.connect(
+        fet_pipe,
+        "outputnode.output_surf",
+        surf_datasink,
+        f"@{cfg.surface.pipeline}",
     )
 
     if cfg.save_graph:
@@ -233,7 +252,8 @@ def create_main_workflow(
 def main():
     parser = get_default_parser(
         "Run the entire Fetpype pipeline -- "
-        "pre-processing, reconstruction and segmentation"
+        "pre-processing, reconstruction, segmentation "
+        "and surface extraction."
     )
 
     parser.add_argument(

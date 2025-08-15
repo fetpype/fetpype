@@ -68,17 +68,17 @@ def create_surf_workflow(
     """
 
     cfg = init_and_load_cfg(cfg_path)
+    pipeline_name = get_pipeline_name(cfg, only_surf=True)
     data_dir, out_dir, nipype_dir = check_and_update_paths(
-        data_dir, out_dir, nipype_dir, cfg
+        data_dir, out_dir, nipype_dir, pipeline_name
     )
 
-    # setup_logging(
-    #     base_dir=nipype_dir,
-    #     debug=debug,
-    #     verbose=verbose,
-    #     capture_prints=True,
-    # )
-
+    setup_logging(
+        base_dir=nipype_dir,
+        debug=debug,
+        verbose=verbose,
+        capture_prints=True,
+    )
 
     check_valid_pipeline(cfg)
     # if general, pipeline is not in params ,create it and set it to niftymic
@@ -110,7 +110,7 @@ def create_surf_workflow(
                 "Please provide a valid BIDS directory."
             )
     # main_workflow
-    main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
+    main_workflow = pe.Workflow(name=pipeline_name)
     main_workflow.base_dir = nipype_dir
     fet_pipe = create_surf_pipeline(cfg)
 
@@ -156,6 +156,7 @@ def create_surf_workflow(
 
     create_description_file(out_dir, pipeline_name, prev_desc, cfg.surface)
     # Create another datasink for the surface pipeline
+
     surf_datasink = create_bids_datasink(
         out_dir=out_dir,
         pipeline_name=pipeline_name,
@@ -163,7 +164,7 @@ def create_surf_workflow(
         name="final_surf_datasink",
         surf_label=cfg.surface.pipeline,
     )
-    
+
     main_workflow.connect(
         fet_pipe, "outputnode.output_surf", surf_datasink, pipeline_name
     )
@@ -175,8 +176,6 @@ def create_surf_workflow(
             simple_form=True,
         )
 
-
-        
     main_workflow.run(
         plugin="MultiProc",
         plugin_args={"n_procs": nprocs, "status_callback": status_line},

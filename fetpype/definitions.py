@@ -9,6 +9,10 @@ VALID_SEGMENTATION = [
     "bounti",
 ]
 
+VALID_SURFACE = [
+    "surface",
+]
+
 VALID_PREPRO_TAGS = [
     "mount",
     "input_stacks",

@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import logging
 import time
@@ -83,7 +84,7 @@ def setup_logging(
         capture_prints (bool): Capture print statements.
         container_logger_name (str): The name of the container logger.
     """
-    log_dir = os.path.join(base_dir, "logs")
+    log_dir = os.path.join(base_dir, "logs", time.strftime("%Y%m%d-%H%M%S"))
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, "pypeline.log")
     try:
@@ -175,28 +176,62 @@ def setup_logging(
     sys.excepthook = _excepthook
 
 
-
+def _iterable_context(node):
+    """
+    Works with a Node or a NodeWrapper.
+    Returns dict like {"subject": "sub-01", "session": "01",
+    "acquisition": "tru"}.
+    """
+    nd = getattr(node, "node", node)  # unwrap NodeWrapper
+    # Prefer the canonical parameterization string if available
+    try:
+        p = nd.parameterization[
+            0
+        ]  # e.g. "_acquisition_tru_session_01_subject_sub-01"
+    except Exception:
+        p = ""
+    # Fall back to fullname (also carries the suffix)
+    if not p:
+        p = getattr(node, "fullname", str(node))
+    # Parse key/value pairs like "_session_01", "_subject_sub-01"
+    pairs = dict(re.findall(r"_(subject|session|acquisition)_([^/_]+)", p))
+    return pairs
 
 
 def status_line(node, status, **_):
-    """
-    Print the status line for a Nipype node.
-
-    Args:
-        node: The Nipype node.
-        status: The status of the node (e.g., "start", "end", "exception").
-    """
     out = sys.__stdout__
     name = getattr(node, "fullname", str(node))
+    ctx = _iterable_context(node)
+
+    tag = ""
+    if ctx:
+        sub = ctx.get("subject")
+        ses = ctx.get("session")
+        acq = ctx.get("acquisition")
+        # compact tag like [sub-01_ses-01_acq-tru]
+        parts = [
+            x
+            for x in (
+                f"sub-{sub}",
+                f"ses-{ses}" if ses else None,
+                f"acq-{acq}" if acq else None,
+            )
+            if x
+        ]
+        tag = f" [{'_'.join(parts)}]"
 
     if status == "start":
         _start_times[name] = time.time()
-        print(f"▶ {name}", file=out, flush=True)
+        print(f"▶ {name}{tag}", file=out, flush=True)
     elif status == "end":
         dt = max(time.time() - _start_times.get(name, time.time()), 0)
-        print(f"✔ {name} ({dt:.1f}s)", file=out, flush=True)
+        print(f"✔ {name}{tag} ({dt:.1f}s)", file=out, flush=True)
     elif status == "exception":
-        print(f"✖ {name} failed (see crashfile & logs)", file=out, flush=True)
+        print(
+            f"✖ {name}{tag} failed (see crashfile & logs)",
+            file=out,
+            flush=True,
+        )
 
 
 def run_and_tee(cmd, *, prefix=""):

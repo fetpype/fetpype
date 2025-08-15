@@ -1,4 +1,4 @@
-pipeline: "fetpype"
+pipeline: "surface"
 docker: 
   cmd: "docker run --rm <mount>
     macatools/surf_proc:v0.0.1e

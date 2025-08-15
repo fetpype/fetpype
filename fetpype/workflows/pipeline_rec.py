@@ -70,8 +70,9 @@ def create_rec_workflow(
 
     cfg = init_and_load_cfg(cfg_path)
 
+    pipeline_name = get_pipeline_name(cfg, only_rec=True)
     data_dir, out_dir, nipype_dir = check_and_update_paths(
-        data_dir, out_dir, nipype_dir, cfg
+        data_dir, out_dir, nipype_dir, pipeline_name
     )
 
     setup_logging(
@@ -94,7 +95,7 @@ def create_rec_workflow(
     # if general, pipeline is not in params ,create it and set it to niftymic
 
     # main_workflow
-    main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
+    main_workflow = pe.Workflow(name=pipeline_name)
     main_workflow.base_dir = nipype_dir
     fet_pipe = create_rec_pipeline(cfg, load_masks)
 
@@ -116,6 +117,7 @@ def create_rec_workflow(
     datasource = create_datasource(
         output_query,
         data_dir,
+        nipype_dir,
         subjects,
         sessions,
         acquisitions,

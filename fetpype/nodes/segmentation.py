@@ -21,9 +21,9 @@ def run_seg_cmd(
 
     """
     import os
-    import subprocess
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_mount_docker
+    from fetpype.utils.logging import run_and_tee
 
     is_valid_cmd(cmd, VALID_TAGS)
 
@@ -89,21 +89,7 @@ def run_seg_cmd(
         # we are using singularity and the
         # parameter has been set in the config file
         cmd = cmd.replace("<singularity_home>", singularity_home)
-    print(f"Running command:\n {cmd}")
-    try:
-        subprocess.run(
-            cmd, shell=True, check=True, text=True, capture_output=True
-        )
-    except subprocess.CalledProcessError as e:
-        if e.stderr:
-            msg = f"Error output:\n{e.stderr.strip()}"
-        elif e.stdout:
-            msg = f"Container stdout:\n{e.stdout.strip()}"
-        else:
-            msg = "No error message from container"
-        raise RuntimeError(
-            f"Container call failed with exit code {e.returncode}.\n"
-            f"Command: {getattr(e, 'cmd', cmd)}\n"
-            f"{msg}"
-        ) from e
+
+    run_and_tee(cmd)
+
     return seg

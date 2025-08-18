@@ -24,3 +24,4 @@ packages = ["fetpype"]
 fetpype_run = "fetpype.workflows.pipeline_fet:main"
 fetpype_run_rec = "fetpype.workflows.pipeline_rec:main"
 fetpype_run_seg = "fetpype.workflows.pipeline_seg:main"
+fetpype_run_surf = "fetpype.workflows.pipeline_surf:main"

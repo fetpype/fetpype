@@ -23,10 +23,11 @@ recon_methods = ["niftymic", "nesvor", "svrtk"]
 
 @pytest.mark.parametrize("sr_method", recon_methods)
 def test_read_config(generate_config, sr_method):
-    cfg = generate_config(sr_method, "bounti")
+    cfg = generate_config(sr_method, "bounti", "surface")
     cfg = init_and_load_cfg(cfg)
     assert cfg["reconstruction"]["pipeline"] == sr_method
     assert cfg["segmentation"]["pipeline"] == "bounti"
+    assert cfg["surface"]["pipeline"] == "surface"
 
 
 load_masks = [True, False]
@@ -44,7 +45,7 @@ test_cases = list(itertools.product(pipelines, recon_methods, load_masks))
 def test_create_full_pipelines(
     generate_config, mock_output_dir, pipeline, sr_method, load_masks
 ):
-    cfg = generate_config(sr_method, "bounti")
+    cfg = generate_config(sr_method, "bounti", "surface")
     cfg = init_and_load_cfg(cfg)
 
     name = "test_" + str(pipeline.__name__)

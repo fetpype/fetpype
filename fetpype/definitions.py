@@ -9,6 +9,10 @@ VALID_SEGMENTATION = [
     "bounti",
 ]
 
+VALID_SURFACE = [
+    "surface",
+]
+
 VALID_PREPRO_TAGS = [
     "mount",
     "input_stacks",
@@ -41,6 +45,17 @@ VALID_SEG_TAGS = [
     "input_dir",
     "output_dir",
     "output_seg",
+    "singularity_path",
+    "singularity_mount",
+    "singularity_home",
+]
+
+
+VALID_SURF_TAGS = [
+    "mount",
+    "input_seg",
+    "labelling_scheme",
+    "output_surf",
     "singularity_path",
     "singularity_mount",
     "singularity_home",

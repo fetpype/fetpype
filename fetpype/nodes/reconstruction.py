@@ -22,12 +22,12 @@ def run_recon_cmd(
         str: Path to the output volume after reconstruction.
     """
     import os
-    import subprocess
     import numpy as np
     import nibabel as nib
     import traceback
     from fetpype import VALID_RECON_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_directory, get_mount_docker
+    from fetpype.utils.logging import run_and_tee
 
     is_valid_cmd(cmd, VALID_TAGS)
     output_dir = os.path.join(os.getcwd(), "recon")
@@ -92,21 +92,6 @@ def run_recon_cmd(
     if "<mount>" in cmd:
         mount_cmd = get_mount_docker(in_stacks_dir, in_masks_dir, output_dir)
         cmd = cmd.replace("<mount>", mount_cmd)
-    print(f"Running command:\n {cmd}")
-    try:
-        subprocess.run(
-            cmd, shell=True, check=True, text=True, capture_output=True
-        )
-    except subprocess.CalledProcessError as e:
-        if e.stderr:
-            msg = f"Error output:\n{e.stderr.strip()}"
-        elif e.stdout:
-            msg = f"Container stdout:\n{e.stdout.strip()}"
-        else:
-            msg = "No error message from container"
-        raise RuntimeError(
-            f"Container call failed with exit code {e.returncode}.\n"
-            f"Command: {getattr(e, 'cmd', cmd)}\n"
-            f"{msg}"
-        ) from e
+
+    run_and_tee(cmd)
     return output_volume

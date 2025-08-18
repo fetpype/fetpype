@@ -1,7 +1,7 @@
 # Reconstruction
-
+In the super-resolution reconstruction steps, an algorithm will take as input several [pre-processed](preprocessing.md) stacks and output a single super-resolution reconstructed volume. This volume can then be used as input in the [segmentation](segmentation.md) step.
 ## Available tools
-Several state-of-the-art super-resolution reconstruction algorithms have been wrapped and tested in fetpype.
+Several state-of-the-art super-resolution reconstruction algorithms have been wrapped and tested in fetpype. 
 
 | Algorithm                              | Repository                                               | Docker                                                                            |
 | -------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------- |

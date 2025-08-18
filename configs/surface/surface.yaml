@@ -1,7 +1,7 @@
 pipeline: "surface"
 docker: 
   cmd: "docker run --rm <mount>
-    macatools/surf_proc:v0.0.1e
+    fetpype/surf_proc:v0.0.1e
     python generate_mesh.py -l <labelling_scheme> 
     -s <input_seg> 
     -m <output_surf>"

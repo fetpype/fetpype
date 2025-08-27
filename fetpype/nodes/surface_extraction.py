@@ -44,6 +44,7 @@ def run_surf_cmd(
     input_seg = os.path.join(input_seg_dir, "input_seg.nii.gz")
 
     output_dir = os.path.join(os.getcwd(), "surf/out")
+    os.makedirs(output_dir, exist_ok=True)
     surf = os.path.join(output_dir, "surf.gii")
 
     # In cmd, there will be things contained in <>.

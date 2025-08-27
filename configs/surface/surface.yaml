@@ -2,13 +2,13 @@ pipeline: "surface"
 docker: 
   cmd: "docker run --rm <mount>
     fetpype/surf_proc:0.0.1
-    python generate_mesh.py -l <labelling_scheme> 
+    generate_mesh -l <labelling_scheme>
     -s <input_seg> 
     -m <output_surf>"
 singularity:
   cmd: "singularity exec --bind <singularity_mount> --home <singularity_home> --nv
     <singularity_path>/surf_proc.sif
-    python generate_mesh.py -l <labelling_scheme> 
+    generate_mesh -l <labelling_scheme>
     -s <input_seg> 
     -m <output_surf>"
 use_scheme: "bounti"

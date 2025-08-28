@@ -101,12 +101,13 @@ def mock_output_dir(tmp_path_factory):
 
 @pytest.fixture(scope="function")
 def generate_config(tmp_path_factory):
-    def _generate(sr, seg):
+    def _generate(sr, seg, surf):
         default_cfg = {
             "defaults": [
                 "preprocessing/default",
                 f"reconstruction/{sr}",
                 f"segmentation/{seg}",
+                f"surface/{surf}",
                 "_self_",
             ],
             "container": "docker",

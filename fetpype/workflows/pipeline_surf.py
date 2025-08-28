@@ -2,14 +2,14 @@ import os
 import json
 import nipype.pipeline.engine as pe
 from fetpype.pipelines.full_pipeline import (
-    create_seg_pipeline,
+    create_surf_pipeline,
 )
 from fetpype.utils.utils_bids import (
     create_datasource,
     create_bids_datasink,
     create_description_file,
 )
-from fetpype import VALID_RECONSTRUCTION
+from fetpype import VALID_SEGMENTATION
 from fetpype.workflows.utils import (
     init_and_load_cfg,
     check_and_update_paths,
@@ -22,7 +22,7 @@ from fetpype.utils.logging import setup_logging, status_line
 ###############################################################################
 
 
-def create_seg_workflow(
+def create_surf_workflow(
     data_dir,
     out_dir,
     nipype_dir,
@@ -36,7 +36,8 @@ def create_seg_workflow(
     verbose=False,
 ):
     """
-    Instantiates and runs the entire workflow of the fetpype pipeline.
+    Instantiates and runs the workflow of fetpype's surface
+    extraction pipeline.
 
     Args:
         data_dir (str):
@@ -65,8 +66,9 @@ def create_seg_workflow(
         verbose (bool):
             Whether to enable verbose mode.
     """
+
     cfg = init_and_load_cfg(cfg_path)
-    pipeline_name = get_pipeline_name(cfg, only_seg=True)
+    pipeline_name = get_pipeline_name(cfg, only_surf=True)
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, pipeline_name
     )
@@ -88,12 +90,17 @@ def create_seg_workflow(
                 data_desc = json.load(f)
             name = data_desc.get("Name", None)
             if "_" in name:
-                name = name.split("_")[0]
-            if name not in VALID_RECONSTRUCTION:
+                name = name.split("_")
+            is_valid = False
+            for n in name:
+                if n in VALID_SEGMENTATION:
+                    is_valid = True
+                    break
+            if not is_valid:
                 raise ValueError(
                     f"Method name <{data_desc['Name']}> is not a valid "
-                    "reconstruction method. Are you sure that you are "
-                    "passing a reconstructed dataset?\n"
+                    "segmentation method. Are you sure that you are "
+                    "passing a segmented dataset?\n"
                     "If you know what you are doing, you can ignore "
                     "this error by adding --ignore_check to the command line."
                 )
@@ -105,12 +112,12 @@ def create_seg_workflow(
     # main_workflow
     main_workflow = pe.Workflow(name=pipeline_name)
     main_workflow.base_dir = nipype_dir
-    fet_pipe = create_seg_pipeline(cfg)
+    fet_pipe = create_surf_pipeline(cfg)
 
     output_query = {
-        "srr_volume": {
+        "seg_volume": {
             "datatype": "anat",
-            "suffix": "T2w",
+            "suffix": "dseg",
             "extension": ["nii", ".nii.gz"],
         }
     }
@@ -123,46 +130,43 @@ def create_seg_workflow(
         subjects,
         sessions,
         acquisitions,
+        save_db=True,
     )
 
     # in both cases we connect datsource outputs to main pipeline
     main_workflow.connect(
-        datasource, "srr_volume", fet_pipe, "inputnode.srr_volume"
+        datasource, "seg_volume", fet_pipe, "inputnode.seg_volume"
     )
 
     # DataSink
 
-    # Segmentation data sink:
-    pipeline_name = cfg.segmentation.pipeline
+    # Surface data sink:
+    pipeline_name = cfg.surface.pipeline
     datasink_path = os.path.join(out_dir, pipeline_name)
     # Create json file to make it BIDS compliant if doesnt exist
     # Eventually, add all parameters to the json file
     os.makedirs(datasink_path, exist_ok=True)
 
     # Create datasink
-    pipeline_name = cfg.segmentation.pipeline
+    pipeline_name = cfg.surface.pipeline
     os.makedirs(datasink_path, exist_ok=True)
     prev_desc = os.path.join(data_dir, "dataset_description.json")
     if not os.path.exists(prev_desc):
         prev_desc = None
 
-    create_description_file(
-        out_dir, pipeline_name, prev_desc, cfg.segmentation
-    )
-    # Create another datasink for the segmentation pipeline
-    seg_datasink = create_bids_datasink(
+    create_description_file(out_dir, pipeline_name, prev_desc, cfg.surface)
+    # Create another datasink for the surface pipeline
+
+    surf_datasink = create_bids_datasink(
         out_dir=out_dir,
         pipeline_name=pipeline_name,
         strip_dir=main_workflow.base_dir,
-        name="final_seg_datasink",
-        rec_label=cfg.reconstruction.pipeline,
-        seg_label=cfg.segmentation.pipeline,
+        name="final_surf_datasink",
+        surf_label=cfg.surface.pipeline,
     )
-    # Add the base directory
 
-    # Connect the pipeline to the datasink
     main_workflow.connect(
-        fet_pipe, "outputnode.output_seg", seg_datasink, pipeline_name
+        fet_pipe, "outputnode.output_surf", surf_datasink, pipeline_name
     )
 
     if cfg.save_graph:
@@ -171,6 +175,7 @@ def create_seg_workflow(
             format="png",
             simple_form=True,
         )
+
     main_workflow.run(
         plugin="MultiProc",
         plugin_args={"n_procs": nprocs, "status_callback": status_line},
@@ -179,21 +184,22 @@ def create_seg_workflow(
 
 def main():
     # Command line parser
-    parser = get_default_parser("Run the Fetpype segmentation pipeline.")
+    parser = get_default_parser("Run the Fetpype surface extraction pipeline.")
 
     parser.add_argument(
         "--ignore_checks",
         action="store_true",
         help=(
-            "Ignore the check to only use data from the list of validated SRR "
-            f"{', '.join(VALID_RECONSTRUCTION)}."
+            "Ignore the check to only use data from the list of "
+            "validated segmentation methods: "
+            f"{', '.join(VALID_SEGMENTATION)}."
         ),
     )
     args = parser.parse_args()
 
     # main_workflow
     print("Initialising the pipeline...")
-    create_seg_workflow(
+    create_surf_workflow(
         data_dir=args.data,
         out_dir=args.out,
         nipype_dir=args.nipype_dir,

@@ -1,12 +1,12 @@
 # Segmentation
-
+In the segmentation step, a [super-resolution reconstructed](reconstruction.md) volume is provided to a segmentation algorithm that outputs a parcellation of the brain into several regions. The segmented volume can then be used as input to [surface extraction](surface.md).
 ## Available tools
 Several state-of-the-art segmentation algorithms have been wrapped and tested in fetpype.
 
 | Algorithm                              | Repository                                               | Docker                                                                            |
 | -------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| BOUNTI[@uus2023bounti]        | <https://github.com/gift-surg/NiftyMIC>  | <https://hub.docker.com/r/renbem/niftymic> |
-| dHCP[@makropoulos2018developing]  |<https://github.com/SVRTK/SVRTK> | <https://hub.docker.com/r/fetalsvrtk/svrtk> |
+| BOUNTI[@uus2023bounti]        | <https://github.com/SVRTK/auto-proc-svrtk>  | <https://hub.docker.com/r/fetalsvrtk/segmentation> |
+| dHCP[@makropoulos2018developing]  |<https://github.com/fetpype/dhcp-structural-pipeline> | <https://hub.docker.com/r/gerardmartijuan/dhcp-pipeline-multifact> |
 
 **⚠️ Disclaimer:** The dHCP pipeline is only available in the dev branch as of now.
 
@@ -80,5 +80,5 @@ The pipeline has been shown to fail in specific systems. We are still investigat
 10%...Error: draw-em command returned non-zero exit status -8
 ```
 
-Try to run the pipeline in a different system or, if you are in an HPC, in a different node. If the problem persists, please open an issue on the [GitHub repository](https://github.com/fetpype/dhcp-structural-pipeline) with the characteristics of the system you are using.
+Try to run the pipeline in a different system or, if you are in an HPC, in a different node. If the problem persists, please reach out to the original authors of the tool on [this GitHub repository](https://github.com/BioMedIA/dhcp-structural-pipeline/tree/fetal).
 

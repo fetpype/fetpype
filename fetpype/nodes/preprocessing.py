@@ -9,6 +9,9 @@ from nipype.interfaces.base import (
     BaseInterfaceInputSpec,
 )
 from fetpype.nodes.utils import get_run_id
+import logging
+
+log = logging.getLogger("nipype.workflow")
 
 
 class CropStacksAndMasksInputSpec(BaseInterfaceInputSpec):
@@ -113,7 +116,8 @@ class CropStacksAndMasks(BaseInterface):
             Code inspired by Michael Ebner:
             https://github.com/gift-surg/NiftyMIC/blob/master/niftymic/base/stack.py
         """
-        print(f"Working on {image_path} and {mask_path}")
+
+        log.info(f"Working on {image_path} and {mask_path}")
         image_ni = ni.load(image_path)
         mask_ni = ni.load(mask_path)
 
@@ -129,7 +133,9 @@ class CropStacksAndMasks(BaseInterface):
         [x_range, y_range, z_range] = self._get_rectangular_masked_region(mask)
 
         if np.array([x_range, y_range, z_range]).all() is None:
-            print("Cropping to bounding box of mask led to an empty image.")
+            log.warning(
+                "Cropping to bounding box of mask led to an empty image."
+            )
             return None
 
         if unit == "mm":
@@ -567,7 +573,7 @@ def run_prepro_cmd(
     """
     import os
     from fetpype import VALID_PREPRO_TAGS
-    import subprocess
+    from fetpype.utils.logging import run_and_tee
 
     # Important for mapnodes
     unlist_stacks = False
@@ -582,7 +588,6 @@ def run_prepro_cmd(
 
     from fetpype.nodes import is_valid_cmd, get_directory, get_mount_docker
 
-    print(input_stacks, cmd, is_enabled, input_masks)
     is_valid_cmd(cmd, VALID_PREPRO_TAGS)
     if "<output_stacks>" not in cmd and "<output_masks>" not in cmd:
         raise RuntimeError(
@@ -648,23 +653,7 @@ def run_prepro_cmd(
             # parameter has been set in the config file
             cmd = cmd.replace("<singularity_mount>", singularity_mount)
 
-        print(f"Running command:\n {cmd}")
-        try:
-            subprocess.run(
-                cmd, shell=True, check=True, text=True, capture_output=True
-            )
-        except subprocess.CalledProcessError as e:
-            if e.stderr:
-                msg = f"Error output:\n{e.stderr.strip()}"
-            elif e.stdout:
-                msg = f"Container stdout:\n{e.stdout.strip()}"
-            else:
-                msg = "No error message from container"
-            raise RuntimeError(
-                f"Container call failed with exit code {e.returncode}.\n"
-                f"Command: {getattr(e, 'cmd', cmd)}\n"
-                f"{msg}"
-            ) from e
+        run_and_tee(cmd)
 
     else:
         output_stacks = input_stacks if "<output_stacks>" in cmd else None

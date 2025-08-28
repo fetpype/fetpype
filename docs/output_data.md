@@ -23,7 +23,7 @@ derivatives/
 │   └── sub-<subject>/
 │       └── [ses-<session>/]
 │           └── anat/
-│               └── sub-<subject>_[ses-<session>]_[rec-<reconstruction>]_[seg-<segmentation>]_[desc-<description>]_<suffix>.nii.gz
+│               └── sub-<subject>_[ses-<session>]_[rec-<reconstruction>]_[seg-<segmentation>]_[surf-surface]_[desc-<description>]_<suffix>.nii.gz
 ```
 
 ### File Naming Convention
@@ -33,6 +33,7 @@ derivatives/
 | `preprocessing_wf/_session_01_subject_sub-01/denoise_wf/_denoising/sub-01_ses-01_run-1_T2w_noise_corrected.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_run-1_desc-denoised_T2w.nii.gz` |
 | `nesvor_pipeline_wf/_session_02_subject_sub-01/recon_node/recon.nii.gz` | `sub-01/ses-02/anat/sub-01_ses-02_rec-nesvor_T2w.nii.gz` |
 | `segmentation_wf/_session_01_subject_sub-01/seg_node/input_srr-mask-brain_bounti-19.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_dseg.nii.gz` |
+| `surface_wf/_session_01_subject_sub-01/seg_node/surf.gii` | `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_surf-surface-surf.gii` |
 
 ### Core BIDS Entities
 
@@ -41,6 +42,7 @@ derivatives/
 - `run-X`: Run number (from original stacks, preserved in preprocessing)
 - `rec-METHOD`: Reconstruction method (e.g., rec-nesvor)
 - `seg-METHOD`: Segmentation method (e.g., seg-bounti)
+- `surf-METHOD`: Surface extraction method (e.g., surf-surface)
 - `desc-DESCRIPTION`: Processing description (e.g., desc-denoised)
 - Suffixes: `T2w`, `dseg`, `mask`, `surf.gii`, `shape.gii`
 
@@ -60,6 +62,9 @@ The DataSink applies context-specific regex rules to convert Nipype outputs to B
 - **Segmentation:**
   - Input: .../seg_node/input_srr-mask-brain_bounti-19.nii.gz
   - Output: sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_dseg.nii.gz
+- **Surface extraction:**
+  - Input: .../surf_node/surf.gii
+  - Output: sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_surf-surface_surf.gii
 
 **Cleanup rules** (applied to all outputs):
 - Remove doubled prefixes (e.g., `sub-sub-` → `sub-`)
@@ -103,8 +108,8 @@ workflow.connect(
 ## Best Practices
 
 - **Always set `strip_dir`:** This should point to the Nipype base working directory. If not set, DataSink will raise an error.
-- **Use descriptive labels:** For `rec_label`, `seg_label`, and `desc_label`, use values that reflect the actual processing method (e.g., `nesvor`, `bounti`, `denoised`).
-- **Pipeline names:** Should match the processing chain (e.g., `nesvor_bounti`, `preprocessing`).
+- **Use descriptive labels:** For `rec_label`, `seg_label`, `surf_label`, and `desc_label`, use values that reflect the actual processing method (e.g., `nesvor`, `bounti`, `surface`, `denoised`).
+- **Pipeline names:** Should match the processing chain (e.g., `nesvor_bounti_surface`, `preprocessing`).
 - **Test your DataSink configuration:** Use unit tests or inspect outputs to ensure correct organization and naming.
 
 ## Troubleshooting

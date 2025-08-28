@@ -10,6 +10,7 @@ from ..nodes.dhcp import dhcp_pipeline
 from nipype import config
 from fetpype.nodes.reconstruction import run_recon_cmd
 from fetpype.nodes.segmentation import run_seg_cmd
+from fetpype.nodes.surface_extraction import run_surf_cmd
 
 
 def print_files(files):
@@ -330,6 +331,59 @@ def get_seg(cfg):
     return seg_pipe
 
 
+def get_surf(cfg):
+    """
+    Get the surface extraction workflow based on the pipeline specified
+    in the config `cfg`.
+
+    Args:
+        cfg: Configuration object containing the parameters for the pipeline.
+    Returns:
+        surf_pipe:   A Nipype workflow object that contains
+                    the surface extraction steps.
+    """
+    surf_pipe = pe.Workflow(name="SurfaceExtraction")
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["seg_volume"]), name="inputnode"
+    )
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["surf_volume"]), name="outputnode"
+    )
+
+    container = cfg.container
+    cfg_surf_base = cfg.surface
+    cfg_surf = cfg.surface[container]
+
+    surf = pe.Node(
+        interface=niu.Function(
+            input_names=[
+                "input_seg",
+                "cmd",
+                "cfg",
+                "singularity_path",
+                "singularity_mount",
+                "singularity_home",
+            ],
+            output_names=["surf_volume"],
+            function=run_surf_cmd,
+        ),
+        name=cfg_surf_base.pipeline,
+    )
+
+    surf.inputs.cmd = cfg_surf.cmd
+    surf.inputs.cfg = cfg_surf_base
+    if cfg.container == "singularity":
+        surf.inputs.singularity_path = cfg.singularity_path
+        surf.inputs.singularity_mount = cfg.singularity_mount
+        surf.inputs.singularity_home = cfg.singularity_home
+
+    surf_pipe.connect(inputnode, "seg_volume", surf, "input_seg")
+    surf_pipe.connect(surf, "surf_volume", outputnode, "surf_volume")
+
+    return surf_pipe
+
+
 def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     """
     Create a full fetal processing pipeline by combining preprocessing,
@@ -356,8 +410,16 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     in_fields = ["stacks"]
     if load_masks:
         in_fields += ["masks"]
+
     inputnode = pe.Node(
         niu.IdentityInterface(fields=in_fields), name="inputnode"
+    )
+
+    outputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=["output_srr", "output_seg", "output_surf"]
+        ),
+        name="outputnode",
     )
 
     enabled_cropping = (
@@ -366,6 +428,9 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     prepro_pipe = get_prepro(cfg, load_masks, enabled_cropping)
     recon = get_recon(cfg)
     segmentation = get_seg(cfg)
+    surface = get_surf(cfg)
+
+    # PREPROCESSING
 
     full_fet_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
 
@@ -378,13 +443,11 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
         prepro_pipe, "outputnode.masks", recon, "inputnode.masks"
     )
 
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=["output_srr", "output_seg"]),
-        name="outputnode",
-    )
     full_fet_pipe.connect(
         recon, "outputnode.srr_volume", outputnode, "output_srr"
     )
+
+    # SEGMENTATION
 
     full_fet_pipe.connect(
         recon, "outputnode.srr_volume", segmentation, "inputnode.srr_volume"
@@ -392,6 +455,16 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
 
     full_fet_pipe.connect(
         segmentation, "outputnode.seg_volume", outputnode, "output_seg"
+    )
+
+    # SURFACE EXTRACTION
+
+    full_fet_pipe.connect(
+        segmentation, "outputnode.seg_volume", surface, "inputnode.seg_volume"
+    )
+
+    full_fet_pipe.connect(
+        surface, "outputnode.surf_volume", outputnode, "output_surf"
     )
 
     return full_fet_pipe
@@ -415,13 +488,6 @@ def create_rec_pipeline(cfg, load_masks=False, name="rec_pipeline"):
     print("Full pipeline name: ", name)
     # Creating pipeline
     rec_pipe = pe.Workflow(name=name)
-    rec_pipe.config["execution"] = {
-        "remove_unnecessary_outputs": True,
-        "stop_on_first_crash": True,
-        "stop_on_first_rerun": True,
-        "crashfile_format": "txt",
-        "write_provenance": False,
-    }
     config.update_config(rec_pipe.config)
     # Creating input node
     in_fields = ["stacks"]
@@ -470,14 +536,6 @@ def create_seg_pipeline(cfg, name="seg_pipeline"):
     print("Full pipeline name: ", name)
     # Creating pipeline
     seg_pipe = pe.Workflow(name=name)
-    seg_pipe.config["execution"] = {
-        "remove_unnecessary_outputs": True,
-        "stop_on_first_crash": True,
-        "stop_on_first_rerun": True,
-        "crashfile_format": "txt",
-        # "use_relative_paths": True,
-        "write_provenance": False,
-    }
     config.update_config(seg_pipe.config)
     # Creating input node
     inputnode = pe.Node(
@@ -499,6 +557,42 @@ def create_seg_pipeline(cfg, name="seg_pipeline"):
     )
 
     return seg_pipe
+
+
+def create_surf_pipeline(cfg, name="surf_pipeline"):
+    """
+    Create the surface extraction workflow based on the pipeline
+    specified in the config `cfg`.
+
+    Args:
+        cfg: Configuration object containing the parameters for the pipeline.
+        name: Name of the pipeline (default = "surf_pipeline").
+    Returns:
+        surf_pipe: A Nipype workflow object that contains the
+            surface extraction steps
+    """
+    print("Full pipeline name: ", name)
+    # Creating pipeline
+    surf_pipe = pe.Workflow(name=name)
+    config.update_config(surf_pipe.config)
+    # Creating input node
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=["seg_volume"]), name="inputnode"
+    )
+
+    surface = get_surf(cfg)
+
+    surf_pipe.connect(inputnode, "seg_volume", surface, "inputnode.seg_volume")
+
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=["output_surf"]),
+        name="outputnode",
+    )
+    surf_pipe.connect(
+        surface, "outputnode.surf_volume", outputnode, "output_surf"
+    )
+
+    return surf_pipe
 
 
 def create_dhcp_subpipe(name="dhcp_pipe", params={}):

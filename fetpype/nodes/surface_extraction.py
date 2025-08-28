@@ -44,7 +44,8 @@ def run_surf_cmd(
     input_seg = os.path.join(input_seg_dir, "input_seg.nii.gz")
 
     output_dir = os.path.join(os.getcwd(), "surf/out")
-    surf = os.path.join(output_dir, "surf.gii")
+    os.makedirs(output_dir, exist_ok=True)
+    surf = os.path.join(output_dir, cfg.out_file)
 
     # In cmd, there will be things contained in <>.
     # Check that everything that is in <> is in valid_tags

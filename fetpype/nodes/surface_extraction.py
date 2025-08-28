@@ -45,7 +45,9 @@ def run_surf_cmd(
 
     output_dir = os.path.join(os.getcwd(), "surf/out")
     os.makedirs(output_dir, exist_ok=True)
-    surf = os.path.join(output_dir, "surf.stl")
+
+
+    surf = os.path.join(output_dir, cfg.out_file)
     #surf = os.path.join(output_dir, "surf.gii")
 
 

@@ -331,7 +331,7 @@ def get_seg(cfg):
     return seg_pipe
 
 
-def get_surf_lh(cfg):
+def get_surf(cfg):
     """
     Get the surface extraction workflow based on the pipeline specified
     in the config `cfg`.
@@ -356,8 +356,8 @@ def get_surf_lh(cfg):
     0/0
 
     container = cfg.container
-    cfg_surf_lh_base = cfg.surface_lh
-    cfg_surf_lh = cfg.surface_lh[container]
+    cfg_surf_base = cfg.surface
+    cfg_surf = cfg.surface[container]
 
     surf_lh= pe.Node(
         interface=niu.Function(
@@ -372,18 +372,19 @@ def get_surf_lh(cfg):
             output_names=["surf_volume_lh"],
             function=run_surf_cmd,
         ),
-        name=cfg_surf_base.pipeline,
+        name="surf_lh",
     )
 
-    surf_lh.inputs.cmd = cfg_surf_lh.cmd
-    surf_lh.inputs.cfg = cfg_surf_lh_base
+    surf_lh.inputs.cmd = cfg_surf.cmd
+    surf_lh.inputs.cfg = cfg_surf_base.surface_lh
+
     if cfg.container == "singularity":
         surf_lh.inputs.singularity_path = cfg.singularity_path
         surf_lh.inputs.singularity_mount = cfg.singularity_mount
         surf_lh.inputs.singularity_home = cfg.singularity_home
 
-    surf_pipe.connect(inputnode, "seg_volume", surf, "input_seg")
-    surf_pipe.connect(surf, "surf_volume_lh", outputnode, "surf_volume_lh")
+    surf_pipe.connect(inputnode, "seg_volume", surf_lh, "input_seg")
+    surf_pipe.connect(surf_lh, "surf_volume", outputnode, "surf_volume_lh")
 
     return surf_pipe
 

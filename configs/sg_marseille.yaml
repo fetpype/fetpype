@@ -2,8 +2,7 @@ defaults:
   - preprocessing/default
   - reconstruction/nesvor
   - segmentation/bounti
-  - surface/surface_lh
-  - surface/surface_rh
+  - surface/surface
   - _self_
 container: "singularity"
 singularity_path: "/scratch/gauzias/softs/fetpype_singularity_images"

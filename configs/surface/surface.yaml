@@ -1,4 +1,5 @@
 pipeline: "surface"
+
 docker: 
   cmd: "docker run --rm <mount>
     fetpype/surf_proc:0.0.2a
@@ -11,8 +12,15 @@ singularity:
     generate_mesh -l <labelling_scheme>
     -s <input_seg> 
     -m <output_surf>"
-use_scheme: "bounti"
-out_file: "surf_rh.stl"
-labelling_scheme: 
-  bounti: [5, 7, 14, 16]
 
+surface_lh:
+    use_scheme: "bounti"
+    out_file: "surf_lh.stl"
+    labelling_scheme:
+        bounti: [5, 7, 14, 16]
+
+surface_rh:
+    use_scheme: "bounti"
+    out_file: "surf_rh.stl"
+    labelling_scheme:
+        bounti: [6, 8, 15, 17]

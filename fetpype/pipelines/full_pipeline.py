@@ -353,8 +353,6 @@ def get_surf(cfg):
 
     print(cfg)
 
-    0/0
-
     container = cfg.container
     cfg_surf_base = cfg.surface
     cfg_surf = cfg.surface[container]

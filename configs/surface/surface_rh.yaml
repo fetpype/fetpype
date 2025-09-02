@@ -12,7 +12,7 @@ singularity:
     -s <input_seg> 
     -m <output_surf>"
 use_scheme: "bounti"
-out_file: "surf.stl"
+out_file: "surf_rh.stl"
 labelling_scheme: 
   bounti: [5, 7, 14, 16]
 

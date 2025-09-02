@@ -18,5 +18,5 @@ surface:
     surface_rh:
         out_file: "surf_rh.stl"
 
-    surface_rh:
-        out_file: "surf_rh.stl"
+    surface_lh:
+        out_file: "surf_lh.stl"

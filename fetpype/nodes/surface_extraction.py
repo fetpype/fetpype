@@ -45,7 +45,6 @@ def run_surf_cmd(
 
 
     print(cfg)
-    0/0
 
     output_dir = os.path.join(os.getcwd(), "surf/out")
     os.makedirs(output_dir, exist_ok=True)

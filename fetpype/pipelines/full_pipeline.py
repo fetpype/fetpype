@@ -342,7 +342,7 @@ def get_surf(cfg):
         surf_pipe:   A Nipype workflow object that contains
                     the surface extraction steps.
     """
-    surf_pipe = pe.Workflow(name="SurfaceExtraction_lh")
+    surf_pipe = pe.Workflow(name="SurfaceExtraction")
     # Creating input node
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["seg_volume"]), name="inputnode"
@@ -367,7 +367,7 @@ def get_surf(cfg):
                 "singularity_mount",
                 "singularity_home",
             ],
-            output_names=["surf_volume_lh"],
+            output_names=["surf_volume"],
             function=run_surf_cmd,
         ),
         name="surf_lh",
@@ -396,7 +396,7 @@ def get_surf(cfg):
                 "singularity_mount",
                 "singularity_home",
             ],
-            output_names=["surf_volume_rh"],
+            output_names=["surf_volume"],
             function=run_surf_cmd,
         ),
         name="surf_rh",

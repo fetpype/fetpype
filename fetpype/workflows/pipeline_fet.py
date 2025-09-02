@@ -208,6 +208,16 @@ def create_main_workflow(
         seg_label=cfg.segmentation.pipeline,
     )
 
+    surf_datasink = create_bids_datasink(
+        out_dir=out_dir,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
+        name="final_surf_datasink",
+        rec_label=cfg.reconstruction.pipeline,
+        seg_label=cfg.segmentation.pipeline,
+        surf_label=cfg.surface.pipeline,
+    )
+
     # Connect the pipeline to the datasink
     main_workflow.connect(
         fet_pipe, "outputnode.output_srr", recon_datasink, f"@{pipeline_name}"
@@ -219,6 +229,19 @@ def create_main_workflow(
         f"@{cfg.segmentation.pipeline}",
     )
 
+    main_workflow.connect(
+        fet_pipe,
+        "outputnode.output_surf_lh",
+        surf_datasink,
+        "@surf_lh",
+    )
+
+    main_workflow.connect(
+        fet_pipe,
+        "outputnode.output_surf_rh",
+        surf_datasink,
+        "@surf_rh",
+    )
 
     if cfg.save_graph:
         main_workflow.write_graph(

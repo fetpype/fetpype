@@ -351,6 +351,10 @@ def get_surf_lh(cfg):
         niu.IdentityInterface(fields=["surf_volume_lh"]), name="outputnode"
     )
 
+    print(cfg)
+
+    0/0
+
     container = cfg.container
     cfg_surf_lh_base = cfg.surface_lh
     cfg_surf_lh = cfg.surface_lh[container]

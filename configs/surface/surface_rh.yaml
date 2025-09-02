@@ -1,4 +1,4 @@
-pipeline: "surface_rh"
+pipeline: "surface"
 docker: 
   cmd: "docker run --rm <mount>
     fetpype/surf_proc:0.0.2a

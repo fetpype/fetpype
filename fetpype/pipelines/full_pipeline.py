@@ -515,19 +515,19 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     # SURFACE EXTRACTION
 
     full_fet_pipe.connect(
-        segmentation, "outputnode.seg_volume", surface_rh, "inputnode.seg_volume"
-    )
-
-    full_fet_pipe.connect(
-        surface_rh, "outputnode.surf_volume", outputnode, "output_surf_rh"
-    )
-
-    full_fet_pipe.connect(
         segmentation, "outputnode.seg_volume", surface_lh, "inputnode.seg_volume"
     )
 
     full_fet_pipe.connect(
         surface_lh, "outputnode.surf_volume", outputnode, "output_surf_lh"
+    )
+
+    full_fet_pipe.connect(
+        segmentation, "outputnode.seg_volume", surface_rh, "inputnode.seg_volume"
+    )
+
+    full_fet_pipe.connect(
+        surface_rh, "outputnode.surf_volume", outputnode, "output_surf_rh"
     )
 
     return full_fet_pipe

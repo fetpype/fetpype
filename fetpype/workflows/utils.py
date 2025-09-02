@@ -20,18 +20,20 @@ def get_default_parser(desc):
     parser.add_argument(
         "--out",
         type=str,
+        required=True,
         help=(
             "Output directory, where all outputs will be saved. "
-            "(default: <data>/derivatives/<out>/pipeline_name)"
+            "(<out>/derivatives/pipeline_name)"
         ),
     )
 
     parser.add_argument(
         "--nipype_dir",
         type=str,
+        required=False,
         help=(
             "Directory, where the nipype processing will be saved. "
-            "(default: nipype/ on the same folder as the data directory)"
+            "(<out>/nipype/pipeline_name)"
         ),
     )
     parser.add_argument(
@@ -180,14 +182,18 @@ def check_and_update_paths(data_dir, out_dir, nipype_dir, pipeline_name):
     if out_dir is None:
         out_dir = data_dir
 
-    out_dir = os.path.join(os.path.abspath(out_dir), "derivatives", pipeline_name)
-
-    os.makedirs(out_dir, exist_ok=True)
-
     if nipype_dir is None:
         nipype_dir = out_dir
 
-    nipype_dir = os.path.join(os.path.abspath(nipype_dir), pipeline_name)
+    # derivatives
+    out_dir = os.path.join(os.path.abspath(out_dir),
+                           "derivatives", pipeline_name)
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    # working directory
+    nipype_dir = os.path.join(os.path.abspath(nipype_dir), "nipype")
+
 
     os.makedirs(nipype_dir, exist_ok=True)
 

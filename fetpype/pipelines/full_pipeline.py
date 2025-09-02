@@ -343,12 +343,16 @@ def get_surf(cfg):
                     the surface extraction steps.
     """
     surf_pipe = pe.Workflow(name="SurfaceExtraction")
+
     # Creating input node
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["seg_volume"]), name="inputnode"
     )
+
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["surf_volume_lh", "surf_volume_rh"]), name="outputnode"
+        niu.IdentityInterface(
+            fields=["surf_volume_lh", "surf_volume_rh"]),
+        name="outputnode"
     )
 
     print(cfg)
@@ -357,7 +361,8 @@ def get_surf(cfg):
     cfg_surf_base = cfg.surface
     cfg_surf = cfg.surface[container]
 
-    surf_lh= pe.Node(
+    # surf_lh
+    surf_lh = pe.Node(
         interface=niu.Function(
             input_names=[
                 "input_seg",
@@ -384,9 +389,8 @@ def get_surf(cfg):
     surf_pipe.connect(inputnode, "seg_volume", surf_lh, "input_seg")
     surf_pipe.connect(surf_lh, "surf_volume", outputnode, "surf_volume_lh")
 
-
-
-    surf_rh= pe.Node(
+    # surf_rh
+    surf_rh = pe.Node(
         interface=niu.Function(
             input_names=[
                 "input_seg",
@@ -414,7 +418,6 @@ def get_surf(cfg):
     surf_pipe.connect(surf_rh, "surf_volume", outputnode, "surf_volume_rh")
 
     return surf_pipe
-
 
 
 def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
@@ -450,7 +453,8 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
 
     outputnode = pe.Node(
         niu.IdentityInterface(
-            fields=["output_srr", "output_seg", "output_surf_lh", "output_surf_rh"]
+            fields=["output_srr", "output_seg",
+                    "output_surf_lh", "output_surf_rh"]
         ),
         name="outputnode",
     )
@@ -465,14 +469,13 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     surface = get_surf(cfg)
 
     # PREPROCESSING
-
     full_fet_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
 
     # RECONSTRUCTION
-
     full_fet_pipe.connect(
         prepro_pipe, "outputnode.stacks", recon, "inputnode.stacks"
     )
+
     full_fet_pipe.connect(
         prepro_pipe, "outputnode.masks", recon, "inputnode.masks"
     )
@@ -482,7 +485,6 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     )
 
     # SEGMENTATION
-
     full_fet_pipe.connect(
         recon, "outputnode.srr_volume", segmentation, "inputnode.srr_volume"
     )
@@ -492,7 +494,6 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     )
 
     # SURFACE EXTRACTION
-
     full_fet_pipe.connect(
         segmentation, "outputnode.seg_volume", surface, "inputnode.seg_volume"
     )

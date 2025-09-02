@@ -20,18 +20,20 @@ def get_default_parser(desc):
     parser.add_argument(
         "--out",
         type=str,
+        required=True,
         help=(
             "Output directory, where all outputs will be saved. "
-            "(default: <data>/derivatives/<out>/pipeline_name)"
+            "(<out>/derivatives/pipeline_name)"
         ),
     )
 
     parser.add_argument(
         "--nipype_dir",
         type=str,
+        required=False,
         help=(
             "Directory, where the nipype processing will be saved. "
-            "(default: nipype/ on the same folder as the data directory)"
+            "(<out>/nipype/pipeline_name)"
         ),
     )
     parser.add_argument(

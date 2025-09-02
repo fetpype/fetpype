@@ -20,18 +20,20 @@ def get_default_parser(desc):
     parser.add_argument(
         "--out",
         type=str,
+        required=True,
         help=(
             "Output directory, where all outputs will be saved. "
-            "(default: <data>/derivatives/<out>/pipeline_name)"
+            "(<out>/derivatives/pipeline_name)"
         ),
     )
 
     parser.add_argument(
         "--nipype_dir",
         type=str,
+        required=False,
         help=(
             "Directory, where the nipype processing will be saved. "
-            "(default: nipype/ on the same folder as the data directory)"
+            "(<out>/nipype/pipeline_name)"
         ),
     )
     parser.add_argument(
@@ -172,23 +174,25 @@ def check_and_update_paths(data_dir, out_dir, nipype_dir, pipeline_name):
     Returns:
         tuple: Updated paths for data_dir, out_dir, and nipype_dir.
     """
+
     data_dir = os.path.abspath(data_dir)
 
-    if out_dir is None:
-        out_dir = os.path.join(data_dir, "derivatives", pipeline_name)
-    else:
-        out_dir = os.path.join(os.path.abspath(out_dir), pipeline_name)
+    assert os.path.exists(data_dir), f"Error {data_dir} should be a valid dir"
 
-    try:
-        os.makedirs(out_dir)
-    except OSError:
-        print("out_dir {} already exists".format(out_dir))
+    if out_dir is None:
+        out_dir = data_dir
+
     if nipype_dir is None:
-        # Get parent directory of data_dir
-        parent_dir = os.path.dirname(data_dir)
-        nipype_dir = os.path.join(parent_dir, "nipype")
-    else:
-        nipype_dir = os.path.abspath(nipype_dir)
+        nipype_dir = out_dir
+
+    # derivatives
+    out_dir = os.path.join(os.path.abspath(out_dir),
+                           "derivatives", pipeline_name)
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    # working directory
+    nipype_dir = os.path.join(os.path.abspath(nipype_dir), "nipype")
 
     os.makedirs(nipype_dir, exist_ok=True)
 

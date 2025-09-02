@@ -623,13 +623,16 @@ def create_surf_pipeline(cfg, name="surf_pipeline"):
     surf_pipe.connect(inputnode, "seg_volume", surface, "inputnode.seg_volume")
 
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["output_surf"]),
+        niu.IdentityInterface(fields=["output_surf_lh", "output_surf_rh"]),
         name="outputnode",
     )
     surf_pipe.connect(
-        surface, "outputnode.surf_volume", outputnode, "output_surf"
+        surface, "outputnode.surf_volume_lh", outputnode, "output_surf_lh"
     )
 
+    surf_pipe.connect(
+        surface, "outputnode.surf_volume_rh", outputnode, "output_surf_rh"
+    )
     return surf_pipe
 
 

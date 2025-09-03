@@ -1,4 +1,4 @@
-pipeline: "white"
+pipeline: "surface"
 
 docker: 
   cmd: "docker run --rm <mount>
@@ -15,12 +15,12 @@ singularity:
 
 surface_lh:
     use_scheme: "bounti"
-    out_file: "hemi-L.surf.gii"
+    out_file: "hemi-L.white.surf.gii"
     labelling_scheme:
         bounti: [5, 7, 14, 16]
 
 surface_rh:
     use_scheme: "bounti"
-    out_file: "hemi-R.surf.gii"
+    out_file: "hemi-R.white.surf.gii"
     labelling_scheme:
         bounti: [6, 8, 15, 17]

@@ -284,7 +284,6 @@ def create_bids_datasink(
     if surf_label:
         label = f"_rec-{rec_label}" if rec_label else ""
         label += f"_seg-{seg_label}" if seg_label else ""
-        label += f"_{surf_label}"
 
         # for surf.gii
         regex_subs.append(
@@ -292,12 +291,12 @@ def create_bids_datasink(
                 (
                     rf"^{escaped_bids_derivatives_root}/"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"[^/]+surf\.gii$"
+                    rf"[^/]+\.surf\.gii$"
                 ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-                    rf"sub-\2_ses-\1_\3{label}.surf.gii"
+                    rf"sub-\2_ses-\1{label}_\3.surf.gii"
                 ),
             )
         )

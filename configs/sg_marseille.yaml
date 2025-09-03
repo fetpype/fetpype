@@ -13,10 +13,10 @@ singularity_home: "/scratch/dmeunier/Python/Scripts/tmp_proc:/home/tmp_proc"
 reconstruction:
   output_resolution: 0.5
 save_graph: False
-
-surface:
-    surface_rh:
-        out_file: "surf_rh.stl"
-
-    surface_lh:
-        out_file: "surf_lh.stl"
+#
+# white:
+#     surface_rh:
+#         out_file: "surf_rh.stl"
+#
+#     surface_lh:
+#         out_file: "surf_lh.stl"

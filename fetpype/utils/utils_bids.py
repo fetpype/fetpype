@@ -280,25 +280,58 @@ def create_bids_datasink(
             )
         )
 
+    # ** Rule 5 : Surface Output
     if surf_label:
-        label = f"rec-{rec_label}" if rec_label else ""
+        label = f"_rec-{rec_label}" if rec_label else ""
         label += f"_seg-{seg_label}" if seg_label else ""
-        label += f"_surf-{surf_label}"
+        label += f"_{surf_label}"
+
+        # for surf.gii
         regex_subs.append(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"[^/]+\.gii$"
+                    rf"[^/]+surf\.gii$"
                 ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-                    rf"sub-\2_ses-\1{label}_surf.gii"
+                    rf"sub-\2_ses-\1_\3{label}.surf.gii"
                 ),
             )
         )
-
+#
+#         # for stl
+#         regex_subs.append(
+#             (
+#                 (
+#                     rf"^{escaped_bids_derivatives_root}/"
+#                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+#                     rf"[^/]+_rh\.stl$"
+#                 ),
+#                 # Groups: \1=SESS, \2=SUBJ, \3=ext
+#                 (
+#                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+#                     rf"sub-\2_ses-\1_hemi-R{label}_surf.stl"
+#                 ),
+#             )
+#         )
+#
+#         regex_subs.append(
+#             (
+#                 (
+#                     rf"^{escaped_bids_derivatives_root}/"
+#                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+#                     rf"[^/]+_lh\.stl$"
+#                 ),
+#                 # Groups: \1=SESS, \2=SUBJ, \3=ext
+#                 (
+#                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+#                     rf"sub-\2_ses-\1_hemi-L{label}_surf.stl"
+#                 ),
+#             )
+#         )
     # Add more specific rules here if other file types need handling
     regex_subs.extend(
         [

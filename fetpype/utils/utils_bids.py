@@ -304,7 +304,7 @@ def create_bids_datasink(
                 (
                     rf"^{escaped_bids_derivatives_root}/"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"([^/])+\.stl$"
+                    rf"([^/]+)\.stl$"
                 ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
                 (

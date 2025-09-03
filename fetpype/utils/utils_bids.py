@@ -280,39 +280,21 @@ def create_bids_datasink(
             )
         )
 
-    # ** Rule 5 : Surface Output
     if surf_label:
-        label = f"_rec-{rec_label}" if rec_label else ""
+        label = f"rec-{rec_label}" if rec_label else ""
         label += f"_seg-{seg_label}" if seg_label else ""
-
-        # for surf.gii
+        label += f"_surf-{surf_label}"
         regex_subs.append(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"[^/]+\.surf\.gii$"
+                    rf"[^/]+\.gii$"
                 ),
                 # Groups: \1=SESS, \2=SUBJ, \3=ext
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-                    rf"sub-\2_ses-\1{label}_\3.surf.gii"
-                ),
-            )
-        )
-
-        # for stl
-        regex_subs.append(
-            (
-                (
-                    rf"^{escaped_bids_derivatives_root}/"
-                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"[^/]+\.stl$"
-                ),
-                # Groups: \1=SESS, \2=SUBJ, \3=ext
-                (
-                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-                    rf"sub-\2_ses-\1{label}_\3.stl"
+                    rf"sub-\2_ses-\1{label}_surf.gii"
                 ),
             )
         )

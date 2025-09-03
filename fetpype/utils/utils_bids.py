@@ -300,37 +300,23 @@ def create_bids_datasink(
                 ),
             )
         )
-#
-#         # for stl
-#         regex_subs.append(
-#             (
-#                 (
-#                     rf"^{escaped_bids_derivatives_root}/"
-#                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-#                     rf"[^/]+_rh\.stl$"
-#                 ),
-#                 # Groups: \1=SESS, \2=SUBJ, \3=ext
-#                 (
-#                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-#                     rf"sub-\2_ses-\1_hemi-R{label}_surf.stl"
-#                 ),
-#             )
-#         )
-#
-#         regex_subs.append(
-#             (
-#                 (
-#                     rf"^{escaped_bids_derivatives_root}/"
-#                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-#                     rf"[^/]+_lh\.stl$"
-#                 ),
-#                 # Groups: \1=SESS, \2=SUBJ, \3=ext
-#                 (
-#                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-#                     rf"sub-\2_ses-\1_hemi-L{label}_surf.stl"
-#                 ),
-#             )
-#         )
+
+        # for stl
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"[^/]+\.stl$"
+                ),
+                # Groups: \1=SESS, \2=SUBJ, \3=ext
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1{label}_\3.stl"
+                ),
+            )
+        )
+
     # Add more specific rules here if other file types need handling
     regex_subs.extend(
         [

@@ -343,19 +343,26 @@ def get_surf(cfg):
                     the surface extraction steps.
     """
     surf_pipe = pe.Workflow(name="SurfaceExtraction")
+
     # Creating input node
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["seg_volume"]), name="inputnode"
     )
+
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["surf_volume"]), name="outputnode"
+        niu.IdentityInterface(
+            fields=["surf_volume_lh", "surf_volume_rh"]),
+        name="outputnode"
     )
+
+    print(cfg)
 
     container = cfg.container
     cfg_surf_base = cfg.surface
     cfg_surf = cfg.surface[container]
 
-    surf = pe.Node(
+    # surf_lh
+    surf_lh = pe.Node(
         interface=niu.Function(
             input_names=[
                 "input_seg",
@@ -368,18 +375,47 @@ def get_surf(cfg):
             output_names=["surf_volume"],
             function=run_surf_cmd,
         ),
-        name=cfg_surf_base.pipeline,
+        name="surf_lh",
     )
 
-    surf.inputs.cmd = cfg_surf.cmd
-    surf.inputs.cfg = cfg_surf_base
-    if cfg.container == "singularity":
-        surf.inputs.singularity_path = cfg.singularity_path
-        surf.inputs.singularity_mount = cfg.singularity_mount
-        surf.inputs.singularity_home = cfg.singularity_home
+    surf_lh.inputs.cmd = cfg_surf.cmd
+    surf_lh.inputs.cfg = cfg_surf_base.surface_lh
 
-    surf_pipe.connect(inputnode, "seg_volume", surf, "input_seg")
-    surf_pipe.connect(surf, "surf_volume", outputnode, "surf_volume")
+    if cfg.container == "singularity":
+        surf_lh.inputs.singularity_path = cfg.singularity_path
+        surf_lh.inputs.singularity_mount = cfg.singularity_mount
+        surf_lh.inputs.singularity_home = cfg.singularity_home
+
+    surf_pipe.connect(inputnode, "seg_volume", surf_lh, "input_seg")
+    surf_pipe.connect(surf_lh, "surf_volume", outputnode, "surf_volume_lh")
+
+    # surf_rh
+    surf_rh = pe.Node(
+        interface=niu.Function(
+            input_names=[
+                "input_seg",
+                "cmd",
+                "cfg",
+                "singularity_path",
+                "singularity_mount",
+                "singularity_home",
+            ],
+            output_names=["surf_volume"],
+            function=run_surf_cmd,
+        ),
+        name="surf_rh",
+    )
+
+    surf_rh.inputs.cmd = cfg_surf.cmd
+    surf_rh.inputs.cfg = cfg_surf_base.surface_rh
+
+    if cfg.container == "singularity":
+        surf_rh.inputs.singularity_path = cfg.singularity_path
+        surf_rh.inputs.singularity_mount = cfg.singularity_mount
+        surf_rh.inputs.singularity_home = cfg.singularity_home
+
+    surf_pipe.connect(inputnode, "seg_volume", surf_rh, "input_seg")
+    surf_pipe.connect(surf_rh, "surf_volume", outputnode, "surf_volume_rh")
 
     return surf_pipe
 
@@ -417,7 +453,8 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
 
     outputnode = pe.Node(
         niu.IdentityInterface(
-            fields=["output_srr", "output_seg", "output_surf"]
+            fields=["output_srr", "output_seg",
+                    "output_surf_lh", "output_surf_rh"]
         ),
         name="outputnode",
     )
@@ -428,17 +465,17 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     prepro_pipe = get_prepro(cfg, load_masks, enabled_cropping)
     recon = get_recon(cfg)
     segmentation = get_seg(cfg)
+
     surface = get_surf(cfg)
 
     # PREPROCESSING
-
     full_fet_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
 
     # RECONSTRUCTION
-
     full_fet_pipe.connect(
         prepro_pipe, "outputnode.stacks", recon, "inputnode.stacks"
     )
+
     full_fet_pipe.connect(
         prepro_pipe, "outputnode.masks", recon, "inputnode.masks"
     )
@@ -448,7 +485,6 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     )
 
     # SEGMENTATION
-
     full_fet_pipe.connect(
         recon, "outputnode.srr_volume", segmentation, "inputnode.srr_volume"
     )
@@ -458,13 +494,16 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     )
 
     # SURFACE EXTRACTION
-
     full_fet_pipe.connect(
         segmentation, "outputnode.seg_volume", surface, "inputnode.seg_volume"
     )
 
     full_fet_pipe.connect(
-        surface, "outputnode.surf_volume", outputnode, "output_surf"
+        surface, "outputnode.surf_volume_lh", outputnode, "output_surf_lh"
+    )
+
+    full_fet_pipe.connect(
+        surface, "outputnode.surf_volume_rh", outputnode, "output_surf_rh"
     )
 
     return full_fet_pipe
@@ -585,13 +624,16 @@ def create_surf_pipeline(cfg, name="surf_pipeline"):
     surf_pipe.connect(inputnode, "seg_volume", surface, "inputnode.seg_volume")
 
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["output_surf"]),
+        niu.IdentityInterface(fields=["output_surf_lh", "output_surf_rh"]),
         name="outputnode",
     )
     surf_pipe.connect(
-        surface, "outputnode.surf_volume", outputnode, "output_surf"
+        surface, "outputnode.surf_volume_lh", outputnode, "output_surf_lh"
     )
 
+    surf_pipe.connect(
+        surface, "outputnode.surf_volume_rh", outputnode, "output_surf_rh"
+    )
     return surf_pipe
 
 

@@ -1,6 +1,6 @@
 defaults:
   - preprocessing/default
-  - reconstruction/nesvor
+  - reconstruction/niftymic
   - segmentation/bounti
   - _self_
 container: "docker"

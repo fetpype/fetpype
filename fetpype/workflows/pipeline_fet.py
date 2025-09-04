@@ -209,8 +209,10 @@ def create_main_workflow(
             simple_form=True,
         )
 
-    main_workflow.config["execution"] = {"remove_unnecessary_outputs": "false"}
-    main_workflow.run(plugin="MultiProc", plugin_args={"n_procs": nprocs})
+    main_workflow.run(
+        plugin="MultiProc",
+        plugin_args={"n_procs": nprocs, "status_callback": status_line},
+    )
 
 
 def main():

@@ -23,7 +23,7 @@ def get_default_parser(desc):
         required=True,
         help=(
             "Output directory, where all outputs will be saved. "
-            "(<out>/derivatives/pipeline_name)"
+            "Formatted as <out>/derivatives/pipeline_name."
         ),
     )
 
@@ -33,7 +33,7 @@ def get_default_parser(desc):
         required=False,
         help=(
             "Directory, where the nipype processing will be saved. "
-            "(<out>/nipype/pipeline_name)"
+            "(default: <out>/nipype/pipeline_name)"
         ),
     )
     parser.add_argument(
@@ -44,7 +44,7 @@ def get_default_parser(desc):
         nargs="+",
         required=False,
         help=(
-            "List of subjects to process (default: every subject in the"
+            "List of subjects to process (default: every subject in the "
             "data directory)."
         ),
     )

@@ -144,6 +144,7 @@ def create_datasource(
 
     return bids_datasource
 
+
 def create_bids_datasink(
     out_dir,
     pipeline_name,
@@ -165,12 +166,16 @@ def create_bids_datasink(
     <datatype>/<BIDS_filename>
     """
     if not strip_dir:
-        raise ValueError("`strip_dir` (Nipype work dir base path) is required.")
+        raise ValueError(
+            "`strip_dir` (Nipype work dir base path) is required."
+        )
     if name is None:
         name = f"{pipeline_name}_datasink"
 
     datasink = pe.Node(
-        nio.DataSink(base_directory=out_dir, parameterization=True, strip_dir=strip_dir),
+        nio.DataSink(
+            base_directory=out_dir, parameterization=True, strip_dir=strip_dir
+        ),
         name=name,
     )
 
@@ -183,179 +188,212 @@ def create_bids_datasink(
         # ** Rule 1: Preprocessing Stacks (Denoised) **
         if desc_label == "denoised":
             # with session
-            regex_subs.append((
+            regex_subs.append(
                 (
-                    rf"^{escaped_bids_derivatives_root}/"
-                    rf".*?_?session_([^/]+)"
-                    rf"_subject_([^/]+).*?/?_denoising.*/"
-                    rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+))?"
-                    rf"_T2w_noise_corrected(\.nii(?:\.gz)?)$"
-                ),
-                (
-                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
-                    rf"/\3_desc-denoised_T2w\4"
-                ),
-            ))
+                    (
+                        rf"^{escaped_bids_derivatives_root}/"
+                        rf".*?_?session_([^/]+)"
+                        rf"_subject_([^/]+).*?/?_denoising.*/"
+                        rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+))?"
+                        rf"_T2w_noise_corrected(\.nii(?:\.gz)?)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
+                        rf"/\3_desc-denoised_T2w\4"
+                    ),
+                )
+            )
             # without session
-            regex_subs.append((
+            regex_subs.append(
                 (
-                    rf"^{escaped_bids_derivatives_root}/"
-                    rf"(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*?/?_denoising.*/"
-                    rf"(sub-[^_]+(?:_run-\d+)?)?_?"
-                    rf"T2w_noise_corrected(\.nii(?:\.gz)?)$"
-                ),
-                (
-                    rf"{bids_derivatives_root}/sub-\1/{datatype}"
-                    rf"/\2_desc-denoised_T2w\3"
-                ),
-            ))
+                    (
+                        rf"^{escaped_bids_derivatives_root}/"
+                        rf"(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*?/"
+                        rf"?_denoising.*/"
+                        rf"(sub-[^_]+(?:_run-\d+)?)?_?"
+                        rf"T2w_noise_corrected(\.nii(?:\.gz)?)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\1/{datatype}"
+                        rf"/\2_desc-denoised_T2w\3"
+                    ),
+                )
+            )
 
         # ** Rule 2: Preprocessing Masks (Cropped) **
         if desc_label == "cropped":
             # with session
-            regex_subs.append((
+            regex_subs.append(
                 (
-                    rf"^{escaped_bids_derivatives_root}/.*?_session_"
-                    rf"([^/]+)_subject_([^/]+).*/?_cropping.*/"
-                    rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_"
-                    rf"mask(\.nii(?:\.gz)?)$"
-                ),
-                (
-                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
-                    rf"/\3_desc-cropped_mask\4"
-                ),
-            ))
+                    (
+                        rf"^{escaped_bids_derivatives_root}/.*?_session_"
+                        rf"([^/]+)_subject_([^/]+).*/?_cropping.*/"
+                        rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_"
+                        rf"mask(\.nii(?:\.gz)?)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
+                        rf"/\3_desc-cropped_mask\4"
+                    ),
+                )
+            )
             # without session
-            regex_subs.append((
+            regex_subs.append(
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_session_[^/]+).*?_subject_"
-                    rf"([^/]+).*/?_cropping.*/"
-                    rf"(sub-[^_]+(?:_run-\d+)?)_mask(\.nii(?:\.gz)?)$"
-                ),
-                (
-                    rf"{bids_derivatives_root}/sub-\1/{datatype}"
-                    rf"/\2_desc-cropped_mask\3"
-                ),
-            ))
+                    (
+                        rf"^{escaped_bids_derivatives_root}/"
+                        rf"(?!.*?_session_[^/]+).*?_subject_"
+                        rf"([^/]+).*/?_cropping.*/"
+                        rf"(sub-[^_]+(?:_run-\d+)?)_mask(\.nii(?:\.gz)?)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\1/{datatype}"
+                        rf"/\2_desc-cropped_mask\3"
+                    ),
+                )
+            )
 
     # ** Rule 3: Reconstruction Output **
     if rec_label and not seg_label and pipeline_name != "preprocessing":
         # with session
-        regex_subs.append((
+        regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)"
-                rf"_subject_([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
-            ),
-            (
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/"
-                rf"{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3"
-            ),
-        ))
+                (
+                    rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)"
+                    rf"_subject_([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/"
+                    rf"{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3"
+                ),
+            )
+        )
         # without session
-        regex_subs.append((
+        regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+).*?_?subject_"
-                rf"([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
-            ),
-            (
-                rf"{bids_derivatives_root}/sub-\1/"
-                rf"{datatype}/sub-\1_rec-{rec_label}_T2w\2"
-            ),
-        ))
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_"
+                    rf"([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/"
+                    rf"{datatype}/sub-\1_rec-{rec_label}_T2w\2"
+                ),
+            )
+        )
 
     # ** Rule 4: Segmentation Output **
     if seg_label and rec_label and pipeline_name != "preprocessing":
         # with session
-        regex_subs.append((
+        regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/"
-                rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
-            ),
-            (
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-                rf"sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
-            ),
-        ))
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
+                ),
+            )
+        )
         # without session
-        regex_subs.append((
+        regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*/"
-                rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
-            ),
-            (
-                rf"{bids_derivatives_root}/sub-\1/{datatype}/"
-                rf"sub-\1_rec-{rec_label}_seg-{seg_label}_dseg\2"
-            ),
-        ))
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
+                    rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/{datatype}/"
+                    rf"sub-\1_rec-{rec_label}_seg-{seg_label}_dseg\2"
+                ),
+            )
+        )
 
     # ** Rule 5: Surface outputs (.gii) **
     if surf_label:
         label = f"_rec-{rec_label}" if rec_label else ""
         label += f"_seg-{seg_label}" if seg_label else ""
         # with session
-        regex_subs.append((
+        regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/"
-                rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                rf"([^/]+)\.gii$"
-            ),
-            (
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-                rf"sub-\2_ses-\1{label}_\3.gii"
-            ),
-        ))
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"([^/]+)\.gii$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1{label}_\3.gii"
+                ),
+            )
+        )
         # without session
-        regex_subs.append((
+        regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*/"
-                rf"([^/]+)\.gii$"
-            ),
-            (
-                rf"{bids_derivatives_root}/sub-\1/{datatype}/"
-                rf"sub-\1{label}_\2.gii"
-            ),
-        ))
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
+                    rf"([^/]+)\.gii$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/{datatype}/"
+                    rf"sub-\1{label}_\2.gii"
+                ),
+            )
+        )
 
         # ** Rule 6: Surface outputs (.stl) **
         # with session
-        regex_subs.append((
+        regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/"
-                rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                rf"([^/]+)\.stl$"
-            ),
-            (
-                rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
-                rf"sub-\2_ses-\1{label}_\3.stl"
-            ),
-        ))
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"([^/]+)\.stl$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1{label}_\3.stl"
+                ),
+            )
+        )
         # without session
-        regex_subs.append((
+        regex_subs.append(
             (
-                rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*/"
-                rf"([^/]+)\.stl$"
-            ),
-            (
-                rf"{bids_derivatives_root}/sub-\1/{datatype}/"
-                rf"sub-\1{label}_\2.stl"
-            ),
-        ))
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
+                    rf"([^/]+)\.stl$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/{datatype}/"
+                    rf"sub-\1{label}_\2.stl"
+                ),
+            )
+        )
 
-    # --- Generic cleanup rules (unchanged, but keep them after the mapping rules) ---
-    regex_subs.extend([
-        (r"sub-sub-", r"sub-"),
-        (r"ses-ses-", r"ses-"),
-        (r"_+", "_"),
-        (r"(/)_", r"\1"),
-        (r"(_)\.", r"\."),
-        (r"-+", "-"),
-        (r"//+", "/"),
-        (r"[\\/]$", ""),
-        (r"_ses-None", ""),  # in case something injected a None
-        (r"(\.nii\.gz)\1+$", r"\1"),
-        (r"(\.nii)\1+$", r"\1"),
-    ])
+    # --- Generic cleanup rules (unchanged, but keep them
+    # after the mapping rules) ---
+    regex_subs.extend(
+        [
+            (r"sub-sub-", r"sub-"),
+            (r"ses-ses-", r"ses-"),
+            (r"_+", "_"),
+            (r"(/)_", r"\1"),
+            (r"(_)\.", r"\."),
+            (r"-+", "-"),
+            (r"//+", "/"),
+            (r"[\\/]$", ""),
+            (r"_ses-None", ""),  # in case something injected a None
+            (r"(\.nii\.gz)\1+$", r"\1"),
+            (r"(\.nii)\1+$", r"\1"),
+        ]
+    )
 
     # Add custom regex substitutions
     if custom_regex_subs:

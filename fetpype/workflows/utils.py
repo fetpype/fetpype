@@ -186,8 +186,9 @@ def check_and_update_paths(data_dir, out_dir, nipype_dir, pipeline_name):
         nipype_dir = out_dir
 
     # derivatives
-    out_dir = os.path.join(os.path.abspath(out_dir),
-                           "derivatives", pipeline_name)
+    out_dir = os.path.join(
+        os.path.abspath(out_dir), "derivatives", pipeline_name
+    )
 
     os.makedirs(out_dir, exist_ok=True)
 

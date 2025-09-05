@@ -1,4 +1,4 @@
-pipeline: "surf_pype"
+pipeline: "surfpype"
 
 docker: 
   cmd: "docker run --rm <mount>

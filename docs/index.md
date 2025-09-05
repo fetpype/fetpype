@@ -3,7 +3,7 @@
 
   <div class="hero__content">
     <h1 class="hero__title">Fetpype</h1>
-    <p class="hero__desc">A robust and user-friendly package for fetal brain MRI analysis</p>
+    <p class="hero__desc">An Open-Source Pipeline for Reproducible Fetal Brain MRI Analysis</p>
   </div>
 </div>
 

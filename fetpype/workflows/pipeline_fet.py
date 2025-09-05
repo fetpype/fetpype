@@ -231,9 +231,16 @@ def create_main_workflow(
 
     main_workflow.connect(
         fet_pipe,
-        "outputnode.output_surf",
+        "outputnode.output_surf_lh",
         surf_datasink,
-        f"@{cfg.surface.pipeline}",
+        "@surf_lh",
+    )
+
+    main_workflow.connect(
+        fet_pipe,
+        "outputnode.output_surf_rh",
+        surf_datasink,
+        "@surf_rh",
     )
 
     if cfg.save_graph:

@@ -23,7 +23,7 @@ def get_default_parser(desc):
         required=True,
         help=(
             "Output directory, where all outputs will be saved. "
-            "(<out>/derivatives/pipeline_name)"
+            "Formatted as <out>/derivatives/pipeline_name."
         ),
     )
 
@@ -33,7 +33,7 @@ def get_default_parser(desc):
         required=False,
         help=(
             "Directory, where the nipype processing will be saved. "
-            "(<out>/nipype/pipeline_name)"
+            "(default: <out>/nipype/pipeline_name)"
         ),
     )
     parser.add_argument(
@@ -44,8 +44,8 @@ def get_default_parser(desc):
         nargs="+",
         required=False,
         help=(
-            "List of subjects to process (default: every subject in the"
-            "data directory)."
+            "List of subjects to process (default: every subject in the "
+            "data directory). *NOTE:* do not include 'sub-' prefix."
         ),
     )
     parser.add_argument(
@@ -57,7 +57,7 @@ def get_default_parser(desc):
         required=False,
         help=(
             "List of sessions to process (default: every session for each "
-            "subject)."
+            "subject). *NOTE:* do not include 'ses-' prefix."
         ),
     )
     parser.add_argument(
@@ -186,8 +186,9 @@ def check_and_update_paths(data_dir, out_dir, nipype_dir, pipeline_name):
         nipype_dir = out_dir
 
     # derivatives
-    out_dir = os.path.join(os.path.abspath(out_dir),
-                           "derivatives", pipeline_name)
+    out_dir = os.path.join(
+        os.path.abspath(out_dir), "derivatives", pipeline_name
+    )
 
     os.makedirs(out_dir, exist_ok=True)
 

@@ -10,7 +10,7 @@ VALID_SEGMENTATION = [
 ]
 
 VALID_SURFACE = [
-    "surface",
+    "surfpype",
 ]
 
 VALID_PREPRO_TAGS = [

@@ -5,6 +5,9 @@ theme:
   logo: media/fetpype_logo.png  # Path to your logo file
   favicon: media/fetpype_favicon.png  # Path to your favicon file
 
+extra_css:
+  - css/home.css
+  
 plugins:
 - mkdocstrings:
     enabled: !ENV [ENABLE_MKDOCSTRINGS, true]

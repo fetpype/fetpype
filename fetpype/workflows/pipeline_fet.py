@@ -17,8 +17,8 @@ from fetpype.workflows.utils import (  # noqa: E402
     get_pipeline_name,
     check_valid_pipeline,
 )
-
-###############################################################################
+from fetpype.utils.logging import setup_logging, status_line
+import logging
 
 
 def create_main_workflow(
@@ -32,6 +32,8 @@ def create_main_workflow(
     cfg_path,
     nprocs,
     save_intermediates=False,
+    debug=False,
+    verbose=False,
 ):
     """
     Instantiates and runs the entire workflow of the fetpype pipeline.
@@ -58,18 +60,32 @@ def create_main_workflow(
             parameters.
         nprocs (int):
             Number of processes to be launched by MultiProc.
+        debug (bool):
+            Whether to enable debug mode.
+        verbose (bool):
+            Whether to enable verbose mode.
 
     """
 
     cfg = init_and_load_cfg(cfg_path)
+    pipeline_name = get_pipeline_name(cfg)
     data_dir, out_dir, nipype_dir = check_and_update_paths(
-        data_dir, out_dir, nipype_dir, cfg
+        data_dir, out_dir, nipype_dir, pipeline_name
     )
 
+    setup_logging(
+        base_dir=nipype_dir,
+        debug=debug,
+        verbose=verbose,
+        capture_prints=True,
+    )
+    log = logging.getLogger("nipype")
     # Print the three paths
-    print(f"Data directory: {data_dir}")
-    print(f"Output directory: {out_dir}")
-    print(f"Nipype directory: {nipype_dir}")
+    log.info(
+        f"Data directory: {data_dir}\n"
+        f"Output directory: {out_dir}\n"
+        f"Nipype directory: {nipype_dir}"
+    )
 
     load_masks = False
     if masks_dir is not None:
@@ -84,7 +100,7 @@ def create_main_workflow(
     check_valid_pipeline(cfg)
 
     # main_workflow
-    main_workflow = pe.Workflow(name=get_pipeline_name(cfg))
+    main_workflow = pe.Workflow(name=pipeline_name)
     main_workflow.base_dir = nipype_dir
     fet_pipe = create_full_pipeline(cfg, load_masks)
 
@@ -106,6 +122,7 @@ def create_main_workflow(
     datasource = create_datasource(
         output_query,
         data_dir,
+        nipype_dir,
         subjects,
         sessions,
         acquisitions,
@@ -191,6 +208,16 @@ def create_main_workflow(
         seg_label=cfg.segmentation.pipeline,
     )
 
+    surf_datasink = create_bids_datasink(
+        out_dir=out_dir,
+        pipeline_name=pipeline_name,
+        strip_dir=main_workflow.base_dir,
+        name="final_surf_datasink",
+        rec_label=cfg.reconstruction.pipeline,
+        seg_label=cfg.segmentation.pipeline,
+        surf_label=cfg.surface.pipeline,
+    )
+
     # Connect the pipeline to the datasink
     main_workflow.connect(
         fet_pipe, "outputnode.output_srr", recon_datasink, f"@{pipeline_name}"
@@ -200,6 +227,20 @@ def create_main_workflow(
         "outputnode.output_seg",
         seg_datasink,
         f"@{cfg.segmentation.pipeline}",
+    )
+
+    main_workflow.connect(
+        fet_pipe,
+        "outputnode.output_surf_lh",
+        surf_datasink,
+        "@surf_lh",
+    )
+
+    main_workflow.connect(
+        fet_pipe,
+        "outputnode.output_surf_rh",
+        surf_datasink,
+        "@surf_rh",
     )
 
     if cfg.save_graph:
@@ -218,7 +259,8 @@ def create_main_workflow(
 def main():
     parser = get_default_parser(
         "Run the entire Fetpype pipeline -- "
-        "pre-processing, reconstruction and segmentation"
+        "pre-processing, reconstruction, segmentation "
+        "and surface extraction."
     )
 
     parser.add_argument(
@@ -227,6 +269,7 @@ def main():
         default=None,
         help="Path to the directory containing the masks.",
     )
+
     args = parser.parse_args()
 
     # main_workflow
@@ -242,6 +285,8 @@ def main():
         cfg_path=args.cfg_path,
         nprocs=args.nprocs,
         save_intermediates=args.save_intermediates,
+        debug=args.debug,
+        verbose=args.verbose,
     )
 
 

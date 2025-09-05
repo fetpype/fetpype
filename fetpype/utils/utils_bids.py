@@ -13,17 +13,19 @@ import re
 def create_datasource(
     output_query,
     data_dir,
+    nipype_dir,
     subjects=None,
     sessions=None,
     acquisitions=None,
     derivative=None,
     name="bids_datasource",
     extra_derivatives=None,
+    save_db=False,
 ):
     """Create a datasource node that have iterables following BIDS format.
-    By default, from a BIDSLayout, lists all the subjects (<sub>),
-    finds their session numbers (<ses>, if any) and their acquisition
-    type (<acq>, if any), and builds an iterable of tuples
+    By default, from a BIDSLayout, lists all the subjects (`<sub>`),
+    finds their session numbers (`<ses>`, if any) and their acquisition
+    type (`<acq>`, if any), and builds an iterable of tuples
     (sub, ses, acq) with all valid combinations.
 
     If a list of subjects/sessions/acquisitions is provided, the
@@ -78,6 +80,18 @@ def create_datasource(
     bids_datasource.inputs.output_query = output_query
 
     layout = BIDSLayout(data_dir, validate=False)
+
+    # Needed as the layout uses validate which
+    # does not work with our segmentation files.
+
+    if save_db:
+        layout_db = os.path.join(nipype_dir, "layout_db")
+        if os.path.exists(layout_db):
+            os.remove(os.path.join(layout_db, "layout_index.sqlite"))
+        layout.save(layout_db)
+
+        bids_datasource.inputs.load_layout = layout_db
+
     # Verbose
     print("BIDS layout:", layout)
     print("\t", layout.get_subjects())
@@ -90,7 +104,10 @@ def create_datasource(
 
     for sub in subjects:
         if sub not in existing_sub:
-            print(f"Subject {sub} was not found.")
+            raise ValueError(
+                f"Requested subject {sub} was not found in the "
+                f"folder {data_dir}."
+            )
 
         existing_ses = layout.get_sessions(subject=sub)
         if sessions is None:
@@ -124,6 +141,7 @@ def create_datasource(
                 iterables[1] += [(sub, ses, acq)]
 
     bids_datasource.iterables = iterables
+
     return bids_datasource
 
 
@@ -135,6 +153,7 @@ def create_bids_datasink(
     name=None,
     rec_label=None,
     seg_label=None,
+    surf_label=None,
     desc_label=None,
     custom_subs=None,
     custom_regex_subs=None,
@@ -145,32 +164,6 @@ def create_bids_datasink(
     Organizes outputs into:
     <out_dir>/derivatives/<pipeline_name>/sub-<ID>/[ses-<ID>/]
     <datatype>/<BIDS_filename>
-
-    Args:
-        out_dir (str): Base output directory
-                        (e.g., /path/to/project/derivatives)
-        pipeline_name (str): Name of the pipeline (e.g., 'nesvor_bounti',
-                            'preprocessing')
-        strip_dir (str): Absolute path to the Nipype working directory
-            base to strip (e.g., /path/to/nipype/workdir).
-        datatype (str, optional): BIDS datatype ('anat', etc.).
-            Defaults to "anat".
-        name (str, optional): Name for the datasink node.
-            Defaults to None, which will use the pipeline name.
-        rec_label (str, optional): Reconstruction label (e.g., 'nesvor')
-            for rec-... entity. Defaults to None.
-        seg_label (str, optional): Segmentation label (e.g., 'bounti
-            ') for seg-... entity. Defaults to None.
-        desc_label (str, optional): Description label for desc-... entity
-        custom_subs (list, optional): List of custom simple substitutions
-            to apply to output paths. Defaults to None.
-        custom_regex_subs (list, optional): List of custom regex
-            substitutions to apply to output paths. Defaults to None.
-
-    Returns:
-        datasink (nipype.Node): A Nipype DataSink node configured for
-        BIDS-compatible output.
-
     """
     if not strip_dir:
         raise ValueError(
@@ -194,6 +187,7 @@ def create_bids_datasink(
     if pipeline_name == "preprocessing":
         # ** Rule 1: Preprocessing Stacks (Denoised) **
         if desc_label == "denoised":
+            # with session
             regex_subs.append(
                 (
                     (
@@ -201,7 +195,7 @@ def create_bids_datasink(
                         rf".*?_?session_([^/]+)"
                         rf"_subject_([^/]+).*?/?_denoising.*/"
                         rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+))?"
-                        rf"_T2w_noise_corrected(\.nii\.gz|\.nii)$"
+                        rf"_T2w_noise_corrected(\.nii(?:\.gz)?)$"
                     ),
                     (
                         rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
@@ -209,15 +203,33 @@ def create_bids_datasink(
                     ),
                 )
             )
+            # without session
+            regex_subs.append(
+                (
+                    (
+                        rf"^{escaped_bids_derivatives_root}/"
+                        rf"(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*?/"
+                        rf"?_denoising.*/"
+                        rf"(sub-[^_]+(?:_run-\d+)?)?_?"
+                        rf"T2w_noise_corrected(\.nii(?:\.gz)?)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\1/{datatype}"
+                        rf"/\2_desc-denoised_T2w\3"
+                    ),
+                )
+            )
+
         # ** Rule 2: Preprocessing Masks (Cropped) **
         if desc_label == "cropped":
+            # with session
             regex_subs.append(
                 (
                     (
                         rf"^{escaped_bids_derivatives_root}/.*?_session_"
                         rf"([^/]+)_subject_([^/]+).*/?_cropping.*/"
                         rf"(sub-[^_]+_ses-[^_]+(?:_run-\d+)?)_"
-                        rf"mask(\.nii\.gz|\.nii)$"
+                        rf"mask(\.nii(?:\.gz)?)$"
                     ),
                     (
                         rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}"
@@ -225,60 +237,161 @@ def create_bids_datasink(
                     ),
                 )
             )
+            # without session
+            regex_subs.append(
+                (
+                    (
+                        rf"^{escaped_bids_derivatives_root}/"
+                        rf"(?!.*?_session_[^/]+).*?_subject_"
+                        rf"([^/]+).*/?_cropping.*/"
+                        rf"(sub-[^_]+(?:_run-\d+)?)_mask(\.nii(?:\.gz)?)$"
+                    ),
+                    (
+                        rf"{bids_derivatives_root}/sub-\1/{datatype}"
+                        rf"/\2_desc-cropped_mask\3"
+                    ),
+                )
+            )
 
     # ** Rule 3: Reconstruction Output **
     if rec_label and not seg_label and pipeline_name != "preprocessing":
+        # with session
         regex_subs.append(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/.*?_?session_([^/]+)"
-                    rf"_subject_([^/]+).*/(?:[^/]+)(\.nii\.gz|\.nii)$"
+                    rf"_subject_([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
                 ),
-                # Groups: \1=SESS, \2=SUBJ, \3=ext
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/"
                     rf"{datatype}/sub-\2_ses-\1_rec-{rec_label}_T2w\3"
                 ),
             )
         )
+        # without session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_"
+                    rf"([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/"
+                    rf"{datatype}/sub-\1_rec-{rec_label}_T2w\2"
+                ),
+            )
+        )
 
     # ** Rule 4: Segmentation Output **
     if seg_label and rec_label and pipeline_name != "preprocessing":
+        # with session
         regex_subs.append(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"input_srr-mask-brain_bounti-19(\.nii\.gz|\.nii)$"
+                    rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
                 ),
-                # Groups: \1=SESS, \2=SUBJ, \3=ext
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
                     rf"sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
                 ),
             )
         )
+        # without session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
+                    rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/{datatype}/"
+                    rf"sub-\1_rec-{rec_label}_seg-{seg_label}_dseg\2"
+                ),
+            )
+        )
 
-    # Add more specific rules here if other file types need handling
+    # ** Rule 5: Surface outputs (.gii) **
+    if surf_label:
+        label = f"_rec-{rec_label}" if rec_label else ""
+        label += f"_seg-{seg_label}" if seg_label else ""
+        # with session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"([^/]+)\.gii$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1{label}_\3.gii"
+                ),
+            )
+        )
+        # without session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
+                    rf"([^/]+)\.gii$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/{datatype}/"
+                    rf"sub-\1{label}_\2.gii"
+                ),
+            )
+        )
+
+        # ** Rule 6: Surface outputs (.stl) **
+        # with session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"([^/]+)\.stl$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1{label}_\3.stl"
+                ),
+            )
+        )
+        # without session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
+                    rf"([^/]+)\.stl$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/{datatype}/"
+                    rf"sub-\1{label}_\2.stl"
+                ),
+            )
+        )
+
+    # --- Generic cleanup rules (unchanged, but keep them
+    # after the mapping rules) ---
     regex_subs.extend(
         [
-            (r"sub-sub-", r"sub-"),  # Fix doubled sub prefix
-            (r"ses-ses-", r"ses-"),  # Fix doubled ses prefix (just in case)
-            (r"_+", "_"),  # Replace multiple underscores with single
-            (r"(/)_", r"\1"),  # Remove underscore after slash if present
-            (r"(_)\.", r"\."),  # Remove underscore before dot if present
-            (r"-+", "-"),  # Replace multiple hyphens with single
-            (r"//+", "/"),  # Fix double slashes
-            (r"[\\/]$", ""),  # Remove trailing slash
-            (
-                r"_ses-None",
-                "",
-            ),  # Remove ses-None if session was optional/missing
-            (
-                r"(\.nii\.gz)\1+$",
-                r"\1",
-            ),  # Fix repeated extensions like .nii.gz.nii.gz
-            (r"(\.nii)\1+$", r"\1"),  # Fix repeated extensions like .nii.nii
+            (r"sub-sub-", r"sub-"),
+            (r"ses-ses-", r"ses-"),
+            (r"_+", "_"),
+            (r"(/)_", r"\1"),
+            (r"(_)\.", r"\."),
+            (r"-+", "-"),
+            (r"//+", "/"),
+            (r"[\\/]$", ""),
+            (r"_ses-None", ""),  # in case something injected a None
+            (r"(\.nii\.gz)\1+$", r"\1"),
+            (r"(\.nii)\1+$", r"\1"),
         ]
     )
 

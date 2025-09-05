@@ -1,8 +1,8 @@
 # Preprocessing
+Pre-processing starts from multiple T2-weighted stacks and processed each stack individually to prepare them for [super-resolution reconstruction](reconstruction.md).
 
 ## Available tools
-Fetpype pre-processes the data in the following order.
-
+Fetpype pre-processes the data in the following order. 
 ---
 
 Data Loading (→ **Brain extraction)** → [Resolution checks](api_nodes.md#fetpype.nodes.preprocessing.CheckAffineResStacksAndMasks) → [Cropping](api_nodes.md#fetpype.nodes.preprocessing.CropStacksAndMasks) → **Denoising** 

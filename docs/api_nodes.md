@@ -13,8 +13,9 @@
 
 ::: fetpype.nodes.reconstruction
 
-
 ::: fetpype.nodes.segmentation
+
+::: fetpype.nodes.surface_extraction
 
 ::: fetpype.nodes.utils
 

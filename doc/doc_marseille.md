@@ -26,3 +26,7 @@ module load userspace/all; module load cuda/11.6; conda activate fetpype; cd /sc
 - on in house test subject
 fetpype_run --data /scratch/gauzias/data/test_fetpype/test_db --out /scratch/gauzias/data/test_fetpype/test_db/derivatives/fetpype --config ./configs/sg_marseille.yaml
 fetpype_run --data /scratch/gauzias/data/test_fetpype/test_fabian/fabian  --out /scratch/gauzias/data/test_fetpype/test_fabian --config ./configs/sg_marseille.yaml
+
+
+# all in one line (DM)
+module load userspace/all cuda/11.6;  conda activate fetpype_conda; cd /scratch/dmeunier/Python/Packages/fetpype; git pull origin surf_for_both_hemisphere; fetpype_run --data /scratch/dmeunier/data/test_fetpype/test_db --out /scratch/dmeunier/data/test_fetpype/version_thomas2/ --config ./configs/sg_marseille.yaml

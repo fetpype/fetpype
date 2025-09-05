@@ -1,4 +1,13 @@
-# Fetpype
+<div class="hero hero--split">
+  <img src="media/fetpype_logo.png" alt="Fetpype logo" class="hero__logo" />
+
+  <div class="hero__content">
+    <h1 class="hero__title">Fetpype</h1>
+    <p class="hero__desc">A robust and user-friendly package for fetal brain MRI analysis</p>
+  </div>
+</div>
+
+
 ## About
 Fetpype is a library that aims at facilitating the analysis of fetal brain MRI by integrating the variety of tools commonly used in processing pipelines. Starting from clinical acquisition of fetal brain MRI (T2-weighted fast spin echo sequences), it performs [pre-processing](preprocessing.md), [reconstruction](reconstruction.md), [segmentation](segmentation.md) and [surface extraction](surface.md).
 
@@ -116,3 +125,5 @@ Fetpype was funded by [ERA-NET NEURON](https://www.neuron-eranet.eu/) in the con
 - French National Research Agency — grant ANR-21-NEU2-0005;
 
 This project was also supported by the SulcalGRIDS project (ANR-19-CE45-0014) and the SNSF project no. 215641. 
+
+![Fetpype funding logo](media/fetpype_funding.png)

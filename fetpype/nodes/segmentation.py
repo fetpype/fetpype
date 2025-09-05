@@ -1,8 +1,10 @@
 def run_seg_cmd(
-    input_srr, cmd, cfg,
+    input_srr,
+    cmd,
+    cfg,
     singularity_path=None,
     singularity_mount=None,
-    singularity_home=None
+    singularity_home=None,
 ):
     """
     Run a segmentation command with the given input SRR.
@@ -21,6 +23,7 @@ def run_seg_cmd(
     import os
     from fetpype import VALID_SEG_TAGS as VALID_TAGS
     from fetpype.nodes import is_valid_cmd, get_mount_docker
+    from fetpype.utils.logging import run_and_tee
 
     is_valid_cmd(cmd, VALID_TAGS)
 
@@ -86,6 +89,7 @@ def run_seg_cmd(
         # we are using singularity and the
         # parameter has been set in the config file
         cmd = cmd.replace("<singularity_home>", singularity_home)
-    print(f"Running command:\n {cmd}")
-    os.system(cmd)
+
+    run_and_tee(cmd)
+
     return seg

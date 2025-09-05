@@ -2,6 +2,7 @@ defaults:
   - preprocessing/default
   - reconstruction/nesvor
   - segmentation/bounti
+  - surface/surfpype
   - _self_
 container: "singularity"
 singularity_path: "/home/gmarti/SINGULARITY"

@@ -1,8 +1,8 @@
-pipeline: "surface"
+pipeline: "surf_pype"
 
 docker: 
   cmd: "docker run --rm <mount>
-    fetpype/surf_proc:0.0.2a
+    fetpype/surf_proc:0.0.2
     generate_mesh -l <labelling_scheme>
     -s <input_seg> 
     -m <output_surf>"
@@ -15,12 +15,12 @@ singularity:
 
 surface_lh:
     use_scheme: "bounti"
-    out_file: "hemi-L.white.surf.gii"
+    out_file: "hemi-L_white.surf.gii"
     labelling_scheme:
         bounti: [5, 7, 14, 16]
 
 surface_rh:
     use_scheme: "bounti"
-    out_file: "hemi-R.white.surf.gii"
+    out_file: "hemi-R_white.surf.gii"
     labelling_scheme:
         bounti: [6, 8, 15, 17]

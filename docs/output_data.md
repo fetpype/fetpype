@@ -42,7 +42,7 @@ derivatives/
 - `run-X`: Run number (from original stacks, preserved in preprocessing)
 - `rec-METHOD`: Reconstruction method (e.g., rec-nesvor)
 - `seg-METHOD`: Segmentation method (e.g., seg-bounti)
-- `surf-METHOD`: Surface extraction method (e.g., surf-surface)
+- `surf-METHOD`: Surface extraction method (e.g., surf-surfpype)
 - `desc-DESCRIPTION`: Processing description (e.g., desc-denoised)
 - Suffixes: `T2w`, `dseg`, `mask`, `surf.gii`, `shape.gii`
 

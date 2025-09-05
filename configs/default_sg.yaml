@@ -5,9 +5,9 @@ defaults:
   - surface/surfpype
   - _self_
 container: "singularity"
-singularity_path: "/home/gmarti/SINGULARITY"
-singularity_mount: "/gpfs/home/gmarti:/gpfs/home/gmarti"
-singularity_home: "/gpfs/home/gmarti/tmp_proc"
+singularity_path: <singularity_base> # e.g. "/home/gmarti/SINGULARITY"
+singularity_mount: <mouning> # e.g. "/gpfs/home/gmarti:/gpfs/home/gmarti"
+singularity_home: <home folder> # e.g. "/gpfs/home/gmarti/tmp_proc"
 reconstruction:
   output_resolution: 0.8
 save_graph: False

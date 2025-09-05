@@ -45,7 +45,7 @@ def get_default_parser(desc):
         required=False,
         help=(
             "List of subjects to process (default: every subject in the "
-            "data directory)."
+            "data directory). *NOTE:* do not include 'sub-' prefix."
         ),
     )
     parser.add_argument(
@@ -57,7 +57,7 @@ def get_default_parser(desc):
         required=False,
         help=(
             "List of sessions to process (default: every session for each "
-            "subject)."
+            "subject). *NOTE:* do not include 'ses-' prefix."
         ),
     )
     parser.add_argument(

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fetpype"
-version = "0.1.1"
+version = "1.0.0"
 description = "Utilities for preprocessing fetal brain MRI scans"
 authors = [{name = "Thomas Sanchez", email = "thomas.sanchez@unil.ch"},
            {name = "Gerard Martí-Juan", email = "gerard.marti@upf.edu"},

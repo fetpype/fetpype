@@ -3,17 +3,21 @@ Pre-processing starts from multiple T2-weighted stacks and processed each stack 
 
 ## Available tools
 Fetpype pre-processes the data in the following order. 
----
 
+---
 Data Loading (→ **Brain extraction)** → [Resolution checks](api_nodes.md#fetpype.nodes.preprocessing.CheckAffineResStacksAndMasks) → [Cropping](api_nodes.md#fetpype.nodes.preprocessing.CropStacksAndMasks) → **Denoising** 
 → **Bias field correction** → [Output checks](api_nodes.md#fetpype.nodes.preprocessing.CheckAndSortStacksAndMasks)
 
 ---
 
-The three steps in boldface are run from a container. 
+The three steps in boldface are run from the [fetpype_utils container](https://hub.docker.com/r/fetpype/fetpype_utils). The code for building the docker is available [at this repository](https://github.com/fetpype/utils_container/).
 
-!!! Note
-    All the container runs use the command below and are passed through the function [`run_prepro_cmd`](api_nodes.md#fetpype.nodes.preprocessing.run_prepro_cmd)
+Currently, we implement the following options:
+
+- **Brain extraction**: `Fetal-BET`[@faghihpirayesh2024fetal] (default) and `MONAIfbs`[@ranzini2021monaifbs]
+- **Denoising**: Non-local means denosing[@manjon2010adaptive] (calling ANTS' `DenoiseImage`)
+- **Bias field correction**: N4 bias field correction[@tustison2010n4itk]
+
 ## Config structure
 
 The config file is structured as follows:
@@ -64,9 +68,15 @@ bias_correction:
       --input_masks <input_masks> 
       --output_stacks <output_stacks>"
 ```
+
+!!! Note
+    All the container runs use the command above and are passed through the function [`run_prepro_cmd`](api_nodes.md#fetpype.nodes.preprocessing.run_prepro_cmd)
+
 !!! Note 
     - Each pre-processing step that can be disabled has a boolean entry `enabled: true` that can be set to false.
     - The steps that rely on a container are set with a list of valid tags
+
+
 
 ### Tags
 

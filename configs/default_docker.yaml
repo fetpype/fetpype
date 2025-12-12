@@ -1,8 +1,8 @@
 defaults:
   - preprocessing/default
   - reconstruction/nesvor
-  - segmentation/bounti
-  - surface/surfpype
+  - segmentation/fetalsynthseg
+  - surface/surfpypefss
   - _self_
 container: "docker"
 reconstruction:

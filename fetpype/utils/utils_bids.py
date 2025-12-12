@@ -105,8 +105,7 @@ def create_datasource(
     for sub in subjects:
         if sub not in existing_sub:
             raise ValueError(
-                f"Requested subject {sub} was not found in the "
-                f"folder {data_dir}."
+                f"Requested subject {sub} was not found in the " f"folder {data_dir}."
             )
 
         existing_ses = layout.get_sessions(subject=sub)
@@ -118,9 +117,7 @@ def create_datasource(
         sessions_subj = [None] if len(sessions_subj) == 0 else sessions_subj
         for ses in sessions_subj:
             if ses is not None and ses not in existing_ses:
-                print(
-                    f"WARNING: Session {ses} was not found for subject {sub}."
-                )
+                print(f"WARNING: Session {ses} was not found for subject {sub}.")
             existing_acq = layout.get_acquisition(subject=sub, session=ses)
             if acquisitions is None:
                 acquisitions_subj = existing_acq
@@ -166,9 +163,7 @@ def create_bids_datasink(
     <datatype>/<BIDS_filename>
     """
     if not strip_dir:
-        raise ValueError(
-            "`strip_dir` (Nipype work dir base path) is required."
-        )
+        raise ValueError("`strip_dir` (Nipype work dir base path) is required.")
     if name is None:
         name = f"{pipeline_name}_datasink"
 
@@ -313,7 +308,36 @@ def create_bids_datasink(
                 ),
             )
         )
-
+    # ** Rule 4.5: Segmentation Output FetalSynthSeg **
+    if seg_label == "fetalsynthseg" and rec_label and pipeline_name != "preprocessing":
+        # with session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"seg-drifts_pred(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
+                ),
+            )
+        )
+        # without session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
+                    rf"seg-drifts_pred(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/{datatype}/"
+                    rf"sub-\1_rec-{rec_label}_seg-{seg_label}_dseg\2"
+                ),
+            )
+        )
     # ** Rule 5: Surface outputs (.gii) **
     if surf_label:
         label = f"_rec-{rec_label}" if rec_label else ""
@@ -410,9 +434,7 @@ def create_bids_datasink(
     return datasink
 
 
-def create_datasink(
-    iterables, name="output", params_subs={}, params_regex_subs={}
-):
+def create_datasink(iterables, name="output", params_subs={}, params_regex_subs={}):
     """
     Deprecated. Creates a data sink node for reformatting and organizing
     relevant outputs.
@@ -463,9 +485,7 @@ def create_datasink(
     datasink.inputs.substitutions = subjFolders
 
     # Load regex-based substitutions from the 'regex_subs.json' file
-    json_regex_subs = op.join(
-        op.dirname(op.abspath(__file__)), "regex_subs.json"
-    )
+    json_regex_subs = op.join(op.dirname(op.abspath(__file__)), "regex_subs.json")
     dict_regex_subs = json.load(open(json_regex_subs, encoding="utf-8"))
 
     # Update with provided regex substitutions
@@ -507,13 +527,9 @@ def get_gestational_age(bids_dir, T2):
             df["participant_id"] == f"{subject_id}", "gestational_age"
         ].values[0]
     except KeyError:
-        raise KeyError(
-            "Column 'gestational_age' not found in participants.tsv"
-        )
+        raise KeyError("Column 'gestational_age' not found in participants.tsv")
     except IndexError:
-        raise IndexError(
-            f"Subject sub-{subject_id} not found in participants.tsv"
-        )
+        raise IndexError(f"Subject sub-{subject_id} not found in participants.tsv")
 
     return gestational_age
 

@@ -1,0 +1,11 @@
+pipeline: "fetalsynthseg"
+docker: 
+  cmd: "docker run --rm <mount>
+    --gpus all
+    vzalevskyi/fetalsynthseg:latest 
+    python3 predict.py
+    --model drifts
+    --input <input_dir>/input_srr.nii.gz 
+    --output <output_dir>/seg-drifts_pred.nii.gz
+    --gpu --lateralize"
+path_to_output: "seg-drifts_pred.nii.gz"

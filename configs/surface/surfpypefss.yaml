@@ -1,0 +1,26 @@
+pipeline: "surfpype"
+
+docker: 
+  cmd: "docker run --rm <mount>
+    fetpype/surf_proc:0.0.2
+    generate_mesh -l <labelling_scheme>
+    -s <input_seg> 
+    -m <output_surf>"
+singularity:
+  cmd: "singularity exec --bind <singularity_mount> --home <singularity_home> --nv
+    <singularity_path>/surf_proc.sif
+    generate_mesh -l <labelling_scheme>
+    -s <input_seg> 
+    -m <output_surf>"
+
+surface_lh:
+    use_scheme: "fetalsynthseg"
+    out_file: "hemi-L_white.surf.gii"
+    labelling_scheme:
+        fetalsynthseg: [13, 14, 16]
+
+surface_rh:
+    use_scheme: "fetalsynthseg"
+    out_file: "hemi-R_white.surf.gii"
+    labelling_scheme:
+        fetalsynthseg: [3, 4, 6]

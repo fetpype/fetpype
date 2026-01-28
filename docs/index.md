@@ -13,6 +13,8 @@ Fetpype is a library that aims at facilitating the analysis of fetal brain MRI b
 
 ![Fetpype diagram](media/fetpype_illustration.png)
 
+
+
 ## The tool
 Fetpype aims at integrating a variety of existing tools, available as docker containers into a single, easy to use interface.  It relies on three main components:
 
@@ -109,13 +111,27 @@ Feel free to explore how fetpype works and what it can do!
 - [Running parts of the pipeline](run_parts.md)
 - [How can I include my method in fetpype?](contributing.md)
 
+
+
 ---
+## Reference
+If you used `Fetpype` in your research, please cite the following paper:
+```
+@article{sanchez2025fetpype,
+  title={Fetpype: An open-source pipeline for reproducible fetal brain mri analysis},
+  author={Sanchez, Thomas and Mart{\'\i}-Juan, Gerard and Meunier, David and Ballester, Miguel Angel Gonzalez and Camara, Oscar and Piella, Gemma and Cuadra, Meritxell Bach and Auzias, Guillaume},
+  journal={arXiv preprint arXiv:2512.17472},
+  year={2025}
+}
+```
+
 ## Contributors
 
 - Gerard Martí-Juan (@[GerardMJuan](https://github.com/GerardMJuan))
 - Thomas Sanchez (@[t-sanchez](https://github.com/t-sanchez))
 - Guillaume Auzias (@[gauzias](https://github.com/gauzias))
 - David Meunier (@[davidmeunier79](https://github.com/davidmeunier79))
+
 
 ## Acknowledgements
 Fetpype was funded by [ERA-NET NEURON](https://www.neuron-eranet.eu/) in the context of the MULTIFACT project. It received funding under different national agencies:

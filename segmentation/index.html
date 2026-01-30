@@ -1,0 +1,1198 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../reconstruction/">
+      
+      
+        <link rel="next" href="../surface/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../media/fetpype_favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Segmentation - Fetpype</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../css/home.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#segmentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Fetpype" class="md-header__button md-logo" aria-label="Fetpype" data-md-component="logo">
+      
+  <img src="../media/fetpype_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fetpype
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Segmentation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Fetpype" class="md-nav__button md-logo" aria-label="Fetpype" data-md-component="logo">
+      
+  <img src="../media/fetpype_logo.png" alt="logo">
+
+    </a>
+    Fetpype
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    In-depth
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    In-depth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../input_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BIDS Input Data Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../output_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Data Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run_parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running parts of the pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preprocessing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reconstruction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#available-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Config structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dhcp-processing-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dHCP processing pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="dHCP processing pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gestational-age-requirement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gestational Age Requirement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processing-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Processing Stages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-dhcp-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known dHCP issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../surface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Surface Extraction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_pipelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#available-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Config structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dhcp-processing-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dHCP processing pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="dHCP processing pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gestational-age-requirement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gestational Age Requirement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processing-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Processing Stages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-dhcp-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known dHCP issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="segmentation">Segmentation</h1>
+<p>In the segmentation step, a <a href="../reconstruction/">super-resolution reconstructed</a> volume is provided to a segmentation algorithm that outputs a parcellation of the brain into several regions. The segmented volume can then be used as input to <a href="../surface/">surface extraction</a>.</p>
+<h2 id="available-tools">Available tools</h2>
+<p>Several state-of-the-art segmentation algorithms have been wrapped and tested in fetpype.</p>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Repository</th>
+<th>Docker</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BOUNTI<sup id="fnref:uus2023bounti"><a class="footnote-ref" href="#fn:uus2023bounti">1</a></sup></td>
+<td><a href="https://github.com/SVRTK/auto-proc-svrtk">https://github.com/SVRTK/auto-proc-svrtk</a></td>
+<td><a href="https://hub.docker.com/r/fetalsvrtk/segmentation">https://hub.docker.com/r/fetalsvrtk/segmentation</a></td>
+</tr>
+<tr>
+<td>dHCP<sup id="fnref:makropoulos2018developing"><a class="footnote-ref" href="#fn:makropoulos2018developing">2</a></sup></td>
+<td><a href="https://github.com/fetpype/dhcp-structural-pipeline">https://github.com/fetpype/dhcp-structural-pipeline</a></td>
+<td><a href="https://hub.docker.com/r/gerardmartijuan/dhcp-pipeline-multifact">https://hub.docker.com/r/gerardmartijuan/dhcp-pipeline-multifact</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>⚠️ Disclaimer:</strong> The dHCP pipeline is only available in the dev branch as of now.</p>
+<p>The version of the algorithm used in fetpype is the one available on the Docker Hub, which have some changes to the original code. The repository is available at <a href="https://github.com/fetpype/dhcp-structural-pipeline">https://github.com/fetpype/dhcp-structural-pipeline</a>.</p>
+<h2 id="config-structure">Config structure</h2>
+<p>Here's a typical structure found in the BOUNTI config. 
+<div class="highlight"><pre><span></span><code><span class="nt">pipeline</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bounti&quot;</span>
+<span class="nt">docker</span><span class="p">:</span><span class="w"> </span>
+<span class="w">  </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;docker</span><span class="nv"> </span><span class="s">run</span><span class="nv"> </span><span class="s">--rm</span><span class="nv"> </span><span class="s">&lt;mount&gt;</span>
+<span class="w">    </span><span class="s">fetalsvrtk/segmentation:general_auto_amd</span><span class="w"> </span>
+<span class="w">    </span><span class="s">bash</span><span class="nv"> </span><span class="s">/home/auto-proc-svrtk/scripts/auto-brain-bounti-segmentation-fetal.sh</span><span class="w"> </span>
+<span class="w">    </span><span class="s">&lt;input_dir&gt;</span><span class="nv"> </span><span class="s">&lt;output_dir&gt;&quot;</span>
+<span class="nt">singularity</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;singularity</span><span class="nv"> </span><span class="s">exec</span><span class="nv"> </span><span class="s">-u</span><span class="nv"> </span><span class="s">--bind</span><span class="nv"> </span><span class="s">&lt;singularity_mount&gt;</span><span class="nv"> </span><span class="s">--bind</span><span class="nv"> </span><span class="s">&lt;singularity_home&gt;:/home/tmp_proc</span><span class="nv"> </span><span class="s">--nv</span>
+<span class="w">    </span><span class="s">&lt;singularity_path&gt;/bounti.sif</span>
+<span class="w">    </span><span class="s">bash</span><span class="nv"> </span><span class="s">/home/auto-proc-svrtk/auto-brain-bounti-segmentation-fetal.sh</span><span class="w"> </span>
+<span class="w">    </span><span class="s">&lt;input_dir&gt;</span><span class="nv"> </span><span class="s">&lt;output_dir&gt;&quot;</span>
+<span class="nt">path_to_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;basename&gt;-mask-brain_bounti-19.nii.gz&quot;</span>
+</code></pre></div></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All the container runs use the command above and are passed through the function <a href="../api_nodes/#fetpype.nodes.segmentation.run_seg_cmd"><code>run_seg_cmd</code></a></p>
+</div>
+<h3 id="tags">Tags</h3>
+<p>There are a limited set of tags that can be used for reconstruction: </p>
+<table>
+<thead>
+<tr>
+<th><div style="width:150px">Command</div></th>
+<th>Description</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;mount&gt;</code></td>
+<td>Where the different folders will be mounted on Docker</td>
+<td>Docker only</td>
+</tr>
+<tr>
+<td><code>&lt;singularity_mount&gt;</code></td>
+<td>Where the different folders will be mounted on Singularity</td>
+<td>Singularity only</td>
+</tr>
+<tr>
+<td><code>&lt;singularity_path&gt;</code></td>
+<td>The base path of the Singularity image</td>
+<td>Singularity only</td>
+</tr>
+<tr>
+<td><code>&lt;singularity_home&gt;</code></td>
+<td>A directory used for temporary files</td>
+<td>Singularity only</td>
+</tr>
+<tr>
+<td><code>&lt;input_stacks&gt;</code></td>
+<td>The list of inputs stacks will be given as arguments</td>
+<td>Mutually exclusive with <code>&lt;input_dir&gt;</code></td>
+</tr>
+<tr>
+<td><code>&lt;input_dir&gt;</code></td>
+<td>The folder that contains the input stacks</td>
+<td>Mutually exclusive with <code>&lt;output_dir&gt;</code></td>
+</tr>
+<tr>
+<td><code>&lt;output_dir&gt;</code></td>
+<td>The output directory</td>
+<td>Mutually exclusive with</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="dhcp-processing-pipeline">dHCP processing pipeline</h2>
+<p>The dHCP pipeline presents some particularities compared to the BOUNTI implementation.</p>
+<h3 id="gestational-age-requirement">Gestational Age Requirement</h3>
+<p>The dHCP pipeline requires gestational age information, which can be provided through the <code>participants.tsv</code> file in the root of the BIDS dataset:</p>
+<div class="highlight"><pre><span></span><code>participant_id    gestational_age
+sub-01           28.5
+sub-02           32.1
+sub-03           25.8
+</code></pre></div>
+<h3 id="processing-stages">Processing Stages</h3>
+<p>You can choose to run only the segmentation, the surface reconstruction, or both. The default is to run both. The following options are available, and you should add them to the "cmd" field of the configuration file:</p>
+<p><strong><code>-seg</code> (Segmentation only):</strong></p>
+<p><strong><code>-surf</code> (Surface reconstruction):</strong></p>
+<p><strong><code>-all</code> (Complete Processing):</strong></p>
+<h3 id="known-dhcp-issues">Known dHCP issues</h3>
+<p>The pipeline has been shown to fail in specific systems. We are still investigating the cause of this issue, but if the pipeline fails with the following error in logs/<image_name>-tissue-em-err.log:</p>
+<div class="highlight"><pre><span></span><code>10%...Error: draw-em command returned non-zero exit status -8
+</code></pre></div>
+<p>Try to run the pipeline in a different system or, if you are in an HPC, in a different node. If the problem persists, please reach out to the original authors of the tool on <a href="https://github.com/BioMedIA/dhcp-structural-pipeline/tree/fetal">this GitHub repository</a>.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:uus2023bounti">
+<p>Alena U Uus and others. BOUNTI: brain volumetry and automated parcellation for 3d fetal mri. <em>bioRxiv</em>, 2023.&#160;<a class="footnote-backref" href="#fnref:uus2023bounti" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:makropoulos2018developing">
+<p>Antonios Makropoulos, Emma C Robinson, Andreas Schuh, Robert Wright, Sean Fitzgibbon, Jelena Bozek, Serena J Counsell, Johannes Steinweg, Katy Vecchiato, Jonathan Passerat-Palmbach, and others. The developing human connectome project: a minimal processing pipeline for neonatal cortical surface reconstruction. <em>Neuroimage</em>, 173:88–112, 2018.&#160;<a class="footnote-backref" href="#fnref:makropoulos2018developing" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1334 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+        <link rel="next" href="configs/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="media/fetpype_favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Fetpype</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="css/home.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#about" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="Fetpype" class="md-header__button md-logo" aria-label="Fetpype" data-md-component="logo">
+      
+  <img src="media/fetpype_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fetpype
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="Fetpype" class="md-nav__button md-logo" aria-label="Fetpype" data-md-component="logo">
+      
+  <img src="media/fetpype_logo.png" alt="logo">
+
+    </a>
+    Fetpype
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#about" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        About
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The tool
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start guide
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick start guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-your-first-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running your first pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running your first pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data formatting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choose-what-you-will-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choose what you will run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singularity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Singularity
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Singularity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#just-run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Just run it!
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#while-youre-waiting-for-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        While you're waiting for the results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contributors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acknowledgements
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    In-depth
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    In-depth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="configs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="input_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BIDS Input Data Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="output_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Data Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="run_parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running parts of the pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preprocessing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reconstruction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="segmentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="surface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Surface Extraction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api_nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api_pipelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api_workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#about" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        About
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The tool
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start guide
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick start guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-your-first-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running your first pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running your first pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data formatting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choose-what-you-will-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choose what you will run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singularity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Singularity
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Singularity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#just-run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Just run it!
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#while-youre-waiting-for-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        While you're waiting for the results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contributors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acknowledgements
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<div class="hero hero--split">
+  <img src="media/fetpype_logo.png" alt="Fetpype logo" class="hero__logo" />
+
+  <div class="hero__content">
+    <h1 class="hero__title">Fetpype</h1>
+    <p class="hero__desc">An Open-Source Pipeline for Reproducible Fetal Brain MRI Analysis</p>
+  </div>
+</div>
+
+<h2 id="about">About</h2>
+<p>Fetpype is a library that aims at facilitating the analysis of fetal brain MRI by integrating the variety of tools commonly used in processing pipelines. Starting from clinical acquisition of fetal brain MRI (T2-weighted fast spin echo sequences), it performs <a href="preprocessing/">pre-processing</a>, <a href="reconstruction/">reconstruction</a>, <a href="segmentation/">segmentation</a> and <a href="surface/">surface extraction</a>.</p>
+<p><img alt="Fetpype diagram" src="media/fetpype_illustration.png" /></p>
+<h2 id="the-tool">The tool</h2>
+<p>Fetpype aims at integrating a variety of existing tools, available as docker containers into a single, easy to use interface.  It relies on three main components:</p>
+<ul>
+<li>Standardized data formatting following the <a href="https://bids.neuroimaging.io/index.html">BIDS</a> (Brain Imaging Data Structure) convention.</li>
+<li>Integration of containerized methods using Docker or Singularity.</li>
+<li>Chaining of data calls using <a href="https://nipype.readthedocs.io/en/latest/">Nipype</a>, a library for robust integration of heterogeneous neuroimaging pipelines.</li>
+<li>Simple yaml configuration files generated using <a href="https://hydra.cc/docs/intro/">Hydra</a>.</li>
+</ul>
+<p><img alt="BIDS, containers, Nipype and hydra" src="media/bids_container_nipype_hydra.png" /></p>
+<p>This package is actively under deployment in a <a href="https://github.com/fetpype/fetpype">public GitHub repository</a>. If you have any question, trouble with the code or desire included a new feature feel free to open an issue there! If you find a typo, or want to include your new method in fetpype, you can submit a pull request (details on how to include your method in fetpype can be found <a href="contributing/">here</a>).</p>
+<h2 id="quick-start-guide">Quick start guide</h2>
+<h3 id="installation">Installation</h3>
+<p>Clone the latest version of the fetpype repository
+<div class="highlight"><pre><span></span><code>git clone https://github.com/fetpype/fetpype
+</code></pre></div></p>
+<p>Within your desired python environment, install fetpype
+<div class="highlight"><pre><span></span><code>pip install -e .
+</code></pre></div></p>
+<h3 id="running-your-first-pipeline">Running your first pipeline</h3>
+<h4 id="data-formatting">Data formatting</h4>
+<p>Start with a BIDS-formatted dataset containing multiple stacks of low-resolution T2-weighted fetal brain MRI. A BIDS formatted folder should look as follows</p>
+<div class="highlight"><pre><span></span><code>sub-01
+    [ses-01]
+        anat
+            sub-01_[ses-01]_run-1_T2w.nii.gz
+            sub-01_[ses-01]_run-2_T2w.nii.gz
+            ...
+            sub-01_[ses-01]_run-N_T2w.nii.gz
+sub-myname
+    [ses-01]
+        anat
+            sub-myname_[ses-01]_run-1_T2w.nii.gz
+            sub-myname_[ses-01]_run-2_T2w.nii.gz
+            sub-myname_[ses-01]_run-6_T2w.nii.gz
+            sub-myname_[ses-01]_run-7_T2w.nii.gz
+    [ses-02]
+            sub-myname_[ses-01]_run-1_T2w.nii.gz
+            sub-myname_[ses-01]_run-2_T2w.nii.gz
+            sub-myname_[ses-01]_run-3_T2w.nii.gz
+</code></pre></div>
+<p>Here, [ses-XX] is an optional tag/folder level. The <code>anat</code> folder will contain the different runs, which are the different stacks acquired for a given subject. You can find a more detailed description on this format in our <a href="input_data/">input data preparation guide</a>. More information about BIDS formatting is available <a href="https://bids.neuroimaging.io/index.html">here</a>.</p>
+<p>The output of the pipeline will be saved in the <code>derivatives</code> folder, which will contain the different steps of the pipeline, also in BIDS format. You can find a more detailed description of the output data structure <a href="output_data/">here</a>.</p>
+<h4 id="choose-what-you-will-run">Choose what you will run</h4>
+<p>The pipeline that will be run is defined by a structure of config files. A default pipeline, featuring pre-processing (mask extraction, denoising, cropping and masks), reconstruction (using NeSVoR<sup id="fnref:xu2023nesvor"><a class="footnote-ref" href="#fn:xu2023nesvor">1</a></sup>) and segmentation (using BOUNTI<sup id="fnref:uus2023bounti"><a class="footnote-ref" href="#fn:uus2023bounti">2</a></sup>) is defined by the following config file.</p>
+<p>It starts by a master config located at <code>configs/default_docker.yaml</code> with the following structure
+<div class="highlight"><pre><span></span><code><span class="nt">defaults</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">preprocessing/default</span><span class="w"> </span><span class="c1"># Default preprocessing</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">reconstruction/nesvor</span><span class="w"> </span><span class="c1"># NeSVoR reconstruction -- You can choose between svrtk, nifymic or nesvor</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">segmentation/bounti</span><span class="w">   </span><span class="c1"># BOUNTI segmentation     </span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">_self_</span>
+<span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;docker&quot;</span><span class="w">       </span><span class="c1"># Running on docker (other option is singularity)</span>
+<span class="nt">reconstruction</span><span class="p">:</span><span class="w">           </span><span class="c1"># Generic reconstruction arguments</span>
+<span class="w">  </span><span class="nt">output_resolution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.8</span><span class="w">  </span><span class="c1"># Target resolution for reconstruction</span>
+<span class="nt">save_graph</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+</code></pre></div>
+This config defines a pipeline that will run the default preprocessing step (defined in <code>configs/preprocessing/default.yaml</code>), the NeSVoR reconstruction pipeline (defined in <code>configs/reconstruction/nesvor.yaml</code>) followed by the BOUNTI segmentation pipeline (defined in <code>configs/preprocessing/bounti.yaml</code>). Hydra will go in the corresponding folder and load the files to create a global config defined in a nested manner. Changing the pipeline that you want to run is as easy as changing the reconstruction pipeline from <code>nesvor</code> to <code>niftymic</code>. </p>
+<p>The details of the configs, the attributes and methods implemented is available <a href="pipelines/">in this page</a>.</p>
+<h3 id="singularity">Singularity</h3>
+<p>Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder. You can indicate the folder in the .yaml file in the "singularity_path" field (see configs/default_sg.yaml for an example). The list of images and their name that are needed to run the pipeline is as follows:</p>
+<ul>
+<li><code>nesvor.sif</code> for the NeSVoR pipeline (junshenxu/nesvor:v0.5.0)</li>
+<li><code>niftymic.sif</code> for the NiftyMIC pipeline (from renbem/niftymic:latest)</li>
+<li><code>svrtk.sif</code> for the SVRTK pipeline (from fetalsvrtk/svrtk:general_auto_amd)</li>
+<li><code>bounti.sif</code> for the BOUNTI pipeline (from fetalsvrtk/segmentation:general_auto_amd)</li>
+<li><code>fetpype_utils.sif</code> for the utils pipeline (from gerardmartijuan/fetpype_utils:latest)</li>
+</ul>
+<h4 id="just-run-it">Just run it!</h4>
+<p>Once you chose the pipeline that you are going to run, you can then run it by calling 
+<div class="highlight"><pre><span></span><code>fetpype_run --data &lt;THE_PATH_TO_YOUR_DATA&gt; --out &lt;THE_PATH_TO_YOUR_DATA&gt;/derivatives/fetpype
+</code></pre></div></p>
+<p>Additional options are available when calling <code>fetpype_run --help</code>. Then just wait and see your results! </p>
+<h4 id="while-youre-waiting-for-the-results">While you're waiting for the results</h4>
+<p>Feel free to explore how fetpype works and what it can do!</p>
+<ul>
+<li><a href="output_data/">Output data formatting</a></li>
+<li><a href="run_parts/">Running parts of the pipeline</a></li>
+<li><a href="contributing/">How can I include my method in fetpype?</a></li>
+</ul>
+<hr />
+<h2 id="reference">Reference</h2>
+<p>If you used <code>Fetpype</code> in your research, please cite the following paper:
+<div class="highlight"><pre><span></span><code>@article{sanchez2025fetpype,
+  title={Fetpype: An open-source pipeline for reproducible fetal brain mri analysis},
+  author={Sanchez, Thomas and Mart{\&#39;\i}-Juan, Gerard and Meunier, David and Ballester, Miguel Angel Gonzalez and Camara, Oscar and Piella, Gemma and Cuadra, Meritxell Bach and Auzias, Guillaume},
+  journal={arXiv preprint arXiv:2512.17472},
+  year={2025}
+}
+</code></pre></div></p>
+<h2 id="contributors">Contributors</h2>
+<ul>
+<li>Gerard Martí-Juan (@<a href="https://github.com/GerardMJuan">GerardMJuan</a>)</li>
+<li>Thomas Sanchez (@<a href="https://github.com/t-sanchez">t-sanchez</a>)</li>
+<li>Guillaume Auzias (@<a href="https://github.com/gauzias">gauzias</a>)</li>
+<li>David Meunier (@<a href="https://github.com/davidmeunier79">davidmeunier79</a>)</li>
+</ul>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<p>Fetpype was funded by <a href="https://www.neuron-eranet.eu/">ERA-NET NEURON</a> in the context of the MULTIFACT project. It received funding under different national agencies:</p>
+<ul>
+<li>Swiss National Science Foundation — grant 31NE30_203977;</li>
+<li>Spain's Ministry of Science, Innovation and Universities — grant MCIN/AEI/10.13039/501100011033/</li>
+<li>French National Research Agency — grant ANR-21-NEU2-0005;</li>
+</ul>
+<p>This project was also supported by the SulcalGRIDS project (ANR-19-CE45-0014) and the SNSF project no. 215641. </p>
+<p><img alt="Fetpype funding logo" src="media/fetpype_funding.png" /></p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:xu2023nesvor">
+<p>Junshen Xu and others. NeSVoR: implicit neural representation for slice-to-volume reconstruction in MRI. <em>IEEE Transactions on Medical Imaging</em>, 2023.&#160;<a class="footnote-backref" href="#fnref:xu2023nesvor" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:uus2023bounti">
+<p>Alena U Uus and others. BOUNTI: brain volumetry and automated parcellation for 3d fetal mri. <em>bioRxiv</em>, 2023.&#160;<a class="footnote-backref" href="#fnref:uus2023bounti" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -70,10 +70,15 @@ Existing fetal brain MRI tools typically focus on individual processing steps an
 
 ![The different steps covered by `Fetpype`. Starting from several T2-weighted stacks of thick slices of the fetal brain (_acquisition_), `Fetpype` pre-processes data before feeding them to a _super-resolution reconstruction_ algorithm that fuses them in a single high-resolution volume. This volume then undergoes _segmentation_, before moving to cortical _surface extraction_. \label{fig:fetpype}](fetpype.png)
 
+# State of the field
+Fetal brain MRI analysis relies on a range of specialized tools that address individual processing steps, particularly motion correction and super-resolution reconstruction. Widely used reconstruction frameworks include SVRTK (C++) [@kuklisova-murgasova_reconstruction_2012; @uus2022automated], NiftyMIC (Python) [@ebner2020automated], and NeSVoR (Python/PyTorch) [@xu2023nesvor]. While increasingly distributed as containers, these tools rely on distinct data organization schemes as well as custom pre- and post-processing steps. Downstream processing tools for brain extraction, segmentation, and surface reconstruction show similar diversity, combining Python scripts, compiled binaries, and domain-specific imaging libraries [@makropoulos2018developing; @uus2023bounti; @faghihpirayesh2024fetal; @bazin2005topology]. As a result, constructing an end-to-end fetal MRI workflow typically requires custom scripting to orchestrate multiple containers, manage data formats, and handle intermediate outputs, limiting reproducibility and accessibility.
+
+`Fetpype` was built to address these limitations by providing a unified, Python-based framework to integrate existing containerized tools for fetal brain MRI analysis. By enforcing data formatting following the widely-used Brain Imaging Data Structure (BIDS) standard [@gorgolewski2016brain], and leveraging containerized execution and `Nipype`-based workflow management [@gorgolewski2011nipype] and Hydra-based configuration [@Yadan2019Hydra], `Fetpype` `Fetpype` provides a standardized and scalable environment for reproducible end-to-end fetal brain MRI analysis on both local workstations and large-scale computing clusters.
+
 # Software design
 `Fetpype` is built around four core design principles: data standardization, containerization, workflow orchestration, and flexible configuration:
 
-1. **Data Standardization**: `Fetpype` expects input data organized according to the Brain Imaging Data Structure (BIDS) standard [@gorgolewski2016brain], promoting interoperability and simplifying data management. 
+1. **Data Standardization**: `Fetpype` expects input data organized according to the BIDS standard [@gorgolewski2016brain], promoting interoperability and simplifying data management. 
 2. **Containerization**: Individual processing tools are encapsulated within Docker or Singularity containers. This ensures reproducibility and reduces installation issues, providing a better experience for the end user. 
 3. **Workflow Management**: The `Nipype` library [@gorgolewski2011nipype] is used to construct processing workflows: it provides a robust interface for combining different steps from different containers or packages, facilitating data caching and parallelization, and allowing pipelines to be easily shareable. 
 4. **Configuration**: Pipeline configuration is managed using simple YAML files and the Hydra library [@Yadan2019Hydra], allowing users to easily select between different modules or parameters without directly modifying the code. The current implementation of `Fetpype` integrates modules for:
@@ -84,21 +89,15 @@ Existing fetal brain MRI tools typically focus on individual processing steps an
   
 The overall processing workflow is summarized in \autoref{fig:fetpype}.
 
-
-
 # Research impact statement
 `Fetpype` is the result of a longstanding collaboration within a European consortium of researchers specializing in fetal neuroimaging. Its default configurations and processing workflows have been the result of extensive testing to achieve robust processing on data acquired across multiple hospitals in France, Spain, and Switzerland, covering a range of scanners and acquisition protocols.
 
 The framework has been used to process large-scale fetal MRI datasets within the consortium, has contributed to a first publication [@sanchez2026data], and is supporting ongoing research projects. Fetpype is used by multiple research groups and has begun to receive external contributions, including pull requests that integrate additional processing methods. This suggests that `Fetpype` addresses a clear methodological need and can serve as shared community infrastructure for fetal brain MRI research.
 
-
 In the future, we plan to supplement `Fetpype` with an automated reporting library containing automated quality control [@sanchez2024fetmrqc; @sanchez2025automatic], subject-wise and population-wise biometry and volumetry [@esteban2017mriqc; @neves2025scanner], as well as spectral analysis of surfaces [@germanaud2012larger]. We welcome community contributions, particularly implementations of new methods that can be integrated into the existing containerized workflow framework.
-
-
 
 # AI usage disclosure
 GitHub Copilot, integrated within Visual Studio Code, was used during software development to assist with code completion and implementation. ChatGPT (GPT-5.2) was used for proofreading and language refinement of the manuscript. The authors take full responsibility for the written content.
-
 
 # Acknowledgements
 This work was funded by Era-net NEURON MULTIFACT project (TS: Swiss National Science Foundation grants 31NE30_203977, 215641; GA: French National Research Agency, Grant ANR-21-NEU2-0005; EE: Instituto de Salud Carlos III (ISCIII) grant AC21\_2/00016; GMJ, GP, OC, MAGB:  Ministry of Science, Innovation and Universities: MCIN/AEI/10.13039/501100011033/), the SulcalGRIDS Project, (GA: French National Research Agency Grant ANR-19-CE45-0014), the pediatric domain shifts project (TS: SNSF 205320-215641), and NVIDIA research grants with the use of NVIDIA RTX6000 ADA GPUs.  We acknowledge the CIBM Center for Biomedical Imaging, a Swiss research center of excellence founded and supported by CHUV, UNIL, EPFL, UNIGE and HUG.

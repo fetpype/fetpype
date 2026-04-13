@@ -10,15 +10,17 @@ on:
 
 jobs:
   build:
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@master
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.12
+      steps:
+        - uses: actions/checkout@master
+        - name: Set up Python ${{ matrix.python-version }}
+          uses: actions/setup-python@v1
+          with:
+            python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
@@ -35,12 +37,3 @@ jobs:
       - name: Test with pytest
         run:
             py.test --cov tests --ignore=initial_scripts/
-
-      - name: Install dependencies
-        run: |
-            pip install codecov pytest pytest-cov
-            pip install -e .
-            pip install flake8
-            sudo apt-get install build-essential  graphviz libgraphviz-dev
-            pip install --upgrade pygraphviz graphviz
-

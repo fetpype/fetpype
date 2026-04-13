@@ -39,6 +39,12 @@ Within your desired python environment, install fetpype
 pip install -e .
 ```
 
+!!! Note
+    `Fetpype` also has also two system level requirements: 
+    1. It requires to have `Graphviz` installed (`sudo apt-get install graphviz`)
+    2. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
+
+
 ### Running your first pipeline
 #### Data formatting
 Start with a BIDS-formatted dataset containing multiple stacks of low-resolution T2-weighted fetal brain MRI. A BIDS formatted folder should look as follows

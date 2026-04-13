@@ -1,39 +1,29 @@
-
 name: Checking unit-tests, PEP8 and standard pipeline congruency
-
 on:
-
   pull_request:
     branches:
       - main
-
-
 jobs:
   build:
-      runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-
-      steps:
-        - uses: actions/checkout@master
-        - name: Set up Python ${{ matrix.python-version }}
-          uses: actions/setup-python@v1
-          with:
-            python-version: ${{ matrix.python-version }}
-
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-            pip install -e .
-            pip install codecov pytest pytest-cov
-            pip install flake8
-            sudo apt-get install build-essential  graphviz libgraphviz-dev
-            pip install --upgrade pygraphviz graphviz
-
+          pip install -e .
+          pip install codecov pytest pytest-cov flake8
+          sudo apt-get install -y build-essential graphviz libgraphviz-dev
+          pip install --upgrade pygraphviz graphviz
       - name: Flake8
-        run:
-            flake8 --count fetpype
-
+        run: |
+          flake8 --count fetpype
       - name: Test with pytest
-        run:
-            py.test --cov tests --ignore=initial_scripts/
+        run: |
+          py.test --cov tests --ignore=initial_scripts/

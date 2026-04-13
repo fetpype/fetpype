@@ -41,8 +41,8 @@ pip install -e .
 
 !!! Note
     `Fetpype` also has also two system level requirements: 
-    1. It required `python>=3.9`
-    2. It requires to have `Graphviz` installed (`sudo apt-get install graphviz`)
+    1. It requires `python>=3.9`.
+    2. It requires to have `Graphviz` installed (`sudo apt-get install graphviz`).
     3. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
 
 

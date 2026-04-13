@@ -4,6 +4,7 @@ import os
 from omegaconf import OmegaConf
 from pathlib import Path
 
+
 def get_default_parser(desc):
 
     parser = argparse.ArgumentParser(description=desc)
@@ -76,12 +77,16 @@ def get_default_parser(desc):
     parser.add_argument(
         "--config",
         dest="cfg_path",
-        default=str(Path(__file__).parent.parent.parent / "configs" / "default_docker.yaml"),
+        default=str(
+            Path(__file__).parent.parent.parent
+            / "configs"
+            / "default_docker.yaml"
+        ),
         type=str,
         help=(
             "Parameters yaml file specifying the parameters, containers and "
             "functions to be used in the pipeline."
-        )
+        ),
     )
     parser.add_argument(
         "--nprocs",

@@ -113,7 +113,10 @@ Once you chose the pipeline that you are going to run, you can then run it by ca
 fetpype_run --data <THE_PATH_TO_YOUR_DATA> --out <THE_PATH_TO_YOUR_DATA>/derivatives/fetpype
 ```
 
-Additional options are available when calling `fetpype_run --help`. Then just wait and see your results! 
+Additional options are available when calling `fetpype_run --help`. Then just wait and see your results!
+
+!!! Tip
+    New to Fetpype or fetal brain MRI reconstruction? The repository features a small simulated dataset so you can test your installation right away. See the [Tutorial](tutorial.md) for the exact command and expected outputs.
 
 #### While you're waiting for the results
 Feel free to explore how fetpype works and what it can do!

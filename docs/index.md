@@ -43,7 +43,10 @@ pip install -e .
     `Fetpype` also has also two system level requirements: 
 
     1. It requires `python>=3.9`.
-    2. It requires to have `Graphviz` installed (`sudo apt-get install graphviz`).
+    2. It requires **Graphviz** to be installed (used by Nipype to export pipeline graphs):
+        - **Debian/Ubuntu**: `sudo apt-get install graphviz`
+        - **macOS**: `brew install graphviz`
+        - **Other platforms**: see the [official Graphviz downloads](https://graphviz.org/download/).
     3. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
 
 

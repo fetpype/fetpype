@@ -17,6 +17,12 @@ dependencies = [
     "networkx==2.8.7",
     "pybids>=0.15.0"
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0"
+]
+
 [tool.setuptools]
 packages = ["fetpype"]
 

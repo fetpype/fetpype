@@ -18,5 +18,15 @@ If you wish to incorporate your method into fetpype, please have a look at the p
 ## Feature Requests
 Feature requests can be made on [GitHub](https://github.com/fetpype/fetpype/issues) as well!
 
+## Running tests locally
+Install the package with the dev dependencies:
+```
+pip install -e ".[dev]"
+```
+Then run the test suite from the root of the repository:
+```
+pytest tests/
+```
+
 ## Solving Issues
 Any new feature, bug fix or documentation contribution is welcome as a pull request (PR)! To do that, simply open a new [GitHub PR](https://github.com/fetpype/fetpype/pulls) with your contribution. Please include a clear description of the problem, refer to any relevant issues, and explain how your contribution solves the problem, and on which data you were able to test it.

@@ -503,7 +503,6 @@ class CheckAndSortStacksAndMasks(BaseInterface):
         out_masks = []
         for i, s in enumerate(stacks_run):
             in_stack = self.inputs.stacks[i]
-            log.info(f"Checking stack {os.path.basename(in_stack)} with run ID {s}")
             if s in masks_run:
                 out_stack = os.path.join(
                     self._gen_filename("output_dir_stacks"),

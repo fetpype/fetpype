@@ -471,7 +471,8 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     # PREPROCESSING
     full_fet_pipe.connect(inputnode, "stacks", prepro_pipe, "inputnode.stacks")
     if load_masks:
-        full_fet_pipe.connect(inputnode, "masks", prepro_pipe, "inputnode.masks")
+        full_fet_pipe.connect(inputnode, "masks", 
+                              prepro_pipe, "inputnode.masks")
     # RECONSTRUCTION
     full_fet_pipe.connect(
         prepro_pipe, "outputnode.stacks", recon, "inputnode.stacks"

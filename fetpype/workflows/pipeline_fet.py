@@ -72,7 +72,6 @@ def create_main_workflow(
     data_dir, out_dir, nipype_dir = check_and_update_paths(
         data_dir, out_dir, nipype_dir, pipeline_name
     )
-
     setup_logging(
         base_dir=nipype_dir,
         debug=debug,
@@ -146,7 +145,7 @@ def create_main_workflow(
     )
     if load_masks:
         main_workflow.connect(
-            datasource, "outputnode.masks", fet_pipe, "inputnode.masks"
+            input_data, "outputnode.masks", fet_pipe, "inputnode.masks"
         )
 
     # Reconstruction data sink:

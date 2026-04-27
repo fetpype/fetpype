@@ -356,7 +356,7 @@ class CheckAffineResStacksAndMasks(BaseInterface):
         Check if the smallest dimension of the stack is the last one.
         """
         vx_str = " x ".join([f"{v:.2f}" for v in r1])
-        assert r1[0] == r1[1], (
+        assert np.allclose(r1[0], r1[1]), (
             f"Inconsistent voxel sizes at dimensions 0 and 1 "
             f"for {path} (voxel size = ({vx_str})). "
             "Are you sure that the data are "
@@ -499,12 +499,11 @@ class CheckAndSortStacksAndMasks(BaseInterface):
         # Check that stacks and masks run_ids match
         stacks_run = get_run_id(self.inputs.stacks)
         masks_run = get_run_id(self.inputs.masks)
-
         out_stacks = []
         out_masks = []
         for i, s in enumerate(stacks_run):
             in_stack = self.inputs.stacks[i]
-
+            log.info(f"Checking stack {os.path.basename(in_stack)} with run ID {s}")
             if s in masks_run:
                 out_stack = os.path.join(
                     self._gen_filename("output_dir_stacks"),

@@ -1,15 +1,31 @@
 pipeline: "svrtk"
-docker: 
-  cmd: " docker run <mount>
-    fetalsvrtk/svrtk:general_auto_amd
-    bash /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 
-    <input_dir> <output_dir> 1 <input_tp> <output_res> 1"
-singularity:
-  cmd: " singularity exec --bind <singularity_mount>
-    fetalsvrtk/svrtk:general_auto_amd
-    <singularity_path>/svrtk.sif 
-    /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 
-    <input_dir> <output_dir> 1 <input_tp> <output_res> 1"
+reconstruction:
+  docker: 
+    cmd: " docker run <mount>
+      fetalsvrtk/svrtk:general_auto_amd
+      bash /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 
+      <input_dir> <output_dir> 1 <input_tp> <output_res> 1"
+  singularity:
+    cmd: " singularity exec --bind <singularity_mount>
+      <singularity_path>/svrtk.sif 
+      bash /home/auto-proc-svrtk/scripts/auto-brain-reconstruction.sh 
+      <input_dir> <output_dir> 1 <input_tp> <output_res> 1"
 path_to_output: "reo-SVR-output-brain.nii.gz"
 
-
+postprocessing:
+  clamp_intensity:
+    enabled: false
+  bias_correction:
+    enabled: false
+    docker:
+      cmd: "docker run <mount> fetpype/fetpype_utils:latest run_bias_field_correction 
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"
+    singularity:
+      cmd: "singularity run --bind <singularity_mount>
+        <singularity_path>/fetpype_utils.sif
+        run_bias_field_correction
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"

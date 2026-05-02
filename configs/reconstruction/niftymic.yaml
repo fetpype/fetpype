@@ -1,15 +1,36 @@
 pipeline: "niftymic"
-docker: 
-  cmd: "docker run --gpus '\"device=0\"' <mount> renbem/niftymic 
-    niftymic_run_reconstruction_pipeline
-    --filenames <input_stacks>
-    --filenames-masks <input_masks>
-    --dir-output <output_dir>"
-singularity:
-  cmd: "singularity exec --bind <singularity_mount> --nv  
-    <singularity_path>/niftymic.sif
-    niftymic_run_reconstruction_pipeline
-    --filenames <input_stacks>
-    --filenames-masks <input_masks>
-    --dir-output <output_dir>"
+reconstruction:
+  docker: 
+    cmd: "docker run --gpus '\"device=0\"' <mount> renbem/niftymic 
+      niftymic_run_reconstruction_pipeline
+      --filenames <input_stacks>
+      --filenames-masks <input_masks>
+      --isotropic-resolution <output_res>
+      --dir-output <output_dir>"
+  singularity:
+    cmd: "singularity exec --bind <singularity_mount> --nv  
+      <singularity_path>/niftymic.sif
+      niftymic_run_reconstruction_pipeline
+      --filenames <input_stacks>
+      --filenames-masks <input_masks>
+      --isotropic-resolution <output_res>
+      --dir-output <output_dir>"
 path_to_output: "recon_template_space/srr_template.nii.gz"
+  
+postprocessing:
+  clamp_intensity:
+    enabled: false
+  bias_correction:
+    enabled: false
+    docker:
+      cmd: "docker run <mount> fetpype/fetpype_utils:latest run_bias_field_correction 
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"
+    singularity:
+      cmd: "singularity run --bind <singularity_mount>
+        <singularity_path>/fetpype_utils.sif
+        run_bias_field_correction
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"

@@ -1,21 +1,41 @@
 pipeline: "nesvor"
-docker: 
-  cmd: "docker run --gpus '\"device=0\"' <mount> junshenxu/nesvor:v0.5.0 
-    nesvor reconstruct 
-    --input-stacks <input_stacks> 
-    --stack-masks <input_masks> 
-    --output-volume <output_volume> 
-    --batch-size 4096 
-    --n-levels-bias 1"
-singularity:
-  cmd: "singularity exec --bind <singularity_mount> --nv <singularity_path>/nesvor.sif 
-    nesvor reconstruct 
-    --input-stacks <input_stacks> 
-    --stack-masks <input_masks> 
-    --output-volume <output_volume> 
-    --batch-size 4096 
-    --n-levels-bias 1"
-args:
-    path_to_output: "nesvor.nii.gz"
+reconstruction:
+  docker: 
+    cmd: "docker run --gpus '\"device=0\"' <mount> junshenxu/nesvor:v0.5.0 
+      nesvor reconstruct 
+      --input-stacks <input_stacks> 
+      --stack-masks <input_masks> 
+      --output-volume <output_volume> 
+      --output-resolution <output_res>
+      --batch-size 4096 
+      --n-levels-bias 1"
+  singularity:
+    cmd: "singularity exec --bind <singularity_mount> --nv <singularity_path>/nesvor.sif 
+      nesvor reconstruct 
+      --input-stacks <input_stacks> 
+      --stack-masks <input_masks> 
+      --output-volume <output_volume> 
+      --output-resolution <output_res>
+      --batch-size 4096 
+      --n-levels-bias 1"
+  args:
+      path_to_output: "nesvor.nii.gz"
 
+postprocessing:
+  clamp_intensity:
+    enabled: true
+  bias_correction:
+    enabled: true
+    docker:
+      cmd: "docker run <mount> fetpype/fetpype_utils:latest run_bias_field_correction 
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"
+    singularity:
+      cmd: "singularity run --bind <singularity_mount>
+        <singularity_path>/fetpype_utils.sif
+        run_bias_field_correction
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"
 

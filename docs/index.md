@@ -50,6 +50,10 @@ pip install -e .
     3. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
 
 
+!!! warning "Apple Silicon (ARM) Macs"
+    **Running fetpype via Docker on Apple Silicon is not currently supported.** The Docker images provided are built for linux/amd64 and fail to run on Apple Silicon Macs (M1/M2/M3), using Rosetta 2 emulation : the ANTs binaries (e.g. DenoiseImage) crash and issue a SIGILL (illegal instruction) at the denoising step.
+
+
 ### Running your first pipeline
 #### Data formatting
 Start with a BIDS-formatted dataset containing multiple stacks of low-resolution T2-weighted fetal brain MRI. A BIDS formatted folder should look as follows

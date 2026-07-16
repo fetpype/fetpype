@@ -234,6 +234,8 @@ def check_valid_pipeline(cfg):
                 f"Please choose one of {VALID_SURFACE}"
             )
         if cfg.surface.surface_rh.use_scheme != cfg.segmentation.pipeline:
-            raise RuntimeError(f"Segmentation method {cfg.segmentation.pipeline} "
-                               "is incompatible with the surface extraction scheme "
-                               f"{cfg.surface.surface_rh.use_scheme }")
+            raise RuntimeError(
+                f"Segmentation method {cfg.segmentation.pipeline} "
+                "is incompatible with the surface extraction scheme "
+                f"{cfg.surface.surface_rh.use_scheme}"
+            )

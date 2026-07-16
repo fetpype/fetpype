@@ -1,0 +1,73 @@
+cff-version: 1.2.0                                                                                                                                                                                                                                    
+message: "If you use this software, please cite it as below."                                                                                                                                                                                         
+title: "Fetpype: An Open-Source Pipeline for Reproducible Fetal Brain MRI Analysis"                                                                                                                                                                   
+version: "1.0.0"                                                                                                                                                                                                                                      
+date-released: 2026-01-22                                                                                                                                                                                                                             
+url: "https://github.com/fetpype/fetpype"                                                                                                                                                                                                             
+authors:                                                                                                                                                                                                                                              
+  - family-names: Sanchez                                                                                                                                                                                                                             
+    given-names: Thomas                                                                                                                                                                                                                               
+    orcid: "https://orcid.org/0000-0003-3668-5155"                                                                                                                                                                                                    
+  - family-names: Martí-Juan                                                                                                                                                                                                                          
+    given-names: Gerard                                                                                                                                                                                                                               
+    orcid: "https://orcid.org/0000-0003-4729-7182"                                                                                                                                                                                                    
+  - family-names: Meunier                                                                                                                                                                                                                             
+    given-names: David                                                                                                                                                                                                                                
+    orcid: "https://orcid.org/0000-0002-5812-6138"                                                                                                                                                                                                    
+  - family-names: Gonzalez Ballester                                                                                                                                                                                                                  
+    given-names: Miguel Angel                                                                                                                                                                                                                         
+    orcid: "https://orcid.org/0000-0002-9227-6826"                                                                                                                                                                                                    
+  - family-names: Camara                                                                                                                                                                                                                              
+    given-names: Oscar                                                                                                                                                                                                                                
+    orcid: "https://orcid.org/0000-0002-5125-6132"                                                                                                                                                                                                    
+  - family-names: Eixarch                                                                                                                                                                                                                             
+    given-names: Elisenda                                                                                                                                                                                                                             
+    orcid: "https://orcid.org/0000-0001-7379-9608"                                                                                                                                                                                                    
+  - family-names: Piella                                                                                                                                                                                                                              
+    given-names: Gemma
+  - family-names: Eixarch                                                                                                                                                                                                                             
+    given-names: Elisenda                                                                                                                                                                                                                             
+    orcid: "https://orcid.org/0000-0001-7379-9608"                                                                                                                                                                                                    
+  - family-names: Piella                                                                                                                                                                                                                              
+    given-names: Gemma                                                                                                                                                                                                                                
+    orcid: "https://orcid.org/0000-0001-5236-5819"
+  - family-names: Bach Cuadra                               
+    given-names: Meritxell
+    orcid: "https://orcid.org/0000-0003-2730-4285"          
+  - family-names: Auzias                                    
+    given-names: Guillaume
+    orcid: "https://orcid.org/0000-0002-0414-5691"          
+preferred-citation:                                         
+  type: article
+  title: "Fetpype: An Open-Source Pipeline for Reproducible Fetal Brain MRI Analysis"                                     
+  doi: "10.48550/arXiv.2512.17472"
+  journal: "arXiv"                                          
+  year: 2025
+  authors:                                                  
+    - family-names: Sanchez
+      given-names: Thomas
+      orcid: "https://orcid.org/0000-0003-3668-5155"
+    - family-names: Martí-Juan                              
+      given-names: Gerard
+      orcid: "https://orcid.org/0000-0003-4729-7182"        
+    - family-names: Meunier                                 
+      given-names: David
+      orcid: "https://orcid.org/0000-0002-5812-6138"        
+    - family-names: Gonzalez Ballester                      
+      given-names: Miguel Angel
+      orcid: "https://orcid.org/0000-0002-9227-6826"        
+    - family-names: Camara
+      given-names: Oscar                                    
+      orcid: "https://orcid.org/0000-0002-5125-6132"
+    - family-names: Eixarch                                 
+      given-names: Elisenda
+      orcid: "https://orcid.org/0000-0001-7379-9608"        
+    - family-names: Piella
+      given-names: Gemma                                    
+      orcid: "https://orcid.org/0000-0001-5236-5819"
+    - family-names: Bach Cuadra                             
+      given-names: Meritxell
+      orcid: "https://orcid.org/0000-0003-2730-4285"        
+    - family-names: Auzias                                  
+      given-names: Guillaume
+      orcid: "https://orcid.org/0000-0002-0414-5691"

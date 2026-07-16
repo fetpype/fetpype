@@ -10,4 +10,6 @@ Fetpype comes with three main scripts, located in the `workflows` folder, than c
 
 !!! Note
     We recommend you to start by running the entire pipeline with default parameters on a few subjects, to see how the outputs will be structured. This will be useful in particular when running only the segmentation pipeline (`fetpype_run_seg`), as your data need to be properly formatted for the script to work as expected. More information on output formatting is available [here](output_data.md).
-    
+
+!!! Note
+    Recall that **Docker** (or **Singularity**) should be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.

@@ -39,6 +39,21 @@ Within your desired python environment, install fetpype
 pip install -e .
 ```
 
+!!! Note
+    `Fetpype` also has also two system level requirements: 
+
+    1. It requires `python>=3.9`.
+    2. It requires **Graphviz** to be installed (used by Nipype to export pipeline graphs):
+        - **Debian/Ubuntu**: `sudo apt-get install graphviz`
+        - **macOS**: `brew install graphviz`
+        - **Other platforms**: see the [official Graphviz downloads](https://graphviz.org/download/).
+    3. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
+
+
+!!! warning "Apple Silicon (ARM) Macs"
+    **Running fetpype via Docker on Apple Silicon is not currently supported.** The Docker images provided are built for linux/amd64 and fail to run on Apple Silicon Macs (M1/M2/M3), using Rosetta 2 emulation : the ANTs binaries (e.g. DenoiseImage) crash and issue a SIGILL (illegal instruction) at the denoising step.
+
+
 ### Running your first pipeline
 #### Data formatting
 Start with a BIDS-formatted dataset containing multiple stacks of low-resolution T2-weighted fetal brain MRI. A BIDS formatted folder should look as follows
@@ -102,7 +117,10 @@ Once you chose the pipeline that you are going to run, you can then run it by ca
 fetpype_run --data <THE_PATH_TO_YOUR_DATA> --out <THE_PATH_TO_YOUR_DATA>/derivatives/fetpype
 ```
 
-Additional options are available when calling `fetpype_run --help`. Then just wait and see your results! 
+Additional options are available when calling `fetpype_run --help`. Then just wait and see your results!
+
+!!! Tip
+    New to Fetpype or fetal brain MRI reconstruction? The repository features a small simulated dataset so you can test your installation right away. See the [Tutorial](tutorial.md) for the exact command and expected outputs.
 
 #### While you're waiting for the results
 Feel free to explore how fetpype works and what it can do!

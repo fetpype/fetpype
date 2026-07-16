@@ -40,9 +40,9 @@ authors:
 preferred-citation:                                         
   type: article
   title: "Fetpype: An Open-Source Pipeline for Reproducible Fetal Brain MRI Analysis"                                     
-  doi: "10.48550/arXiv.2512.17472"
-  journal: "arXiv"                                          
-  year: 2025
+  doi: "10.21105/joss.10278"
+  journal: "Journal of Open Source Software"                                          
+  year: 2026
   authors:                                                  
     - family-names: Sanchez
       given-names: Thomas

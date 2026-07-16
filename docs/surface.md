@@ -16,18 +16,18 @@ Several state-of-the-art segmentation algorithms have been wrapped and tested in
 ## Config structure
 Here's a typical structure found in the BOUNTI config. 
 ```yaml
-pipeline: "surf_pype"
+pipeline: "surfpype"
+
 docker: 
   cmd: "docker run --rm <mount>
-    fetpype/surf_proc:v0.0.2
-    generate_mesh -l <labelling_scheme> 
+    fetpype/surf_proc:0.0.2
+    generate_mesh -l <labelling_scheme>
     -s <input_seg> 
     -m <output_surf>"
 singularity:
   cmd: "singularity exec --bind <singularity_mount> --home <singularity_home> --nv
-    <singularity_path>/macatools/surf_proc.sif
-    fetpype/surf_proc:v0.0.2
-    generate_mesh -l <labelling_scheme> 
+    <singularity_path>/surf_proc.sif
+    generate_mesh -l <labelling_scheme>
     -s <input_seg> 
     -m <output_surf>"
 
@@ -36,12 +36,14 @@ surface_lh:
     out_file: "hemi-L_white.surf.gii"
     labelling_scheme:
         bounti: [5, 7, 14, 16]
+        fetalsynthseg: [13, 14, 16]
 
 surface_rh:
     use_scheme: "bounti"
     out_file: "hemi-R_white.surf.gii"
     labelling_scheme:
         bounti: [6, 8, 15, 17]
+        fetalsynthseg: [3, 4, 6]
 ```
 
 

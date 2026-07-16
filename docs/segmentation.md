@@ -6,6 +6,7 @@ Several state-of-the-art segmentation algorithms have been wrapped and tested in
 | Algorithm                              | Repository                                               | Docker                                                                            |
 | -------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | BOUNTI[@uus2023bounti]        | <https://github.com/SVRTK/auto-proc-svrtk>  | <https://hub.docker.com/r/fetalsvrtk/segmentation> |
+| FetalSynthSeg[@zalevskyi2024improving;@zalevskyi2026evaluating]        | <https://github.com/Medical-Image-Analysis-Laboratory/FetalSynthSeg>  | <https://hub.docker.com/r/vzalevskyi/fetalsynthseg> |
 | dHCP[@makropoulos2018developing]  |<https://github.com/fetpype/dhcp-structural-pipeline> | <https://hub.docker.com/r/gerardmartijuan/dhcp-pipeline-multifact> |
 
 **⚠️ Disclaimer:** The dHCP pipeline is only available in the dev branch as of now.

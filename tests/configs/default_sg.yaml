@@ -1,6 +1,7 @@
 defaults:
   - preprocessing/default
   - reconstruction/niftymic
+  - reconstruction/postprocessing
   - segmentation/bounti
   - surface/surface
   - _self_

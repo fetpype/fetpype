@@ -14,14 +14,14 @@ singularity:
     -m <output_surf>"
 
 surface_lh:
-    use_scheme: "bounti"
+    use_scheme: "fetalsynthseg"
     out_file: "hemi-L_white.surf.gii"
     labelling_scheme:
         bounti: [5, 7, 14, 16]
         fetalsynthseg: [13, 14, 16]
 
 surface_rh:
-    use_scheme: "bounti"
+    use_scheme: "fetalsynthseg"
     out_file: "hemi-R_white.surf.gii"
     labelling_scheme:
         bounti: [6, 8, 15, 17]

@@ -20,33 +20,34 @@ import itertools
 # Define options
 pipelines = [create_full_pipeline, create_rec_pipeline, create_seg_pipeline, create_surf_pipeline]
 recon_methods = ["niftymic", "nesvor", "svrtk"]
-
+segmentation_methods = ["bounti", "fetalsynthseg"]
 
 @pytest.mark.parametrize("sr_method", recon_methods)
-def test_read_config(generate_config, sr_method):
-    cfg = generate_config(sr_method, "bounti", "surfpype")
+@pytest.mark.parametrize("seg_method", segmentation_methods)
+def test_read_config(generate_config, sr_method, seg_method):
+    cfg = generate_config(sr_method, seg_method, "surfpype")
     cfg = init_and_load_cfg(cfg)
     assert cfg["reconstruction"]["pipeline"] == sr_method
-    assert cfg["segmentation"]["pipeline"] == "bounti"
+    assert cfg["segmentation"]["pipeline"] == seg_method
     assert cfg["surface"]["pipeline"] == "surfpype"
 
 
 load_masks = [True, False]
-test_cases = list(itertools.product(pipelines, recon_methods, load_masks))
+test_cases = list(itertools.product(pipelines, recon_methods, segmentation_methods, load_masks))
 
 
 @pytest.mark.parametrize(
-    "pipeline, sr_method, load_masks",
+    "pipeline, sr_method, seg_method, load_masks",
     test_cases,
     ids=[
-        f"pipelines-{str(x[0].__name__)}_sr-{x[1]}_loadMask-{x[2]}"
+        f"pipelines-{str(x[0].__name__)}_sr-{x[1]}_seg-{x[2]}_loadMask-{x[3]}"
         for x in test_cases
     ],
 )
 def test_create_full_pipelines(
-    generate_config, mock_output_dir, pipeline, sr_method, load_masks
+    generate_config, mock_output_dir, pipeline, sr_method, seg_method, load_masks
 ):
-    cfg = generate_config(sr_method, "bounti", "surfpype")
+    cfg = generate_config(sr_method, seg_method, "surfpype")
     cfg = init_and_load_cfg(cfg)
 
     name = "test_" + str(pipeline.__name__)

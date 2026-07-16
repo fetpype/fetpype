@@ -6,13 +6,23 @@ This pipeline is the fruit of a collaborative effort shared across teams involve
 
 # What is *Fetpype*?
 *Fetpype* is a library that aims at facilitating the analysis of fetal brain MRI by integrating the variety of tools commonly used in processing pipelines. 
-Starting from clinical acquisition of fetal brain MRI (T2-weighted fast spin echo sequences), it performs pre-processing, reconstruction, segmentation and surface extraction (*to be implemented*).
+Starting from clinical acquisition of fetal brain MRI (T2-weighted fast spin echo sequences), it performs pre-processing, reconstruction, segmentation and surface extraction.
 
 It aims at making easy the integration of a variety of tools existing to process fetal brain MR images by providing a wrapper around docker/singularity containers and working with BIDS formatted data. 
 
 More information are available on the [documentation](https://fetpype.github.io/fetpype/).
 
+# Reference
+If you use `Fetpype` in your research, please cite the following paper:
 
+```
+@article{sanchez2025fetpype,
+  title={Fetpype: An open-source pipeline for reproducible fetal brain mri analysis},
+  author={Sanchez, Thomas and Mart{\'\i}-Juan, Gerard and Meunier, David and Ballester, Miguel Angel Gonzalez and Camara, Oscar and Piella, Gemma and Cuadra, Meritxell Bach and Auzias, Guillaume},
+  journal={arXiv preprint arXiv:2512.17472},
+  year={2025}
+}
+```
 
 
 

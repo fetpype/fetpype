@@ -1,5 +1,6 @@
 nav:
     - Home: index.md
+    - Tutorial: tutorial.md
     - In-depth:
         - configs.md
         - input_data.md

@@ -2,7 +2,7 @@ import os.path as op
 
 import json
 import os
-from bids.layout import BIDSLayout
+from bids.layout import BIDSLayout, BIDSLayoutIndexer
 
 import nipype.interfaces.io as nio
 import nipype.pipeline.engine as pe
@@ -79,7 +79,20 @@ def create_datasource(
         bids_datasource.inputs.extra_derivatives = extra_derivatives
     bids_datasource.inputs.output_query = output_query
 
-    layout = BIDSLayout(data_dir, validate=False)
+    # Exclude nipype working dir when it lives inside data_dir: its JSON
+    # hash files are lists, not dicts, and crash BIDSLayout metadata indexing.
+    ignore = []
+    try:
+        rel_nipype = os.path.relpath(nipype_dir, data_dir)
+        if not rel_nipype.startswith(".."):
+            ignore.append(re.compile(re.escape(rel_nipype)))
+    except ValueError:
+        pass
+    layout = BIDSLayout(
+        data_dir,
+        validate=False,
+        indexer=BIDSLayoutIndexer(ignore=ignore),
+    )
 
     # Needed as the layout uses validate which
     # does not work with our segmentation files.

@@ -13,6 +13,8 @@ Fetpype is a library that aims at facilitating the analysis of fetal brain MRI b
 
 ![Fetpype diagram](media/fetpype_illustration.png)
 
+
+
 ## The tool
 Fetpype aims at integrating a variety of existing tools, available as docker containers into a single, easy to use interface.  It relies on three main components:
 
@@ -36,6 +38,21 @@ Within your desired python environment, install fetpype
 ```
 pip install -e .
 ```
+
+!!! Note
+    `Fetpype` also has also two system level requirements: 
+
+    1. It requires `python>=3.9`.
+    2. It requires **Graphviz** to be installed (used by Nipype to export pipeline graphs):
+        - **Debian/Ubuntu**: `sudo apt-get install graphviz`
+        - **macOS**: `brew install graphviz`
+        - **Other platforms**: see the [official Graphviz downloads](https://graphviz.org/download/).
+    3. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
+
+
+!!! warning "Apple Silicon (ARM) Macs"
+    **Running fetpype via Docker on Apple Silicon is not currently supported.** The Docker images provided are built for linux/amd64 and fail to run on Apple Silicon Macs (M1/M2/M3), using Rosetta 2 emulation : the ANTs binaries (e.g. DenoiseImage) crash and issue a SIGILL (illegal instruction) at the denoising step.
+
 
 ### Running your first pipeline
 #### Data formatting
@@ -100,7 +117,10 @@ Once you chose the pipeline that you are going to run, you can then run it by ca
 fetpype_run --data <THE_PATH_TO_YOUR_DATA> --out <THE_PATH_TO_YOUR_DATA>/derivatives/fetpype
 ```
 
-Additional options are available when calling `fetpype_run --help`. Then just wait and see your results! 
+Additional options are available when calling `fetpype_run --help`. Then just wait and see your results!
+
+!!! Tip
+    New to Fetpype or fetal brain MRI reconstruction? The repository features a small simulated dataset so you can test your installation right away. See the [Tutorial](tutorial.md) for the exact command and expected outputs.
 
 #### While you're waiting for the results
 Feel free to explore how fetpype works and what it can do!
@@ -109,13 +129,27 @@ Feel free to explore how fetpype works and what it can do!
 - [Running parts of the pipeline](run_parts.md)
 - [How can I include my method in fetpype?](contributing.md)
 
+
+
 ---
+## Reference
+If you used `Fetpype` in your research, please cite the following paper:
+```
+@article{sanchez2025fetpype,
+  title={Fetpype: An open-source pipeline for reproducible fetal brain mri analysis},
+  author={Sanchez, Thomas and Mart{\'\i}-Juan, Gerard and Meunier, David and Ballester, Miguel Angel Gonzalez and Camara, Oscar and Piella, Gemma and Cuadra, Meritxell Bach and Auzias, Guillaume},
+  journal={arXiv preprint arXiv:2512.17472},
+  year={2025}
+}
+```
+
 ## Contributors
 
 - Gerard Martí-Juan (@[GerardMJuan](https://github.com/GerardMJuan))
 - Thomas Sanchez (@[t-sanchez](https://github.com/t-sanchez))
 - Guillaume Auzias (@[gauzias](https://github.com/gauzias))
 - David Meunier (@[davidmeunier79](https://github.com/davidmeunier79))
+
 
 ## Acknowledgements
 Fetpype was funded by [ERA-NET NEURON](https://www.neuron-eranet.eu/) in the context of the MULTIFACT project. It received funding under different national agencies:

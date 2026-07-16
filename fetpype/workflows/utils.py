@@ -2,6 +2,7 @@ import argparse
 import hydra
 import os
 from omegaconf import OmegaConf
+from pathlib import Path
 
 
 def get_default_parser(desc):
@@ -76,7 +77,11 @@ def get_default_parser(desc):
     parser.add_argument(
         "--config",
         dest="cfg_path",
-        default="../configs/default_docker.yaml",
+        default=str(
+            Path(__file__).parent.parent.parent
+            / "configs"
+            / "default_docker.yaml"
+        ),
         type=str,
         help=(
             "Parameters yaml file specifying the parameters, containers and "

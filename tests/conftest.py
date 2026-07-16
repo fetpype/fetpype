@@ -106,6 +106,7 @@ def generate_config(tmp_path_factory):
             "defaults": [
                 "preprocessing/default",
                 f"reconstruction/{sr}",
+                f"reconstruction/postprocessing",
                 f"segmentation/{seg}",
                 f"surface/{surf}",
                 "_self_",

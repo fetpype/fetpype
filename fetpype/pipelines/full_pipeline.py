@@ -8,7 +8,11 @@ from ..nodes.preprocessing import (
 )
 from ..nodes.dhcp import dhcp_pipeline
 from nipype import config
-from fetpype.nodes.reconstruction import run_recon_cmd
+from fetpype.nodes.reconstruction import (
+    run_recon_cmd,
+    run_postpro_cmd,
+    clamp_intensities,
+)
 from fetpype.nodes.segmentation import run_seg_cmd
 from fetpype.nodes.surface_extraction import run_surf_cmd
 
@@ -232,19 +236,26 @@ def get_recon(cfg):
         rec_pipe:   A Nipype workflow object that contains
                     the reconstruction steps.
     """
+    # The cfg here is the full and completed configuration file
+
+    container = cfg.container
+    cfg_reco_base = cfg.reconstruction
+    cfg_reco = cfg.reconstruction.reconstruction[container]
+    cfg_postpro = cfg.reconstruction.postprocessing
     rec_pipe = pe.Workflow(name="Reconstruction")
+    enabled_clamp = cfg_postpro.clamp_intensity.enabled
+    enabled_ppbc = cfg_postpro.bias_correction.enabled
+
     # Creating input node
+    # Define input and output
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["stacks", "masks"]), name="inputnode"
     )
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["srr_volume"]), name="outputnode"
+        niu.IdentityInterface(fields=["output_stacks"]), name="outputnode"
     )
 
-    container = cfg.container
-    cfg_reco_base = cfg.reconstruction
-    cfg_reco = cfg.reconstruction[container]
-
+    # 1. reconstruction
     recon = pe.Node(
         interface=niu.Function(
             input_names=[
@@ -268,13 +279,69 @@ def get_recon(cfg):
         recon.inputs.singularity_path = cfg.singularity_path
         recon.inputs.singularity_mount = cfg.singularity_mount
 
+    # 2. clamp_intensities
+    clamp_intense_name = "clamp_intensities"
+    clamp_intense_name += "_disabled" if not enabled_clamp else ""
+    clamp_intense = pe.Node(
+        interface=niu.Function(
+            input_names=[
+                "input_stacks",
+                "cfg",
+                "is_enabled",
+            ],
+            output_names=["output_stacks"],
+            function=clamp_intensities,
+        ),
+        name=clamp_intense_name
+    )
+    clamp_intense.inputs.is_enabled = enabled_clamp
+    clamp_intense.inputs.cfg = cfg
+
+    # 3. post_bias_correction
+    post_bias_corr_name = "PostBiasCorrection"
+    post_bias_corr_name += "_disabled" if not enabled_ppbc else ""
+
+    post_bias_corr = pe.Node(
+        interface=niu.Function(
+            input_names=[
+                "input_stacks",
+                "input_masks",
+                "is_enabled",
+                "cmd",
+                "singularity_path",
+                "singularity_mount",
+            ],
+            output_names=["output_stacks"],
+            function=run_postpro_cmd,
+        ),
+        iterfield=["input_stacks", "input_masks"],
+        name=post_bias_corr_name,
+    )
+    post_bias_cfg = cfg_postpro.bias_correction
+    post_bias_corr.inputs.is_enabled = enabled_ppbc
+    post_bias_corr.inputs.cmd = post_bias_cfg[container].cmd
+
+    # if the container is singularity, add singularity path to post_bias_corr
+    if cfg.container == "singularity":
+        post_bias_corr.inputs.singularity_path = cfg.singularity_path
+        post_bias_corr.inputs.singularity_mount = cfg.singularity_mount
+
+    # connect nodes
     rec_pipe.connect(
         [
             (inputnode, recon, [("stacks", "input_stacks")]),
             (inputnode, recon, [("masks", "input_masks")]),
         ]
     )
-    rec_pipe.connect(recon, "srr_volume", outputnode, "srr_volume")
+
+    # recon => clamp_intense => post_bias_corr => outputnode
+    rec_pipe.connect(recon, "srr_volume", clamp_intense, "input_stacks")
+    rec_pipe.connect(
+        clamp_intense, "output_stacks", post_bias_corr, "input_stacks"
+    )
+    rec_pipe.connect(
+        post_bias_corr, "output_stacks", outputnode, "output_stacks"
+    )
     return rec_pipe
 
 
@@ -483,12 +550,12 @@ def create_full_pipeline(cfg, load_masks=False, name="full_pipeline"):
     )
 
     full_fet_pipe.connect(
-        recon, "outputnode.srr_volume", outputnode, "output_srr"
+        recon, "outputnode.output_stacks", outputnode, "output_srr"
     )
 
     # SEGMENTATION
     full_fet_pipe.connect(
-        recon, "outputnode.srr_volume", segmentation, "inputnode.srr_volume"
+        recon, "outputnode.output_stacks", segmentation, "inputnode.srr_volume"
     )
 
     full_fet_pipe.connect(
@@ -559,7 +626,9 @@ def create_rec_pipeline(cfg, load_masks=False, name="rec_pipeline"):
         niu.IdentityInterface(fields=["output_srr", "output_seg"]),
         name="outputnode",
     )
-    rec_pipe.connect(recon, "outputnode.srr_volume", outputnode, "output_srr")
+    rec_pipe.connect(
+        recon, "outputnode.output_stacks", outputnode, "output_srr"
+    )
 
     return rec_pipe
 

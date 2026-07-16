@@ -1,13 +1,14 @@
 defaults:
   - preprocessing/default
   - reconstruction/nesvor
+  - reconstruction/postprocessing
   - segmentation/bounti
   - surface/surfpype
   - _self_
 container: "singularity"
 singularity_path: <singularity_base> # e.g. "/home/gmarti/SINGULARITY"
-singularity_mount: <mouning> # e.g. "/gpfs/home/gmarti:/gpfs/home/gmarti"
+singularity_mount: <mounting> # e.g. "/gpfs/home/gmarti:/gpfs/home/gmarti"
 singularity_home: <home folder> # e.g. "/gpfs/home/gmarti/tmp_proc"
 reconstruction:
-  output_resolution: 0.8
+  output_resolution: 0.5
 save_graph: False

@@ -338,7 +338,7 @@ def create_bids_datasink(
                 (
                     rf"^{escaped_bids_derivatives_root}/"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"seg-drifts_pred(\.nii(?:\.gz)?)$"
+                    rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
@@ -352,7 +352,7 @@ def create_bids_datasink(
                 (
                     rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
                     rf".*?_?subject_([^/]+).*/"
-                    rf"seg-drifts_pred(\.nii(?:\.gz)?)$"
+                    rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\1/{datatype}/"

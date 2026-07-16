@@ -1,0 +1,18 @@
+quantile_ratio: 0.997
+postprocessing:
+  clamp_intensity:
+    enabled: true
+  bias_correction:
+    enabled: true
+    docker:
+      cmd: "docker run <mount> fetpype/fetpype_utils:latest run_bias_field_correction 
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"
+    singularity:
+      cmd: "singularity run --bind <singularity_mount>
+        <singularity_path>/fetpype_utils.sif
+        run_bias_field_correction
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"

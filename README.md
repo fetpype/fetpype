@@ -16,11 +16,17 @@ More information are available on the [documentation](https://fetpype.github.io/
 If you use `Fetpype` in your research, please cite the following paper:
 
 ```
-@article{sanchez2025fetpype,
-  title={Fetpype: An open-source pipeline for reproducible fetal brain mri analysis},
-  author={Sanchez, Thomas and Mart{\'\i}-Juan, Gerard and Meunier, David and Ballester, Miguel Angel Gonzalez and Camara, Oscar and Piella, Gemma and Cuadra, Meritxell Bach and Auzias, Guillaume},
-  journal={arXiv preprint arXiv:2512.17472},
-  year={2025}
+@article{sanchez2026fetpype,
+  author = {Sanchez, Thomas and Martí-Juan, Gerard and Meunier, David and Ballester, Miguel Angel Gonzalez and Camara, Oscar and Eixarch, Elisenda and Piella, Gemma and Cuadra, Meritxell Bach and Auzias, Guillaume},
+  title = {Fetpype: An Open-Source Pipeline for Reproducible Fetal Brain MRI Analysis}, 
+  doi = {10.21105/joss.10278},
+  url = {https://doi.org/10.21105/joss.10278},
+  year = {2026},
+  publisher = {The Open Journal},
+  volume = {11},
+  number = {122},
+  pages = {10278},
+  journal = {Journal of Open Source Software}
 }
 ```
 

@@ -2,7 +2,7 @@ defaults:
   - preprocessing/default
   - reconstruction/nesvor
   - reconstruction/postprocessing
-  - segmentation/fetalsynthseg
+  - segmentation/bounti
   - surface/surfpype
   - _self_
 container: "docker"

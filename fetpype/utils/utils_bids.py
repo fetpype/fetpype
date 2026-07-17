@@ -326,7 +326,40 @@ def create_bids_datasink(
                 ),
             )
         )
-
+    # ** Rule 4.5: Segmentation Output FetalSynthSeg **
+    if (
+        seg_label == "fetalsynthseg"
+        and rec_label
+        and pipeline_name != "preprocessing"
+    ):
+        # with session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?session_([^/]+)_subject_([^/]+).*/"
+                    rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
+                    rf"sub-\2_ses-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
+                ),
+            )
+        )
+        # without session
+        regex_subs.append(
+            (
+                (
+                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
+                    rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
+                ),
+                (
+                    rf"{bids_derivatives_root}/sub-\1/{datatype}/"
+                    rf"sub-\1_rec-{rec_label}_seg-{seg_label}_dseg\2"
+                ),
+            )
+        )
     # ** Rule 5: Surface outputs (.gii) **
     if surf_label:
         label = f"_rec-{rec_label}" if rec_label else ""

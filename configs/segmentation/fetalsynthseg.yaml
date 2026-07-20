@@ -9,10 +9,11 @@ docker:
     --output <output_dir>/seg-fetalsynthseg_pred.nii.gz
     --gpu --lateralize"
 singularity:
-  cmd: "singularity exec <mount> --nv fetalsynthseg.sif \
-    python3 predict.py \
-    --model drifts \
-    --input <input_dir>/input_srr.nii.gz \
-    --output <output_dir>/seg-fetalsynthseg_pred.nii.gz \
+  cmd: "singularity exec --bind <singularity_mount> --nv
+    <singularity_path>/fetalsynthseg.sif
+    python3 /fetalSynthSeg/predict.py
+    --model drifts
+    --input <input_dir>/input_srr.nii.gz
+    --output <output_dir>/seg-fetalsynthseg_pred.nii.gz
     --gpu --lateralize"
 path_to_output: "seg-fetalsynthseg_pred.nii.gz"

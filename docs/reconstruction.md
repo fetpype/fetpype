@@ -55,3 +55,45 @@ There are a limited set of tags that can be used for reconstruction:
 !!! Note 
     The configs contains an additional variable `path_to_output`. This is needed when only an `<output_dir>` is given to the method. This variable contains the path where the reconstructed volume will be located *relative* to `<output_dir>`.
 
+
+## Postprocessing
+After the reconstruction, a postprocessing step is applied. This step is consisted of an intensity clamping and post bias correction.
+
+---
+Reconstruction → Intensity clamping → Post bias correction → Output
+
+---
+
+
+- **Intensity clamping**: Clamps the image intensity using a threshold defined by a quantile ratio. The value of this ratio is specified in the configuration file as "quantile_ratio".
+- **Bias field correction**: N4 bias field correction[@tustison2010n4itk] similar to the bias correction used in the preprocessing.
+
+
+## Config structure
+The config file is structured as follows:
+```yaml
+quantile_ratio: 0.997
+postprocessing:
+  clamp_intensity:
+    enabled: true
+  bias_correction:
+    enabled: true
+    docker:
+      cmd: "docker run <mount> fetpype/fetpype_utils:latest run_bias_field_correction 
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"
+    singularity:
+      cmd: "singularity run --bind <singularity_mount>
+        <singularity_path>/fetpype_utils.sif
+        run_bias_field_correction
+        --input_stacks <input_stacks> 
+        --input_masks <input_masks> 
+        --output_stacks <output_stacks>"
+```
+
+!!! Note
+    - The intensity clamping is passed through the function [`clamp_intensities`]
+    - The container run of bias correction uses the command above and is passed through the function [`run_postpro_cmd`]
+
+

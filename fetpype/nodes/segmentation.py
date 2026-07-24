@@ -44,7 +44,7 @@ def run_seg_cmd(
     input_srr = os.path.join(input_srr_dir, "input_srr.nii.gz")
 
     output_dir = os.path.join(os.getcwd(), "seg/out")
-    os.makedirs(output_dir, exist_ok=True)  # Add this line
+    os.makedirs(output_dir, exist_ok=True)
     seg = os.path.join(output_dir, "seg.nii.gz")
 
     # In cmd, there will be things contained in <>.

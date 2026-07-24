@@ -156,6 +156,8 @@ If you used `Fetpype` in your research, please cite the following paper:
 - Guillaume Auzias (@[gauzias](https://github.com/gauzias))
 - David Meunier (@[davidmeunier79](https://github.com/davidmeunier79))
 - Danial Borooghani (@[dborooghani-Git](https://github.com/dborooghani-Git))
+- Pierre Auriau (@[PierreAuriau](https://github.com/PierreAuriau))
+- Vladyslav Zalevskyi (@[vladzalevskyi](https://github.com/vladzalevskyi))
 
 
 ## Acknowledgements

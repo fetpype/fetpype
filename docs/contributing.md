@@ -22,11 +22,13 @@ Fetpype is designed to be a modular wrapper around exiting tools. It is based ru
 
 If you wish to incorporate your method into fetpype, please have a look at the page describing the pipeline step to which you want to contribute (i.e. [preprocessing](preprocessing.md), [reconstruction](reconstruction.md), [segmentation](segmentation.md) or [surface extraction](surface.md)). Each page describes what the step does, what kind of input and output are expected, and the tags that can be provided to interact with your container image. If you have trouble in making your method compatible with fetpype, don't hesitate opening an issue on [GitHub](https://github.com/fetpype/fetpype/issues).
 
+When your method is ready, please make a PR (cf. the concrete steps described below), update the documentation in the relevant page, and add yourself to the [contributor's list](index.md#contributors) :) 
+
 ## 4. Feature Requests
 Feature requests can be made on [GitHub](https://github.com/fetpype/fetpype/issues) as well!
 
 ---
-## Concrete steps
+## Concrete steps to contributing
 When you have developed something that you would like to add to Fetpype, you can then run the tests locally, along with flake8 formatting.
 
 ### Running tests locally

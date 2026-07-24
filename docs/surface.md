@@ -54,7 +54,7 @@ surface_rh:
     All the container runs use the command above and are passed through the function [`run_surf_cmd`](api_nodes.md#fetpype.nodes.surface_extraction.run_surf_cmd)
 
 ### Tags
-There are a limited set of tags that can be used for reconstruction: 
+There are a limited set of tags that can be used for surface reconstruction: 
 
 | <div style="width:150px">Command</div> | Description                                                | Comments                               |
 | -------------------------------------- | ---------------------------------------------------------- | -------------------------------------- |

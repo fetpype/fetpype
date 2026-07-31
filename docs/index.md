@@ -49,6 +49,9 @@ pip install -e .
         - **Other platforms**: see the [official Graphviz downloads](https://graphviz.org/download/).
     3. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
 
+!!! Note "AMU Mesocentre users"
+     To install `fetpype` at the AMU Mesocentre, we recommand to use `conda` with `python=3.9` and `pandas=1.5`. The GCC compiler of the Mesocentre may fail to compile newer version of numpy or pandas.
+
 
 !!! warning "Apple Silicon (ARM) Macs"
     **Running fetpype via Docker on Apple Silicon is not currently supported.** The Docker images provided are built for linux/amd64 and fail to run on Apple Silicon Macs (M1/M2/M3), using Rosetta 2 emulation : the ANTs binaries (e.g. DenoiseImage) crash and issue a SIGILL (illegal instruction) at the denoising step.

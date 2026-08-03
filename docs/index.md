@@ -65,24 +65,24 @@ Start with a BIDS-formatted dataset containing multiple stacks of low-resolution
 sub-01
     [ses-01]
         anat
-            sub-01_[ses-01]_run-1_T2w.nii.gz
-            sub-01_[ses-01]_run-2_T2w.nii.gz
+            sub-01_[ses-01]_[acq-01]_run-1_T2w.nii.gz
+            sub-01_[ses-01]_[acq-01]_run-2_T2w.nii.gz
             ...
-            sub-01_[ses-01]_run-N_T2w.nii.gz
+            sub-01_[ses-01]_[acq-01]_run-N_T2w.nii.gz
 sub-myname
     [ses-01]
         anat
-            sub-myname_[ses-01]_run-1_T2w.nii.gz
-            sub-myname_[ses-01]_run-2_T2w.nii.gz
-            sub-myname_[ses-01]_run-6_T2w.nii.gz
-            sub-myname_[ses-01]_run-7_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-1_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-2_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-6_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-7_T2w.nii.gz
     [ses-02]
-            sub-myname_[ses-01]_run-1_T2w.nii.gz
-            sub-myname_[ses-01]_run-2_T2w.nii.gz
-            sub-myname_[ses-01]_run-3_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-1_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-2_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-3_T2w.nii.gz
 ```
 
-Here, [ses-XX] is an optional tag/folder level. The `anat` folder will contain the different runs, which are the different stacks acquired for a given subject. You can find a more detailed description on this format in our [input data preparation guide](input_data.md). More information about BIDS formatting is available [here](https://bids.neuroimaging.io/index.html).
+Here, [ses-XX] and [acq-YY] are optional tag/folder levels. The `anat` folder will contain the different runs, which are the different stacks acquired for a given subject. You can find a more detailed description on this format in our [input data preparation guide](input_data.md). More information about BIDS formatting is available [here](https://bids.neuroimaging.io/index.html).
 
 The output of the pipeline will be saved in the `derivatives` folder, which will contain the different steps of the pipeline, also in BIDS format. You can find a more detailed description of the output data structure [here](output_data.md).
 

@@ -49,10 +49,6 @@ pip install -e .
         - **Other platforms**: see the [official Graphviz downloads](https://graphviz.org/download/).
     3. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
 
-!!! Note "AMU Mesocentre users"
-     To install `fetpype` at the AMU Mesocentre, we recommand to use `conda` with `python=3.9` and `pandas=1.5`. The GCC compiler of the Mesocentre may fail to compile newer version of numpy or pandas.
-
-
 !!! warning "Apple Silicon (ARM) Macs"
     **Running fetpype via Docker on Apple Silicon is not currently supported.** The Docker images provided are built for linux/amd64 and fail to run on Apple Silicon Macs (M1/M2/M3), using Rosetta 2 emulation : the ANTs binaries (e.g. DenoiseImage) crash and issue a SIGILL (illegal instruction) at the denoising step.
 
@@ -106,13 +102,23 @@ This config defines a pipeline that will run the default preprocessing step (def
 The details of the configs, the attributes and methods implemented is available [in this page](pipelines.md).
 
 #### Singularity 
-Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder. You can indicate the folder in the .yaml file in the "singularity_path" field (see configs/default_sg.yaml for an example). The list of images and their name that are needed to run the pipeline is as follows:
+Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder with the command: 
+```bash
+singularity pull /path/to/singularity_images/<singularity_image.sif> docker://<path_to_docker_image>
+# example for fetpype_utils docker image
+singularity pull fetpype_utils.sif docker://fetpype/fetpype_utils:latest
+```
+You can indicate the "path/to/singularity_images" in the .yaml file in the "singularity_path" field (see [configs/default_sg.yaml](../configs/default_sg.yaml) for an example). The list of images and their name that are needed to run the pipeline is as follows:
 
 - `nesvor.sif` for the NeSVoR pipeline (junshenxu/nesvor:v0.5.0)
 - `niftymic.sif` for the NiftyMIC pipeline (from renbem/niftymic:latest)
 - `svrtk.sif` for the SVRTK pipeline (from fetalsvrtk/svrtk:general_auto_amd)
 - `bounti.sif` for the BOUNTI pipeline (from fetalsvrtk/segmentation:general_auto_amd)
-- `fetpype_utils.sif` for the utils pipeline (from gerardmartijuan/fetpype_utils:latest)
+- `fetalsynthseg.sif` for the FetalSynthSeg segmentation (from vzalevskyi/fetalsynthseg:latest)
+- `fetpype_utils.sif` for the utils pipeline (from fetpype/fetpype_utils:latest)
+- `surf_proc.sif`for the surface processing pipeline (from fetpype/surf_proc:latest)
+
+In the config file, you can also define directory mappings between containers and the host system in the "singularity_mount" field. Finally, you will need to specify the path to a temporary directory on your host system in the "singularity_home" field (do not forget to create the directory before launching the pipeline!). This directory will be used by the containers to save temporary files, the path within the container must be "/home/tmp_proc".
 
 #### Just run it!
 Once you chose the pipeline that you are going to run, you can then run it by calling 

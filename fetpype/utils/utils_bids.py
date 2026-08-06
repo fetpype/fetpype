@@ -257,7 +257,8 @@ def create_bids_datasink(
                         rf"^{escaped_bids_derivatives_root}/"
                         rf"(?!.*?_session_[^/]+).*?_subject_"
                         rf"([^/]+).*/?_cropping.*/"
-                        rf"(sub-[^_]+(?:_acq-[^_]+)?(?:_run-\d+)?)_mask(\.nii(?:\.gz)?)$"
+                        rf"(sub-[^_]+(?:_acq-[^_]+)?(?:_run-\d+)?)_"
+                        rf"mask(\.nii(?:\.gz)?)$"
                     ),
                     (
                         rf"{bids_derivatives_root}/sub-\1/{datatype}"
@@ -272,9 +273,9 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/.*?_?acquisition_([^/]+)"
-                    rf"_session_([^/]+)_subject_([^/]+).*/"
-                    rf"(?:[^/]+)(\.nii(?:\.gz)?)$"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf".*?_?acquisition_([^/]+)_session_([^/]+)"
+                    rf"_subject_([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\3/ses-\2/"
@@ -286,7 +287,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
                     rf"(?:[^/]+)(\.nii(?:\.gz)?)$"
                 ),
@@ -300,7 +302,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?session_[^/]+)"
                     rf".*?_?acquisition_([^/]+)_subject_([^/]+).*/"
                     rf"(?:[^/]+)(\.nii(?:\.gz)?)$"
                 ),
@@ -314,9 +317,9 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
-                    rf"(?!.*?_?session_[^/]+).*?_?subject_"
-                    rf"([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/(?:[^/]+)(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\1/"
@@ -332,12 +335,14 @@ def create_bids_datasink(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/"
-                    rf".*?_?acquisition_([^/]+)_session_([^/]+)_subject_([^/]+).*/"
+                    rf".*?_?acquisition_([^/]+)_session_([^/]+)"
+                    rf"_subject_([^/]+).*/"
                     rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\3/ses-\2/{datatype}/"
-                    rf"sub-\3_ses-\2_acq-\1_rec-{rec_label}_seg-{seg_label}_dseg\4"
+                    rf"sub-\3_ses-\2_acq-\1_rec-{rec_label}"
+                    rf"_seg-{seg_label}_dseg\4"
                 ),
             )
         )
@@ -345,7 +350,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
                     rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
                 ),
@@ -359,7 +365,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?session_[^/]+)"
                     rf".*?_?acquisition_([^/]+)_subject_([^/]+).*/"
                     rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
                 ),
@@ -395,12 +402,14 @@ def create_bids_datasink(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/"
-                    rf".*?_?acquisition_([^/]+)_session_([^/]+)_subject_([^/]+).*/"
+                    rf".*?_?acquisition_([^/]+)_session_([^/]+)"
+                    rf"_subject_([^/]+).*/"
                     rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\3/ses-\2/{datatype}/"
-                    rf"sub-\3_ses-\2_acq-\1_rec-{rec_label}_seg-{seg_label}_dseg\4"
+                    rf"sub-\3_ses-\2_acq-\1_rec-{rec_label}"
+                    rf"_seg-{seg_label}_dseg\4"
                 ),
             )
         )
@@ -408,7 +417,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
                     rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
                 ),
@@ -436,8 +446,9 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
-                    rf"(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*/"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
                     rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
                 ),
                 (
@@ -455,8 +466,8 @@ def create_bids_datasink(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/"
-                    rf".*?_?acquisition_([^/]+)_session_([^/]+)_subject_([^/]+).*/"
-                    rf"([^/]+)\.gii$"
+                    rf".*?_?acquisition_([^/]+)_session_([^/]+)"
+                    rf"_subject_([^/]+).*/([^/]+)\.gii$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\3/ses-\2/{datatype}/"
@@ -468,7 +479,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
                     rf"([^/]+)\.gii$"
                 ),
@@ -482,7 +494,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?session_[^/]+)"
                     rf".*?_?acquisition_([^/]+)_subject_([^/]+).*/"
                     rf"([^/]+)\.gii$"
                 ),
@@ -496,8 +509,9 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
-                    rf"(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*/"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
                     rf"([^/]+)\.gii$"
                 ),
                 (
@@ -513,8 +527,8 @@ def create_bids_datasink(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/"
-                    rf".*?_?acquisition_([^/]+)_session_([^/]+)_subject_([^/]+).*/"
-                    rf"([^/]+)\.stl$"
+                    rf".*?_?acquisition_([^/]+)_session_([^/]+)"
+                    rf"_subject_([^/]+).*/([^/]+)\.stl$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\3/ses-\2/{datatype}/"
@@ -526,7 +540,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
                     rf"([^/]+)\.stl$"
                 ),
@@ -540,7 +555,8 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?session_[^/]+)"
                     rf".*?_?acquisition_([^/]+)_subject_([^/]+).*/"
                     rf"([^/]+)\.stl$"
                 ),
@@ -554,8 +570,9 @@ def create_bids_datasink(
         regex_subs.append(
             (
                 (
-                    rf"^{escaped_bids_derivatives_root}/(?!.*?_?acquisition_[^/]+)"
-                    rf"(?!.*?_?session_[^/]+).*?_?subject_([^/]+).*/"
+                    rf"^{escaped_bids_derivatives_root}/"
+                    rf"(?!.*?_?acquisition_[^/]+)(?!.*?_?session_[^/]+)"
+                    rf".*?_?subject_([^/]+).*/"
                     rf"([^/]+)\.stl$"
                 ),
                 (

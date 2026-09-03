@@ -1,0 +1,57 @@
+/* Hydra-style hero: logo left, title + small subtitle on the right */
+.md-typeset .hero, .hero {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: center;
+  gap: clamp(0.75rem, 2.5vw, 1.5rem);
+  padding: clamp(1rem, 3vw, 2rem) 0;
+  border-block: 1px solid var(--md-default-fg-color--light, rgba(0,0,0,.12));
+
+}
+
+.md-typeset .hero__logo, .hero__logo {
+  width: clamp(120px, 18vw, 220px);
+  height: auto;
+}
+
+.md-typeset .hero__content, .hero__content { min-width: 0; }
+
+.md-typeset .hero__title, .hero__title {
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.md-typeset .hero__desc, .hero__desc {
+  margin: .25rem 0 0;
+  font-size: clamp(0.95rem, 1.5vw, 1.05rem);
+  color: var(--md-default-fg-color--light, #6b7280);
+}
+
+/* Optional buttons used in your markup */
+.md-typeset .btn, .btn {
+  display: inline-block;
+  padding: .55rem .9rem;
+  border-radius: .65rem;
+  text-decoration: none;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: var(--md-accent-fg-color, #4f46e5);
+  color: var(--md-primary-bg-color, #fff);
+  margin: .25rem .35rem;
+}
+
+.md-typeset .btn--secondary, .btn--secondary {
+  background: transparent;
+  color: var(--md-default-fg-color, #111827);
+  border-color: rgba(0,0,0,.12);
+}
+
+/* Stack on small screens */
+@media (max-width: 700px) {
+  .md-typeset .hero, .hero { grid-template-columns: 1fr; text-align: center; }
+  .md-typeset .hero__content, .hero__content { max-width: 65ch; margin: 0 auto; }
+  .md-typeset .hero__logo, .hero__logo { margin: 0 auto; width: clamp(96px, 32vw, 160px); }
+}

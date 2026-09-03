@@ -34,7 +34,7 @@ path_to_output: "<basename>-mask-brain_bounti-19.nii.gz"
     All the container runs use the command above and are passed through the function [`run_seg_cmd`](api_nodes.md#fetpype.nodes.segmentation.run_seg_cmd)
 
 ### Tags
-There are a limited set of tags that can be used for reconstruction: 
+There are a limited set of tags that can be used for segmentation: 
 
 | <div style="width:150px">Command</div> | Description                                               | Comments                                                                            |
 | -------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------- |

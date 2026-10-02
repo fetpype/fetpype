@@ -621,9 +621,12 @@ class DilateMasks(BaseInterface):
             )
 
         # Do per slice binary dilation
-        dilated_mask = binary_dilation(mask.astype(bool),
-                                       iterations=iterations,
-                                       axes=(0, 1))
+        dilated_mask = np.zeros_like(mask)
+        for z in range(mask.shape[2]):
+            dilated_mask[:, :, z] = binary_dilation(
+                mask[:, :, z].astype(bool),
+                iterations=iterations
+                )
         dilated_mask_ni = ni.Nifti1Image(dilated_mask.astype(mask.dtype),
                                          mask_ni.affine,
                                          mask_ni.header)

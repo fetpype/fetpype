@@ -38,6 +38,10 @@ brain_extraction:
 check_stacks_and_masks:
   enabled: true
 
+mask_dilation:
+  enabled: true
+  iterations: 8
+
 denoising:
   enabled: true
   docker:

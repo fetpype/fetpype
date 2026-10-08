@@ -1,4 +1,4 @@
-# Contributing
+# Contributing 1.0.1
 Fetpype is an open source project and welcomes contributions! Here are some ideas on how to help:
 
 1. Writing and improving the documentation

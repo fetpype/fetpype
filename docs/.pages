@@ -6,7 +6,9 @@ nav:
         - input_data.md
         - output_data.md
         - run_parts.md
-        - contributing.md
+        - Contributing to Fetpype:
+          - contributing.md
+          - changes.md
     - Pipeline:
         - preprocessing.md
         - reconstruction.md

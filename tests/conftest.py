@@ -5,6 +5,7 @@ import os
 import shutil
 import json
 from pathlib import Path
+from importlib.resources import files
 import yaml
 
 
@@ -117,7 +118,7 @@ def generate_config(tmp_path_factory):
         }
 
         temp_dir = tmp_path_factory.mktemp("config_test")
-        config_folder = Path(__file__).parent.parent / "configs"
+        config_folder = Path(__file__).parent.parent / "fetpype" / "configs"
         shutil.copytree(config_folder, temp_dir, dirs_exist_ok=True)
 
         config_path = temp_dir / "cfg_test.yaml"
@@ -127,3 +128,35 @@ def generate_config(tmp_path_factory):
         return config_path
 
     return _generate
+
+
+# --- Integration tests ---
+# They run the full pipeline on test_data with containers and a GPU, so they
+# are skipped unless pytest is called with --integration (see
+# tests/integration and scripts/run_integration.sh).
+def pytest_addoption(parser):
+    parser.addoption(
+        "--integration",
+        action="store_true",
+        help="Run the integration tests (needs containers and a GPU).",
+    )
+    parser.addoption(
+        "--integration-config",
+        default=str(files("fetpype") / "configs" / "default_docker.yaml"),
+        help="Config used by the integration tests, e.g. your own "
+        "Singularity config (default: the packaged default_docker.yaml).",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--integration"):
+        return
+    skip = pytest.mark.skip(reason="integration test: run with --integration")
+    for item in items:
+        if "integration" in item.keywords:
+            item.add_marker(skip)
+
+
+@pytest.fixture
+def integration_config(request):
+    return request.config.getoption("--integration-config")

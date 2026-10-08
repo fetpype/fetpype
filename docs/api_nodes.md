@@ -5,6 +5,7 @@
 ::: fetpype.nodes.preprocessing
     options:
       members: 
+        - DilateMasks
         - CropStacksAndMasks
         - CheckAffineResStacksAndMasks
         - CheckAndSortStacksAndMasks

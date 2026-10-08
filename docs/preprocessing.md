@@ -5,7 +5,7 @@ Pre-processing starts from multiple T2-weighted stacks and processed each stack 
 Fetpype pre-processes the data in the following order. 
 
 ---
-Data Loading (→ **Brain extraction)** → [Resolution checks](api_nodes.md#fetpype.nodes.preprocessing.CheckAffineResStacksAndMasks) → [Cropping](api_nodes.md#fetpype.nodes.preprocessing.CropStacksAndMasks) → **Denoising** 
+Data Loading (→ **Brain extraction**) → [Brain mask dilation](api_nodes.md#fetpype.nodes.preprocessing.DilateMasks) → [Resolution checks](api_nodes.md#fetpype.nodes.preprocessing.CheckAffineResStacksAndMasks) → [Cropping](api_nodes.md#fetpype.nodes.preprocessing.CropStacksAndMasks) → **Denoising** 
 → **Bias field correction** → [Output checks](api_nodes.md#fetpype.nodes.preprocessing.CheckAndSortStacksAndMasks)
 
 ---
@@ -37,6 +37,10 @@ brain_extraction:
 
 check_stacks_and_masks:
   enabled: true
+
+mask_dilation:
+  enabled: true
+  iterations: 8
 
 denoising:
   enabled: true

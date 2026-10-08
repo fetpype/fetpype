@@ -1,5 +1,6 @@
 import numpy as np
 import nibabel as ni
+from scipy.ndimage import binary_dilation
 import os
 from nipype.interfaces.base import (
     traits,
@@ -542,6 +543,111 @@ class CheckAndSortStacksAndMasks(BaseInterface):
         outputs = self._outputs().get()
         outputs["output_stacks"] = self._results["output_stacks"]
         outputs["output_masks"] = self._results["output_masks"]
+        return outputs
+
+
+class DilateMasksInputSpec(BaseInterfaceInputSpec):
+    """Class used to represent the inputs of the
+    DilateMasks interface.
+    """
+    mask = File(
+        mandatory=True,
+        desc="Input mask filename"
+        )
+    iterations = traits.Int(
+        1,
+        usedefault=True,
+        desc="Number of dilation iterations"
+        )
+    is_enabled = traits.Bool(
+        True,
+        usedefault=True,
+        desc="Enable dilation"
+        )
+
+
+class DilateMasksOutputSpec(TraitedSpec):
+    """Class used to represent the inputs of the
+        DilateMasks interface.
+    """
+    dilated_mask = File(desc="Dilated mask")
+
+
+class DilateMasks(BaseInterface):
+    """
+    Interface to dilate brain masks per slice.
+
+    Dilation ensures that the whole brain is included inside the brain mask as
+    brain extraction may crop some brain tissues. Overall, it should improve
+    the reconstruction and segmentation steps for some subjects.
+
+    Args:
+
+        mask (input; str): Input mask filename.
+        iterations(input; int): Number of dilation iterations.
+        is_enabled (input; bool): Whether dilation is enabled.
+
+        dilated_mask (output; str): Path to the dilated mask.
+
+    Examples:
+        >>> from fetpype.nodes.preprocessing import DilateMasks()
+        >>> dilate_mask = DilateMasks()
+        >>> dilate_mask.inputs.mask = 'sub-01_acq-haste_run-1_T2w_mask.nii.gz'
+        >>> dilate_mask.inputs.iterations = 8
+        >>> dilate_mask.run() # doctest: +SKIP
+    """
+    input_spec = DilateMasksInputSpec
+    output_spec = DilateMasksOutputSpec
+    _results = {}
+
+    def _gen_filename(self, name):
+        if name == "dilated_mask":
+            filename = os.path.basename(self.inputs.mask)
+            filename = filename.replace("mask", "dilated_mask")
+            return os.path.abspath(filename)
+        return None
+
+    def _dilate_mask(self, mask_path, iterations):
+        mask_ni = ni.load(mask_path)
+        mask = mask_ni.get_fdata()
+
+        # Check the low resolution axis should be the last one
+        zooms = np.asarray(mask_ni.header.get_zooms()[:3])
+        low_resolution_axis = int(np.argmax(zooms))
+        if low_resolution_axis != 2:
+            raise ValueError(
+                f"Expected the lowest-resolution axis to be 2, "
+                f"but got axis {low_resolution_axis}; voxel sizes are {zooms}"
+            )
+
+        # Do per slice binary dilation
+        dilated_mask = np.zeros_like(mask)
+        for z in range(mask.shape[2]):
+            dilated_mask[:, :, z] = binary_dilation(
+                mask[:, :, z].astype(bool),
+                iterations=iterations
+                )
+        dilated_mask_ni = ni.Nifti1Image(dilated_mask.astype(mask.dtype),
+                                         mask_ni.affine,
+                                         mask_ni.header)
+        ni.save(dilated_mask_ni, self._gen_filename("dilated_mask"))
+
+    def _run_interface(self, runtime):
+        if self.inputs.is_enabled:
+            self._dilate_mask(
+                self.inputs.mask,
+                self.inputs.iterations
+            )
+        else:
+            os.system(
+                f"cp {self.inputs.mask} "
+                f"{self._gen_filename('dilated_mask')}"
+            )
+        return runtime
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs["dilated_mask"] = self._gen_filename("dilated_mask")
         return outputs
 
 

@@ -53,3 +53,5 @@ Automatic if you've already set up `~/.pypirc`. If it has a [testpypi] section w
 ```
 
 Then test the commands on your data (e.g. `fetpype_run --help`, a real pipeline run).
+
+4. **On rele**

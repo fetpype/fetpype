@@ -117,7 +117,7 @@ def generate_config(tmp_path_factory):
         }
 
         temp_dir = tmp_path_factory.mktemp("config_test")
-        config_folder = Path(__file__).parent.parent / "configs"
+        config_folder = Path(__file__).parent.parent / "fetpype" / "configs"
         shutil.copytree(config_folder, temp_dir, dirs_exist_ok=True)
 
         config_path = temp_dir / "cfg_test.yaml"

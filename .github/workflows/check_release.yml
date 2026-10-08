@@ -1,0 +1,89 @@
+name: "Check release"
+
+# Makes sure that merging a PR in main cannot break the release:
+# the package must build and work once installed, and a version bump must be
+# releasable (see release.yml).
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch the tags
+      - name: Check that versions are in sync
+        run: |
+          v_init=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' fetpype/_version.py)
+          v_proj=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+          v_bump=$(sed -n 's/^current_version = "\(.*\)"/\1/p' pyproject.toml)
+          v_cff=$(sed -n 's/^version: "v\([^"]*\)".*/\1/p' citation.cff)
+          echo "_version.py: $v_init, pyproject: $v_proj, bump-my-version: $v_bump, citation.cff: $v_cff"
+          if [ "$v_init" != "$v_proj" ] || [ "$v_init" != "$v_bump" ] || [ "$v_init" != "$v_cff" ]; then
+            echo "::error::Versions are out of sync. Change the version with bump-my-version."
+            exit 1
+          fi
+          echo "VERSION=$v_init" >> "$GITHUB_ENV"
+      - name: Check that a new version can be released
+        run: |
+          if git rev-parse -q --verify "refs/tags/v$VERSION" > /dev/null; then
+            echo "v$VERSION is already released: merging this PR will not make a release."
+            exit 0
+          fi
+          echo "Merging this PR will release v$VERSION."
+          pip install packaging
+          python - <<'EOF'
+          import os, subprocess, sys
+          from packaging.version import Version, InvalidVersion
+          new = Version(os.environ["VERSION"])
+          tags = []
+          for tag in subprocess.run(["git", "tag", "--list", "v*"], capture_output=True, text=True).stdout.split():
+              try:
+                  tags.append(Version(tag[1:]))
+              except InvalidVersion:
+                  pass
+          if tags and new <= max(tags):
+              sys.exit(f"::error::Version {new} is not higher than the latest release {max(tags)}.")
+          EOF
+          if [ "$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/fetpype/$VERSION/json")" = "200" ]; then
+            echo "::error::Version $VERSION is already on PyPI."
+            exit 1
+          fi
+          awk -v header="## [$VERSION]" '
+            /^## \[/ { if (found) exit; if (index($0, header) == 1) { found = 1; next } }
+            found
+          ' CHANGELOG.md > release_notes.md
+          if ! grep -q '[^[:space:]]' release_notes.md; then
+            echo "::error::No entry for $VERSION in CHANGELOG.md. Run bump-my-version to create it."
+            exit 1
+          fi
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and check the package
+        run: |
+          pip install build twine
+          python -m build
+          twine check --strict dist/*
+      - name: Install the wheel in a clean environment
+        run: |
+          python -m venv /tmp/venv
+          /tmp/venv/bin/pip install dist/*.whl
+      - name: Test the installed package
+        working-directory: /tmp  # outside the repo, so only the installed package is used
+        run: |
+          source /tmp/venv/bin/activate
+          python -c "import fetpype; print(fetpype.__version__, fetpype.__file__)"
+          for cmd in fetpype_run fetpype_run_rec fetpype_run_seg fetpype_run_surf; do
+            $cmd --help > /dev/null
+          done
+          python -c "from importlib.resources import files; from fetpype.workflows.utils import init_and_load_cfg; init_and_load_cfg(str(files('fetpype') / 'configs' / 'default_docker.yaml'))"
+          fetpype_init_configs /tmp/user_configs
+          python -c "from fetpype.workflows.utils import init_and_load_cfg; init_and_load_cfg('/tmp/user_configs/default_docker.yaml')"

@@ -17,6 +17,7 @@ nav:
         - api_pipelines.md
         - api_utils.md
         - api_workflows.md
+    - Changelog: changelog.md
         
         
 

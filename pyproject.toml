@@ -20,7 +20,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0"
+    "pytest>=7.0",
+    "bump-my-version"
 ]
 
 [tool.setuptools]
@@ -32,3 +33,35 @@ fetpype_run = "fetpype.workflows.pipeline_fet:main"
 fetpype_run_rec = "fetpype.workflows.pipeline_rec:main"
 fetpype_run_seg = "fetpype.workflows.pipeline_seg:main"
 fetpype_run_surf = "fetpype.workflows.pipeline_surf:main"
+
+[tool.bumpversion]
+current_version = "1.1.0"
+commit = true
+# Tags and GitHub releases are created by CI when the bump is merged on main
+# (.github/workflows/release.yml), so no tag is created locally.
+tag = false
+message = "Bump version: {current_version} → {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "fetpype/_version.py"
+
+[[tool.bumpversion.files]]
+filename = "citation.cff"
+search = 'version: "v{current_version}"'
+replace = 'version: "v{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "citation.cff"
+regex = true
+search = 'date-released: \d{{4}}-\d{{2}}-\d{{2}}'
+replace = 'date-released: {now:%Y-%m-%d}'
+
+[[tool.bumpversion.files]]
+filename = "CHANGELOG.md"
+search = "## [Unreleased]"
+replace = "## [Unreleased]\n\n## [{new_version}] - {now:%Y-%m-%d}"

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fetpype"
-version = "1.1.0"
+version = "2.0.0"
 requires-python = ">=3.9"
 description = "Utilities for preprocessing fetal brain MRI scans"
 authors = [{name = "Thomas Sanchez", email = "thomas.sanchez@unil.ch"},
@@ -35,7 +35,7 @@ fetpype_run_seg = "fetpype.workflows.pipeline_seg:main"
 fetpype_run_surf = "fetpype.workflows.pipeline_surf:main"
 
 [tool.bumpversion]
-current_version = "1.1.0"
+current_version = "2.0.0"
 commit = true
 # Tags and GitHub releases are created by CI when the bump is merged on main
 # (.github/workflows/release.yml), so no tag is created locally.

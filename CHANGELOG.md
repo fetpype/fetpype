@@ -4,6 +4,10 @@ All notable changes to fetpype are documented here. Releases follow [semantic ve
 
 ## [Unreleased]
 
+### Changed
+- **Breaking:** brain masks are now dilated slice by slice after brain extraction, and this is enabled by default. This changes input for reconstruction, and therefore the downstream results. Dilated masks are saved as `*_dilated_mask*`. Custom preprocessing configs must now include a `mask_dilation` section. A user should set `mask_dilation.enabled: false` to keep the behaviour like the previous versions of `fetpype`.
+- The default brain extraction method when running with Singularity is now `fet_bet` instead of `monaifbs`.
+
 ### Added
 - Support for the BIDS `acq-` (acquisition) entity in input file names.
 - Documentation for running fetpype with Singularity, including notes for mesocentre users.

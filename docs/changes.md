@@ -57,4 +57,13 @@ Then test the commands on your data (e.g. `fetpype_run --help`, a real pipeline 
 This test should be run by the action define in `.github/workflows/check_release.yml`
 
 ## Integration testing
-Before a new release is merged on main, an integration test is mandatory. Given that fetpype requires GPU usage, this is run locally and then committed as a status that will be read by a Github workflow.
+We have an integration that we recommend running before every new release. Given that fetpype requires GPU usage, this is run locally and then committed as a status that can be read by a Github workflow. Here's how to run it for Docker or Singularity: 
+```
+scripts/run_integration.sh  --commit               # with Docker (default_docker.yaml)
+scripts/run_integration.sh my_sg.yaml --commit     # with your own config, e.g. for Singularity
+```
+The script refuses to run with uncommitted changes, as it records the result in the commit message. It creates an empty commit titled "✅ Integration testing passed" or "❌ Integration testing failed", whose message lists the tested commit, date, version, config, GPU and duration, plus what failed if any. You can omit the term `commit` to only print the result and not have a message pushed to github. Past runs can be listed with `git log --grep "Integration testing"` as the result is attached to the current commit.  You can run the test locally with the other tests by calling with `pytest
+  tests/integration --integration [--integration-config my_cfg.yaml]`. 
+  
+This integration test provides additional information and does not block any merging of a branch.
+  

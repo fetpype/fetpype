@@ -1,25 +1,24 @@
 #!/usr/bin/env bash
-# Run the integration test (full pipeline on test_data) and report the result
-# as a commit status on GitHub, shown with the other checks of the commit/PR.
+# Run the integration test (full pipeline on test_data) and print the result.
+# With --commit, also record it in an empty commit pushed to GitHub: the title
+# says whether the test passed or failed, and the message gives the details.
 #
-# Usage: scripts/run_integration.sh [--no-report] [config.yaml]
+# Usage: scripts/run_integration.sh [--commit] [config.yaml]
 #   config.yaml   Config to run with, e.g. your own Singularity config
 #                 (default: the packaged default_docker.yaml).
-#   --no-report   Only run the test, do not post the result on GitHub.
+#   --commit      Commit the result and push it to the upstream of the
+#                 current branch.
 #
-# Reporting needs the GitHub CLI (gh), logged in with write access to the
-# repository (FETPYPE_REPO, default: fetpype/fetpype).
+# The result commit describes the commit that was tested, i.e. its parent.
+# To list the results: git log --grep "Integration testing"
 set -uo pipefail
 
-REPO="${FETPYPE_REPO:-fetpype/fetpype}"
-CONTEXT="integration (local)"
-
-report=true
+commit=false
 config=""
 for arg in "$@"; do
     case "$arg" in
-        --no-report) report=false ;;
-        -h|--help) sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        --commit) commit=true ;;
+        -h|--help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) config="$arg" ;;
     esac
 done
@@ -32,17 +31,19 @@ if ! git diff --quiet HEAD \
     echo "Commit your changes first: the result is attached to the current commit."
     exit 1
 fi
-if $report && ! gh auth status > /dev/null 2>&1; then
-    echo "gh is not logged in: run 'gh auth login', or use --no-report."
+# Check before the (long) run that the result commit can be pushed.
+if $commit && ! git rev-parse --abbrev-ref '@{upstream}' > /dev/null 2>&1; then
+    echo "--commit needs a branch that is pushed to GitHub:" \
+        "run 'git push -u <remote> <branch>' first."
     exit 1
 fi
 
-sha=$(git rev-parse HEAD)
-out_dir="${TMPDIR:-/tmp}/fetpype_integration/${sha:0:8}"
+sha=$(git rev-parse --short HEAD)
+out_dir="${TMPDIR:-/tmp}/fetpype_integration/$sha"
 rm -rf "$out_dir"
 mkdir -p "$out_dir"
 log="$out_dir/pytest.log"
-echo "Running the integration test on ${sha:0:8}, outputs in $out_dir"
+echo "Running the integration test on $sha, outputs in $out_dir"
 
 start=$(date +%s)
 pytest tests/integration --integration -v \
@@ -51,21 +52,46 @@ pytest tests/integration --integration -v \
 code=${PIPESTATUS[0]}
 minutes=$(( ($(date +%s) - start) / 60 ))
 
-state=$([ "$code" -eq 0 ] && echo success || echo failure)
-gpu=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)
-description="$(date +%F), ${minutes} min, $(basename "${config:-default_docker.yaml}"), ${gpu:-no GPU found}"
-echo
-echo "Integration test: $state ($description)"
-echo "Log: $log"
+if [ "$code" -eq 0 ]; then
+    title="✅ Integration testing passed"
+    result="✅ passed"
+else
+    title="❌ Integration testing failed"
+    result="❌ failed"
+fi
 
-if $report; then
-    if gh api "repos/$REPO/statuses/$sha" \
-        -f state="$state" -f context="$CONTEXT" \
-        -f description="${description:0:140}" > /dev/null; then
-        echo "Reported as '$CONTEXT' on $REPO@${sha:0:8}."
+gpu=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)
+message="$title
+
+| Result        | $result |
+| Tested commit | $sha |
+| Date          | $(date +%F) |
+| Version       | $(python -c "import fetpype; print(fetpype.__version__)") |
+| Config        | $(basename "${config:-default_docker.yaml}") |
+| GPU           | ${gpu:-no GPU found} |
+| Duration      | $minutes min |"
+
+# On failure, add pytest's summary of what failed.
+if [ "$code" -ne 0 ]; then
+    failures=$(grep -E "^(FAILED|ERROR) " "$log")
+    message="$message
+
+${failures:-pytest exited with code $code, see the log.}"
+fi
+
+echo
+echo "$message"
+echo
+if $commit; then
+    git commit -q --allow-empty -m "$message"
+    echo "Recorded in commit $(git rev-parse --short HEAD)."
+    if git push -q; then
+        echo "Pushed to $(git rev-parse --abbrev-ref '@{upstream}')."
     else
-        echo "Could not report the result on $REPO: is ${sha:0:8} pushed there (or in an open PR)?"
+        echo "Could not push the result commit: push it with 'git push'" \
+            "(or 'git push -u <remote> <branch>' if the branch has no upstream)."
         [ "$code" -eq 0 ] && code=1
     fi
 fi
+echo "Log and outputs: $out_dir"
 exit "$code"

@@ -64,6 +64,11 @@ fetpype_run_seg = "fetpype.workflows.pipeline_seg:main"
 fetpype_run_surf = "fetpype.workflows.pipeline_surf:main"
 fetpype_init_configs = "fetpype.utils.init_configs:main"
 
+[tool.pytest.ini_options]
+markers = [
+    "integration: full pipeline run on test_data (containers + GPU)",
+]
+
 [tool.bumpversion]
 current_version = "2.0.0"
 commit = true

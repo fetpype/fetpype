@@ -54,4 +54,7 @@ Automatic if you've already set up `~/.pypirc`. If it has a [testpypi] section w
 
 Then test the commands on your data (e.g. `fetpype_run --help`, a real pipeline run).
 
-4. **On rele**
+This test should be run by the action define in `.github/workflows/check_release.yml`
+
+## Integration testing
+Before a new release is merged on main, an integration test is mandatory. Given that fetpype requires GPU usage, this is run locally and then committed as a status that will be read by a Github workflow.

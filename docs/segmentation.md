@@ -7,6 +7,7 @@ Several state-of-the-art segmentation algorithms have been wrapped and tested in
 | -------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | BOUNTI[@uus2023bounti]        | <https://github.com/SVRTK/auto-proc-svrtk>  | <https://hub.docker.com/r/fetalsvrtk/segmentation> |
 | FetalSynthSeg[@zalevskyi2024improving;@zalevskyi2026evaluating]        | <https://github.com/Medical-Image-Analysis-Laboratory/FetalSynthSeg>  | <https://hub.docker.com/r/vzalevskyi/fetalsynthseg> |
+| Multi-BOUNTI[@uus2026multi] | <https://github.com/SVRTK/perinatal-brain-mri-analysis/tree/main> | <https://hub.docker.com/r/fetalsvrtk/svrtk?tag=perinatal_brain_mri_analysis_amd> |
 | dHCP[@makropoulos2018developing]  |<https://github.com/fetpype/dhcp-structural-pipeline> | <https://hub.docker.com/r/gerardmartijuan/dhcp-pipeline-multifact> |
 
 **⚠️ Disclaimer:** The dHCP pipeline is only available in the dev branch as of now.
@@ -34,7 +35,7 @@ path_to_output: "<basename>-mask-brain_bounti-19.nii.gz"
     All the container runs use the command above and are passed through the function [`run_seg_cmd`](api_nodes.md#fetpype.nodes.segmentation.run_seg_cmd)
 
 ### Tags
-There are a limited set of tags that can be used for reconstruction: 
+There are a limited set of tags that can be used for segmentation: 
 
 | <div style="width:150px">Command</div> | Description                                               | Comments                                                                            |
 | -------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------- |

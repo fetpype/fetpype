@@ -23,25 +23,26 @@ derivatives/
 │   └── sub-<subject>/
 │       └── [ses-<session>/]
 │           └── anat/
-│               ├── sub-<subject>_[ses-<session>]_[rec-<reconstruction>]_[seg-<segmentation>]_[desc-<description>]_<suffix>.nii.gz
-│               ├── sub-<subject>_[ses-<session>]_[rec-<reconstruction>]_[seg-<segmentation>]_hemi-L_white.surf.gii
-│               └── sub-<subject>_[ses-<session>]_[rec-<reconstruction>]_[seg-<segmentation>]_hemi-R_white.surf.gii
+│               ├── sub-<subject>_[ses-<session>]_[acq-<acquisition>]_[rec-<reconstruction>]_[seg-<segmentation>]_[desc-<description>]_<suffix>.nii.gz
+│               ├── sub-<subject>_[ses-<session>]_[acq-<acquisition>]_[rec-<reconstruction>]_[seg-<segmentation>]_hemi-L_white.surf.gii
+│               └── sub-<subject>_[ses-<session>]_[acq-<acquisition>]_[rec-<reconstruction>]_[seg-<segmentation>]_hemi-R_white.surf.gii
 ```
 
 ### File Naming Convention
 
 | Input (Nipype working dir) | Output (BIDS derivatives) |
 |----------------------------|---------------------------|
-| `nesvor_bounti_surfpype/full_pipeline/Preprocessing/_session_01_subject_sub-01/denoise_wf/_denoising/sub-01_ses-01_run-1_T2w_noise_corrected.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_run-1_desc-denoised_T2w.nii.gz` |
-| `nesvor_bounti_surfpype/full_pipeline/Reconstruction/_session_01_subject_sub-01/nesvor/recon/recon.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_T2w.nii.gz` |
-| `nesvor_bounti_surfpype/full_pipeline/Segmentation/_session_01_subject_sub-01/bounti/seg/out/input_srr-mask-brain_bounti-19.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_dseg.nii.gz` |
-| `nesvor_bounti_surfpype/full_pipeline/SurfaceExtraction/_session_01_subject_sub-01/surf_lh/surf/out/hemi-L_white.surf.gii` | `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_hemi-L_white.surf.gii` |
-| `nesvor_bounti_surfpype/full_pipeline/SurfaceExtraction/_session_01_subject_sub-01/surf_rh/surf/out/hemi-R_white.surf.gii` | `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_hemi-R_white.surf.gii` |
+| `nesvor_bounti_surfpype/full_pipeline/Preprocessing/_acquisition_01_session_01_subject_sub-01/denoise_wf/_denoising/sub-01_ses-01_acq-01_run-1_T2w_noise_corrected.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_acq-01_run-1_desc-denoised_T2w.nii.gz` |
+| `nesvor_bounti_surfpype/full_pipeline/Reconstruction/_acquisition_01_session_01_subject_sub-01/nesvor/recon/recon.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_acq-01_rec-nesvor_T2w.nii.gz` |
+| `nesvor_bounti_surfpype/full_pipeline/Segmentation/_acquisition_01_session_01_subject_sub-01/bounti/seg/out/input_srr-mask-brain_bounti-19.nii.gz` | `sub-01/ses-01/anat/sub-01_ses-01_acq-01_rec-nesvor_seg-bounti_dseg.nii.gz` |
+| `nesvor_bounti_surfpype/full_pipeline/SurfaceExtraction/_acquisition_01_session_01_subject_sub-01/surf_lh/surf/out/hemi-L_white.surf.gii` | `sub-01/ses-01/anat/sub-01_ses-01_acq-01_rec-nesvor_seg-bounti_hemi-L_white.surf.gii` |
+| `nesvor_bounti_surfpype/full_pipeline/SurfaceExtraction/_acquisition_01_session_01_subject_sub-01/surf_rh/surf/out/hemi-R_white.surf.gii` | `sub-01/ses-01/anat/sub-01_ses-01_acq-01_rec-nesvor_seg-bounti_hemi-R_white.surf.gii` |
 
 ### Core BIDS Entities
 
 - `sub-XX`: Subject identifier
 - `ses-XX`: Session identifier (omitted if no sessions)
+- `acq-XX`: Acquisition identifier (omitted if no acquisitions)
 - `run-X`: Run number (from original stacks, preserved in preprocessing)
 - `rec-<method>`: Reconstruction method (e.g., rec-nesvor)
 - `seg-<method>`: Segmentation method (e.g., seg-bounti)
@@ -51,16 +52,16 @@ derivatives/
 
 ## DataSink Regex and Substitution Rules
 
-All rules extract the subject and session identifiers from the Nipype working directory path (via the `_session_X_subject_Y` segments that Nipype inserts automatically) and use them to construct the BIDS output path. Which rules are active depends on the pipeline stage and the labels passed to `create_bids_datasink`.
+All rules extract the subject and session identifiers from the Nipype working directory path (via the `_session_X_subject_Y` segments that Nipype inserts automatically) and use them to construct the BIDS output path. The acquisition identifiers are also extracted from the Nipype working directory path, except for the preprocessing rules, for which the identifiers are extracted from the nifti filenames. Which rules are active depends on the pipeline stage and the labels passed to `create_bids_datasink`.
 
 ### Preprocessing rules
 
 These rules are active only when `pipeline_name == "preprocessing"`.
 
-**Denoised stacks** (`desc_label="denoised"`): Matches files ending in `_T2w_noise_corrected.nii[.gz]` within any `_denoising` subdirectory. Preserves the subject, session, and run identifiers from the filename.
+**Denoised stacks** (`desc_label="denoised"`): Matches files ending in `_T2w_noise_corrected.nii[.gz]` within any `_denoising` subdirectory. Preserves the subject, session, acquisition and run identifiers from the filename.
 
-  - Input: `.../Preprocessing/_session_01_subject_sub-01/_denoising/sub-01_ses-01_run-1_T2w_noise_corrected.nii.gz`
-  - Output: `sub-01/ses-01/anat/sub-01_ses-01_run-1_desc-denoised_T2w.nii.gz`
+  - Input: `.../Preprocessing/_acquisition_01_session_01_subject_sub-01/_denoising/sub-01_ses-01_acq-01_run-1_T2w_noise_corrected.nii.gz`
+  - Output: `sub-01/ses-01/anat/sub-01_ses-01_acq-01_run-1_desc-denoised_T2w.nii.gz`
 
 ### Full-pipeline rules
 
@@ -69,24 +70,24 @@ These rules are active for the reconstruction, segmentation, and surface pipelin
 **Reconstruction** (`rec_label` set, no `seg_label`): Any `.nii[.gz]` file under the subject/session path is renamed, discarding the original filename and tagging the result with the reconstruction method label.
 
   - Input: `.../nesvor/recon/recon.nii.gz`
-  - Output: `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_T2w.nii.gz`
+  - Output: `sub-01/ses-01/anat/sub-01_ses-01_acq-01_rec-nesvor_T2w.nii.gz`
 
 **Segmentation** (`rec_label` and `seg_label` both set): Matches the BOUNTI output by its fixed filename `input_srr-mask-brain_bounti-19.nii[.gz]` and tags it with both the reconstruction and segmentation method labels.
 
   - Input: `.../bounti/seg/out/input_srr-mask-brain_bounti-19.nii.gz`
-  - Output: `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_dseg.nii.gz`
+  - Output: `sub-01/ses-01/anat/sub-01_ses-01_acq-01_rec-nesvor_seg-bounti_dseg.nii.gz`
 
 **Surface extraction** (`surf_label` set): Any `.gii` or `.stl` file keeps its original filename stem as the BIDS suffix, prefixed with the reconstruction and segmentation labels when available. One file is produced per hemisphere:
 
 Left hemisphere:
 
   - Input: `.../surf_lh/surf/out/hemi-L_white.surf.gii`
-  - Output: `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_hemi-L_white.surf.gii`
+  - Output: `sub-01/ses-01/anat/sub-01_ses-01_acq-01_rec-nesvor_seg-bounti_hemi-L_white.surf.gii`
   
 Right hemisphere:
 
   - Input: `.../surf_rh/surf/out/hemi-R_white.surf.gii`
-  - Output: `sub-01/ses-01/anat/sub-01_ses-01_rec-nesvor_seg-bounti_hemi-R_white.surf.gii`
+  - Output: `sub-01/ses-01/anat/sub-01_ses-01_acq-01_rec-nesvor_seg-bounti_hemi-R_white.surf.gii`
 
 ### Cleanup rules
 
@@ -94,7 +95,7 @@ Applied to all outputs after the above rules:
 
 - Remove doubled prefixes (e.g., `sub-sub-` → `sub-`)
 - Collapse multiple underscores or slashes
-- Remove `None` session labels
+- Remove `None` session and acquisition labels
 - Fix repeated extensions (e.g., `.nii.gz.gz` → `.nii.gz`)
 
 ### Customization

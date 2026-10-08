@@ -49,7 +49,6 @@ pip install -e .
         - **Other platforms**: see the [official Graphviz downloads](https://graphviz.org/download/).
     3. It requires **Docker** (or **Singularity**) to be installed and *actively running* before executing any pipeline command. See the [Docker installation guide](https://docs.docker.com/get-started/get-docker/) for your platform. You can verify that Docker is running with `docker info`.
 
-
 !!! warning "Apple Silicon (ARM) Macs"
     **Running fetpype via Docker on Apple Silicon is not currently supported.** The Docker images provided are built for linux/amd64 and fail to run on Apple Silicon Macs (M1/M2/M3), using Rosetta 2 emulation : the ANTs binaries (e.g. DenoiseImage) crash and issue a SIGILL (illegal instruction) at the denoising step.
 
@@ -62,24 +61,24 @@ Start with a BIDS-formatted dataset containing multiple stacks of low-resolution
 sub-01
     [ses-01]
         anat
-            sub-01_[ses-01]_run-1_T2w.nii.gz
-            sub-01_[ses-01]_run-2_T2w.nii.gz
+            sub-01_[ses-01]_[acq-01]_run-1_T2w.nii.gz
+            sub-01_[ses-01]_[acq-01]_run-2_T2w.nii.gz
             ...
-            sub-01_[ses-01]_run-N_T2w.nii.gz
+            sub-01_[ses-01]_[acq-01]_run-N_T2w.nii.gz
 sub-myname
     [ses-01]
         anat
-            sub-myname_[ses-01]_run-1_T2w.nii.gz
-            sub-myname_[ses-01]_run-2_T2w.nii.gz
-            sub-myname_[ses-01]_run-6_T2w.nii.gz
-            sub-myname_[ses-01]_run-7_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-1_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-2_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-6_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-7_T2w.nii.gz
     [ses-02]
-            sub-myname_[ses-01]_run-1_T2w.nii.gz
-            sub-myname_[ses-01]_run-2_T2w.nii.gz
-            sub-myname_[ses-01]_run-3_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-1_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-2_T2w.nii.gz
+            sub-myname_[ses-01]_[acq-01]_run-3_T2w.nii.gz
 ```
 
-Here, [ses-XX] is an optional tag/folder level. The `anat` folder will contain the different runs, which are the different stacks acquired for a given subject. You can find a more detailed description on this format in our [input data preparation guide](input_data.md). More information about BIDS formatting is available [here](https://bids.neuroimaging.io/index.html).
+Here, [ses-XX] and [acq-YY] are optional tag/folder levels. The `anat` folder will contain the different runs, which are the different stacks acquired for a given subject. You can find a more detailed description on this format in our [input data preparation guide](input_data.md). More information about BIDS formatting is available [here](https://bids.neuroimaging.io/index.html).
 
 The output of the pipeline will be saved in the `derivatives` folder, which will contain the different steps of the pipeline, also in BIDS format. You can find a more detailed description of the output data structure [here](output_data.md).
 
@@ -102,14 +101,24 @@ This config defines a pipeline that will run the default preprocessing step (def
 
 The details of the configs, the attributes and methods implemented is available [in this page](pipelines.md).
 
-### Singularity 
-Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder. You can indicate the folder in the .yaml file in the "singularity_path" field (see configs/default_sg.yaml for an example). The list of images and their name that are needed to run the pipeline is as follows:
+#### Singularity 
+Fetpype also supports running pipelines using Singularity containers. To run your pipeline with Singularity, ensure that you have Singularity installed and available. Currently, singularity images need to be built manually and saved to a folder with the command: 
+```bash
+singularity pull /path/to/singularity_images/<singularity_image.sif> docker://<path_to_docker_image>
+# example for fetpype_utils docker image
+singularity pull fetpype_utils.sif docker://fetpype/fetpype_utils:latest
+```
+You can indicate the "path/to/singularity_images" in the .yaml file in the "singularity_path" field (see [configs/default_sg.yaml](../configs/default_sg.yaml) for an example). The list of images and their name that are needed to run the pipeline is as follows:
 
 - `nesvor.sif` for the NeSVoR pipeline (junshenxu/nesvor:v0.5.0)
 - `niftymic.sif` for the NiftyMIC pipeline (from renbem/niftymic:latest)
 - `svrtk.sif` for the SVRTK pipeline (from fetalsvrtk/svrtk:general_auto_amd)
 - `bounti.sif` for the BOUNTI pipeline (from fetalsvrtk/segmentation:general_auto_amd)
-- `fetpype_utils.sif` for the utils pipeline (from gerardmartijuan/fetpype_utils:latest)
+- `fetalsynthseg.sif` for the FetalSynthSeg segmentation (from vzalevskyi/fetalsynthseg:latest)
+- `fetpype_utils.sif` for the utils pipeline (from fetpype/fetpype_utils:latest)
+- `surf_proc.sif`for the surface processing pipeline (from fetpype/surf_proc:latest)
+
+In the config file, you can also define directory mappings between containers and the host system in the "singularity_mount" field. Finally, you will need to specify the path to a temporary directory on your host system in the "singularity_home" field (do not forget to create the directory before launching the pipeline!). This directory will be used by the containers to save temporary files, the path within the container must be "/home/tmp_proc".
 
 #### Just run it!
 Once you chose the pipeline that you are going to run, you can then run it by calling 

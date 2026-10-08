@@ -1,4 +1,4 @@
-# Contributing
+# Contributing 1.0.1
 Fetpype is an open source project and welcomes contributions! Here are some ideas on how to help:
 
 1. Writing and improving the documentation
@@ -43,6 +43,9 @@ pytest tests/
 
 ### Running flake8
 The formatting must follow flake8, which can be installed and run in the command line. More info [here](https://flake8.pycqa.org/en/latest/).
+
+### Updating the changelog
+Every change should be documented in the `## [Unreleased]` section of [`CHANGELOG.md`](changelog.md), at the root of the repository, as part of the PR that makes the change. More details on how to update the changelog and release of a new version are available on [this page](changes.md).
 
 ### Solving Issues
 Any new feature, bug fix or documentation contribution is welcome as a pull request (PR)! To do that, simply open a new [GitHub PR](https://github.com/fetpype/fetpype/pulls) with your contribution. Please include a clear description of the problem, refer to any relevant issues, and explain how your contribution solves the problem, and on which data you were able to test it.

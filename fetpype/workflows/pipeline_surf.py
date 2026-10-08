@@ -93,7 +93,7 @@ def create_surf_workflow(
                 name = name.split("_")
             is_valid = False
             for n in name:
-                if n in VALID_SEGMENTATION:
+                if n.lower() in [s.lower() for s in VALID_SEGMENTATION]:
                     is_valid = True
                     break
             if not is_valid:
@@ -166,9 +166,13 @@ def create_surf_workflow(
     )
 
     main_workflow.connect(
-        fet_pipe, "outputnode.output_surf", surf_datasink, pipeline_name
+        fet_pipe, "outputnode.output_surf_lh",
+        surf_datasink, f"{pipeline_name}_lh"
     )
-
+    main_workflow.connect(
+        fet_pipe, "outputnode.output_surf_rh",
+        surf_datasink, f"{pipeline_name}_rh"
+    )
     if cfg.save_graph:
         main_workflow.write_graph(
             graph2use="colored",

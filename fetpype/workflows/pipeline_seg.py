@@ -89,7 +89,7 @@ def create_seg_workflow(
             name = data_desc.get("Name", None)
             if "_" in name:
                 name = name.split("_")[0]
-            if name not in VALID_RECONSTRUCTION:
+            if name.lower() not in [r.lower() for r in VALID_RECONSTRUCTION]:
                 raise ValueError(
                     f"Method name <{data_desc['Name']}> is not a valid "
                     "reconstruction method. Are you sure that you are "

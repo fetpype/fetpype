@@ -40,6 +40,8 @@ dev = [
     "bump-my-version",
     "build",
     "twine",
+    "flake8",
+    "black"
 ]
 
 [project.urls]

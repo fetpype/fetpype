@@ -16,7 +16,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{name = "Thomas Sanchez", email = "thomas.sanchez@unil.ch"},
            {name = "Gerard Martí-Juan", email = "gerard.marti@upf.edu"},
            {name = "David Meunier", email = "david.meunier@univ-amu.fr"},

@@ -3,6 +3,11 @@
 All notable changes to fetpype are documented here. Releases follow [semantic versioning](https://semver.org/): see the [contributing guide](https://fetpype.github.io/fetpype/contributing/#updating-the-changelog) for how to update it.
 
 ## [Unreleased]
+### Added
+  - Automatic deployment of new releases to pypi
+  - Integration test that can be run locally
+### Removed
+  - Support for Python 3.9, which reached its end of life. Fetpype now requires Python 3.10 or later.
 
 ## [2.0.0] - 2026-10-08
 

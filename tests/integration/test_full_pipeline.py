@@ -35,6 +35,7 @@ def test_full_pipeline(tmp_path, integration_config):
         "--data", str(data),
         "--out", str(out),
         "--config", integration_config,
+        "--nprocs", "4",
     ]
 
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT)

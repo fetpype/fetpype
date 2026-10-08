@@ -78,7 +78,7 @@ def get_default_parser(desc):
         "--config",
         dest="cfg_path",
         default=str(
-            Path(__file__).parent.parent.parent
+            Path(__file__).parent.parent
             / "configs"
             / "default_docker.yaml"
         ),

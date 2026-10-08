@@ -19,6 +19,7 @@ surface_lh:
     labelling_scheme:
         bounti: [5, 7, 14, 16]
         fetalsynthseg: [13, 14, 16]
+        multibounti: [14, 16, 18, 20, 22, 24, 40, 32, 34, 36]
 
 surface_rh:
     use_scheme: "bounti"
@@ -26,3 +27,4 @@ surface_rh:
     labelling_scheme:
         bounti: [6, 8, 15, 17]
         fetalsynthseg: [3, 4, 6]
+        multibounti: [13, 15, 17, 19, 21, 23, 39, 31, 33, 35]

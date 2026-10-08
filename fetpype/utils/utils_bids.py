@@ -330,6 +330,12 @@ def create_bids_datasink(
 
     # ** Rule 4: Segmentation Output **
     if seg_label and rec_label and pipeline_name != "preprocessing":
+        seg_mapping = {
+            "bounti": "input_srr-mask-brain_bounti-19",
+            "fetalsynthseg": "seg-fetalsynthseg_pred",
+            "multibounti": "multi_tissue_bounti_label"
+        }
+        seg_filename = seg_mapping.get(seg_label, "pred")
         # with session and with acquisition
         regex_subs.append(
             (
@@ -337,7 +343,7 @@ def create_bids_datasink(
                     rf"^{escaped_bids_derivatives_root}/"
                     rf".*?_?acquisition_([^/]+)_session_([^/]+)"
                     rf"_subject_([^/]+).*/"
-                    rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
+                    rf"{seg_filename}(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\3/ses-\2/{datatype}/"
@@ -353,7 +359,7 @@ def create_bids_datasink(
                     rf"^{escaped_bids_derivatives_root}/"
                     rf"(?!.*?_?acquisition_[^/]+)"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
+                    rf"{seg_filename}(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
@@ -368,7 +374,7 @@ def create_bids_datasink(
                     rf"^{escaped_bids_derivatives_root}/"
                     rf"(?!.*?_?session_[^/]+)"
                     rf".*?_?acquisition_([^/]+)_subject_([^/]+).*/"
-                    rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
+                    rf"{seg_filename}(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\2/{datatype}/"
@@ -383,7 +389,7 @@ def create_bids_datasink(
                     rf"^{escaped_bids_derivatives_root}/"
                     rf"(?!.*?_?acquisition_[^/]+)(?!.*?_?session_[^/]+)"
                     rf".*?_?subject_([^/]+).*/"
-                    rf"input_srr-mask-brain_bounti-19(\.nii(?:\.gz)?)$"
+                    rf"{seg_filename}(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\1/{datatype}/"
@@ -391,36 +397,19 @@ def create_bids_datasink(
                 ),
             )
         )
-    # ** Rule 4.5: Segmentation Output FetalSynthSeg **
+    # ** Rule 4.6: Segmentation Output multi-BOUNTI **
     if (
-        seg_label == "fetalsynthseg"
+        seg_label == "multibounti"
         and rec_label
         and pipeline_name != "preprocessing"
     ):
-        # with session and with acquisition
+        # with session
         regex_subs.append(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/"
-                    rf".*?_?acquisition_([^/]+)_session_([^/]+)"
-                    rf"_subject_([^/]+).*/"
-                    rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
-                ),
-                (
-                    rf"{bids_derivatives_root}/sub-\3/ses-\2/{datatype}/"
-                    rf"sub-\3_ses-\2_acq-\1_rec-{rec_label}"
-                    rf"_seg-{seg_label}_dseg\4"
-                ),
-            )
-        )
-        # with session and without acquisition
-        regex_subs.append(
-            (
-                (
-                    rf"^{escaped_bids_derivatives_root}/"
-                    rf"(?!.*?_?acquisition_[^/]+)"
                     rf".*?_?session_([^/]+)_subject_([^/]+).*/"
-                    rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
+                    rf"multi_tissue_bounti_label(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\2/ses-\1/{datatype}/"
@@ -428,28 +417,13 @@ def create_bids_datasink(
                 ),
             )
         )
-        # without session and with acquisition
+        # without session
         regex_subs.append(
             (
                 (
                     rf"^{escaped_bids_derivatives_root}/(?!.*?_?session_[^/]+)"
-                    rf".*?_?acquisition_([^/]+)_subject_([^/]+).*/"
-                    rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
-                ),
-                (
-                    rf"{bids_derivatives_root}/sub-\2/{datatype}/"
-                    rf"sub-\2_acq-\1_rec-{rec_label}_seg-{seg_label}_dseg\3"
-                ),
-            )
-        )
-        # without session and without acquisition
-        regex_subs.append(
-            (
-                (
-                    rf"^{escaped_bids_derivatives_root}/"
-                    rf"(?!.*?_?acquisition_[^/]+)(?!.*?_?session_[^/]+)"
                     rf".*?_?subject_([^/]+).*/"
-                    rf"seg-fetalsynthseg_pred(\.nii(?:\.gz)?)$"
+                    rf"multi_tissue_bounti_label(\.nii(?:\.gz)?)$"
                 ),
                 (
                     rf"{bids_derivatives_root}/sub-\1/{datatype}/"

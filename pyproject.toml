@@ -23,6 +23,7 @@ authors = [{name = "Thomas Sanchez", email = "thomas.sanchez@unil.ch"},
            {name = "Guillaume Auzias", email = "guillaume.auzias@univ-amu.fr"}]
 dependencies = [
       "nipype>=1.10.0",
+      "filelock<3.30",
       "hydra-core>=1.3.2",
       "networkx==2.8.7",
       "pybids>=0.15.0",

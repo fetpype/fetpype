@@ -4,6 +4,7 @@ from ..nodes.preprocessing import (
     CropStacksAndMasks,
     CheckAffineResStacksAndMasks,
     CheckAndSortStacksAndMasks,
+    DilateMasks,
     run_prepro_cmd,
 )
 from ..nodes.dhcp import dhcp_pipeline
@@ -58,6 +59,7 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         print("Overriding cropping enabled status for the selected pipeline.")
     enabled_denoising = True
     enabled_bias_corr = cfg_prepro.bias_correction.enabled
+    enabled_dilation = cfg_prepro.mask_dilation.enabled
 
     # PREPROCESSING
     # 0. Define input and outputs
@@ -102,6 +104,16 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         if cfg.container == "singularity":
             brain_extraction.inputs.singularity_path = cfg.singularity_path
             brain_extraction.inputs.singularity_mount = cfg.singularity_mount
+
+    # 1bis. Mask dilation
+    dilation_name = "MaskDilation"
+    dilation_name += "_disabled" if not enabled_dilation else ""
+
+    dilation = pe.MapNode(interface=DilateMasks(),
+                          iterfield=["mask"],
+                          name=dilation_name)
+    dilation.inputs.is_enabled = enabled_dilation
+    dilation.inputs.iterations = cfg_prepro.mask_dilation.iterations
 
     # 2. Check stacks and masks
     check_name = "CheckAffineAndRes"
@@ -196,14 +208,15 @@ def get_prepro(cfg, load_masks=False, enabled_cropping=False):
         prepro_pipe.connect(
             check_input, "output_stacks", check_affine, "stacks"
         )
-        prepro_pipe.connect(check_input, "output_masks", check_affine, "masks")
-
+        prepro_pipe.connect(check_input, "output_masks", dilation, "mask")
+        prepro_pipe.connect(dilation, "dilated_mask", check_affine, "masks")
     else:
         prepro_pipe.connect(input, "stacks", brain_extraction, "input_stacks")
 
         prepro_pipe.connect(input, "stacks", check_affine, "stacks")
+        prepro_pipe.connect(brain_extraction, "output_masks", dilation, "mask")
         prepro_pipe.connect(
-            brain_extraction, "output_masks", check_affine, "masks"
+            dilation, "dilated_mask", check_affine, "masks"
         )
 
     prepro_pipe.connect(check_affine, "output_stacks", cropping, "image")

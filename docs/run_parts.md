@@ -6,6 +6,7 @@ Fetpype comes with three main scripts, located in the `workflows` folder, than c
 | `fetpype_run`                          | `pipeline_fet.py`                            | Run the entire fetpype pipeline: pre-processing, reconstruction and segmentation | T2-weighted stacks                    |
 | `fetpype_run_rec`                      | `pipeline_rec.py`                            | Run the pre-processing and reconstruction pipeline                               | T2-weighted stacks                    |
 | `fetpype_run_seg`                      | `pipeline_rec.py`                            | Run the segmentation pipeline                                                    | Super-resolution reconstructed volume |
+| `fetpype_run_surf`                     | `pipeline_surf.py`                           | Run the surface extraction pipeline                                     | Segmented volume |
 
 
 !!! Note

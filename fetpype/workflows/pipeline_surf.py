@@ -8,6 +8,7 @@ from fetpype.utils.utils_bids import (
     create_datasource,
     create_bids_datasink,
     create_description_file,
+    get_label_from_files,
 )
 from fetpype import VALID_SEGMENTATION
 from fetpype.workflows.utils import (
@@ -89,11 +90,10 @@ def create_surf_workflow(
             with open(data_desc, "r") as f:
                 data_desc = json.load(f)
             name = data_desc.get("Name", None)
-            if "_" in name:
-                name = name.split("_")
+            name = name.split("_")
             is_valid = False
             for n in name:
-                if n in VALID_SEGMENTATION:
+                if n.lower() in [s.lower() for s in VALID_SEGMENTATION]:
                     is_valid = True
                     break
             if not is_valid:
@@ -153,6 +153,12 @@ def create_surf_workflow(
     prev_desc = os.path.join(data_dir, "dataset_description.json")
     if not os.path.exists(prev_desc):
         prev_desc = None
+    rec_label = get_label_from_files(data_dir,
+                                     label="rec",
+                                     suffix="dseg")
+    seg_label = get_label_from_files(data_dir,
+                                     label="seg",
+                                     suffix="dseg")
 
     create_description_file(out_dir, pipeline_name, prev_desc, cfg.surface)
     # Create another datasink for the surface pipeline
@@ -163,12 +169,18 @@ def create_surf_workflow(
         strip_dir=main_workflow.base_dir,
         name="final_surf_datasink",
         surf_label=cfg.surface.pipeline,
+        rec_label=rec_label,
+        seg_label=seg_label
     )
 
     main_workflow.connect(
-        fet_pipe, "outputnode.output_surf", surf_datasink, pipeline_name
+        fet_pipe, "outputnode.output_surf_lh",
+        surf_datasink, f"{pipeline_name}_lh"
     )
-
+    main_workflow.connect(
+        fet_pipe, "outputnode.output_surf_rh",
+        surf_datasink, f"{pipeline_name}_rh"
+    )
     if cfg.save_graph:
         main_workflow.write_graph(
             graph2use="colored",

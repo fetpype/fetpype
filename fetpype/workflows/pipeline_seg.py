@@ -8,6 +8,7 @@ from fetpype.utils.utils_bids import (
     create_datasource,
     create_bids_datasink,
     create_description_file,
+    get_label_from_files,
 )
 from fetpype import VALID_RECONSTRUCTION
 from fetpype.workflows.utils import (
@@ -89,7 +90,7 @@ def create_seg_workflow(
             name = data_desc.get("Name", None)
             if "_" in name:
                 name = name.split("_")[0]
-            if name not in VALID_RECONSTRUCTION:
+            if name.lower() not in [r.lower() for r in VALID_RECONSTRUCTION]:
                 raise ValueError(
                     f"Method name <{data_desc['Name']}> is not a valid "
                     "reconstruction method. Are you sure that you are "
@@ -145,6 +146,9 @@ def create_seg_workflow(
     prev_desc = os.path.join(data_dir, "dataset_description.json")
     if not os.path.exists(prev_desc):
         prev_desc = None
+    rec_label = get_label_from_files(data_dir,
+                                     label="rec",
+                                     suffix="T2w")
 
     create_description_file(
         out_dir, pipeline_name, prev_desc, cfg.segmentation
@@ -155,7 +159,7 @@ def create_seg_workflow(
         pipeline_name=pipeline_name,
         strip_dir=main_workflow.base_dir,
         name="final_seg_datasink",
-        rec_label=cfg.reconstruction.pipeline,
+        rec_label=rec_label,
         seg_label=cfg.segmentation.pipeline,
     )
     # Add the base directory

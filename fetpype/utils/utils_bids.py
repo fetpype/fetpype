@@ -725,6 +725,42 @@ def get_gestational_age(bids_dir, T2):
     return gestational_age
 
 
+def get_label_from_files(data_dir, label, suffix,
+                         datatype="anat", extension=[".nii", ".nii.gz"]):
+    """
+    Return the value of a BIDS label (for example 'rec' or 'seg') from
+    files in data_dir.
+
+    Args:
+        data_dir (str): Root directory of the BIDS dataset.
+        label (str): BIDS label name, e.g. 'rec' or 'seg'.
+        suffix (str or list[str]): Suffix filter for the BIDSLayout get
+                    method, e.g. "T2w", "dseg".
+        datatype (str or list[str], optionnal): Datatype filter for the
+            BIDSLayout get method, e.g. "anat".
+        extension (str or list[str], optionnal): Extension filter for the
+            BIDSLayout get method, e.g. ".nii.gz", ".nii".
+    Returns:
+        str or None: The label value, e.g. 'nesvor', 'bounti',
+            or None if not found.
+    """
+    layout = BIDSLayout(data_dir, validate=False)
+    files = layout.get(
+        datatype=datatype,
+        suffix=suffix,
+        extension=extension,
+        return_type="filename",
+    )
+    pattern = re.compile(rf"_{label}-([A-Za-z0-9+]+)(?:_|\.|-)")
+    for f in files:
+        basename = os.path.basename(f)
+        match = pattern.search(basename)
+        if match:
+            return match.group(1)
+        else:
+            return None
+
+
 def create_description_file(out_dir, algo, prev_desc=None, cfg=None):
     """Create a dataset_description.json file in the derivatives folder.
     TODO: should look for the extra parameters and also add them

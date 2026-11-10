@@ -3,7 +3,7 @@ import re
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
 
-from fetpype.utils.utils_bids import create_bids_datasink
+from fetpype.utils.utils_bids import create_bids_datasink, get_label_from_files
 
 
 # Helper for sorting lists containing None
@@ -364,3 +364,24 @@ def test_datasink_regex_simulation_cleanup(
             )
             == "sub-12MC3/anat/sub-12MC3_acq-trufi.nii"
         )
+
+
+def test_get_label_from_files(mock_bids_root):
+
+    # None labels
+    assert get_label_from_files(mock_bids_root, "rec", "T2w") is None
+    assert get_label_from_files(mock_bids_root, "seg", "dseg") is None
+
+    # labels from segmentation
+    anat_dir = mock_bids_root / "sub-01" / "ses-01" / "anat"
+    (anat_dir / "sub-01_ses-01_rec-nesvor_seg-bounti_dseg.nii.gz").touch()
+    assert get_label_from_files(mock_bids_root, "rec", "T2w") is None
+    assert get_label_from_files(mock_bids_root, "rec", "dseg") == "nesvor"
+    assert get_label_from_files(mock_bids_root, "seg", "dseg") == "bounti"
+
+    # labels from surface
+    anat_dir = mock_bids_root / "sub-02" / "anat"
+    (anat_dir / "sub-02_acq-slow_rec-svrtk_seg-fetalsynthseg_hemi-R_white.surf.gii").touch()
+    (anat_dir / "sub-02_acq-slow_rec-svrtk_seg-fetalsynthseg_hemi-L_white.surf.gii").touch()
+    assert get_label_from_files(mock_bids_root, "rec", "white", extension=[".gii", ".surf.gii"]) == "svrtk"
+    assert get_label_from_files(mock_bids_root, "seg", "white", extension=[".gii", ".surf.gii"]) == "fetalsynthseg"

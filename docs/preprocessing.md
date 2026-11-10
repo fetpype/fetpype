@@ -33,7 +33,7 @@ brain_extraction:
       <singularity_path>/fetpype_utils.sif
       run_brain_extraction
       --input_stacks <input_stacks> 
-      --output_masks <output_masks> --method monaifbs"
+      --output_masks <output_masks> --method fet_bet"
 
 check_stacks_and_masks:
   enabled: true

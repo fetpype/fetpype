@@ -31,6 +31,8 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.superfences
   - footnotes
+  - pymdownx.snippets:
+      check_paths: true
 
 
   

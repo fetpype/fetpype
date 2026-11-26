@@ -1,0 +1,58 @@
+name: "Release"
+
+# Creates a GitHub release (and its tag) when a version bump is merged on main.
+# Pushes to main that do not change the version are no-ops.
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' fetpype/_version.py)
+          if [ -z "$version" ]; then
+            echo "::error::Could not read __version__ from fetpype/_version.py"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check if this version is already released
+        id: check
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.version.outputs.version }}" > /dev/null; then
+            echo "Version v${{ steps.version.outputs.version }} already released, nothing to do."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract release notes from CHANGELOG.md
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          awk -v header="## [${{ steps.version.outputs.version }}]" '
+            /^## \[/ { if (found) exit; if (index($0, header) == 1) { found = 1; next } }
+            found
+          ' CHANGELOG.md > release_notes.md
+          if ! grep -q '[^[:space:]]' release_notes.md; then
+            echo "::error::No entry for ${{ steps.version.outputs.version }} in CHANGELOG.md. Run bump-my-version to create it."
+            exit 1
+          fi
+          cat release_notes.md
+
+      - name: Create GitHub release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --target "$GITHUB_SHA" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes-file release_notes.md

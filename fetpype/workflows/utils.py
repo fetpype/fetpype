@@ -226,7 +226,15 @@ def check_valid_pipeline(cfg):
                 f"Invalid segmentation pipeline: {cfg.segmentation.pipeline}."
                 f"Please choose one of {VALID_SEGMENTATION}"
             )
-
+        if cfg.segmentation.pipeline == "multibounti":
+            if ("reconstruction" in cfg) & \
+              (cfg.reconstruction.output_resolution != 0.5):
+                raise ValueError(
+                    f"Multi-BOUNTI segmentation requires an input resolution "
+                    f"of 0.5mm³. The reconstruction resolution is "
+                    f"currently set to: "
+                    f"{cfg.reconstruction.output_resolution}."
+                )
     if "surface" in cfg:
         if cfg.surface.pipeline not in VALID_SURFACE:
             raise ValueError(

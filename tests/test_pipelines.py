@@ -20,7 +20,7 @@ import itertools
 # Define options
 pipelines = [create_full_pipeline, create_rec_pipeline, create_seg_pipeline, create_surf_pipeline]
 recon_methods = ["niftymic", "nesvor", "svrtk"]
-segmentation_methods = ["bounti", "fetalsynthseg"]
+segmentation_methods = ["bounti", "fetalsynthseg", "multibounti"]
 
 @pytest.mark.parametrize("sr_method", recon_methods)
 @pytest.mark.parametrize("seg_method", segmentation_methods)

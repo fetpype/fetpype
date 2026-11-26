@@ -1,0 +1,12 @@
+pipeline: "multibounti"
+docker: 
+  cmd: "docker run --rm <mount> --gpus all
+        fetalsvrtk/svrtk:perinatal_brain_mri_analysis_amd 
+        sh -c ' bash /home/perinatal-brain-mri-analysis/scripts/run-multi-bounti-fetal-brain-segmentation-2026-general.sh 
+        0 <input_dir>/input_srr.nii.gz /home/data/tmp <output_dir>/multi_tissue_bounti_label.nii.gz'"
+singularity:
+  cmd: "singularity exec --bind <singularity_mount> --home <singularity_home> --nv
+    <singularity_path>/multibounti.sif
+    sh -c ' bash /home/perinatal-brain-mri-analysis/scripts/run-multi-bounti-fetal-brain-segmentation-2026-general.sh
+    0 <input_dir>/input_srr.nii.gz /home/tmp_proc <output_dir>/multi_tissue_bounti_label.nii.gz'"
+path_to_output: "multi_tissue_bounti_label.nii.gz"

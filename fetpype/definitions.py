@@ -5,7 +5,7 @@ VALID_RECONSTRUCTION = [
 ]
 
 
-VALID_SEGMENTATION = ["bounti", "fetalsynthseg"]
+VALID_SEGMENTATION = ["bounti", "fetalsynthseg", "multibounti"]
 
 VALID_SURFACE = [
     "surfpype",
